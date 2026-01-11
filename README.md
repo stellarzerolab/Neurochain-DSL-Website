@@ -9,7 +9,11 @@ NeuroChain is an **offline**, **deterministic** DSL that combines:
 > This repository is the production codebase behind https://stellarzerolab.art.  
 > It includes the NeuroChain engine + CLI **and** our website demos (WebUI + Snake) plus the REST API server they use.
 >
-> If you are looking for “just the DSL engine”, it's still here under `src/` — this repo simply also ships the real integration we run on our server.
+> The key difference vs an “engine-only” repo is the split of responsibilities:
+> - **Engine**: deterministic DSL execution (preprocessing + legacy compatibility + panic-safe execution).
+> - **Server**: production wrapper around the engine (HTTP API, concurrency/per-IP limits, optional API key, CORS).
+>
+> If you are looking for “just the DSL engine”, it's still here — this repo simply also ships the real integration we run on our server.
 
 NeuroChain has two binaries:
 
