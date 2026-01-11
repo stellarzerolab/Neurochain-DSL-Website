@@ -1,0 +1,41 @@
+[package]
+name = "neurochain"
+version = "0.1.0"
+edition = "2021"
+
+# (optional, but good practice)
+# resolver = "2"
+
+[dependencies]
+# --- Core dependencies ---
+nom = "7.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ndarray = "0.16"
+tract-onnx = "0.21.1"
+anyhow = "1.0"
+tokenizers = "0.19"
+
+# Required: regex (used in src/interpreter/mod.rs)
+regex = "1"
+
+# --- HTTP server / API ---
+axum = { version = "0.7", features = ["macros", "json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tower-http = { version = "0.5", features = ["cors", "fs", "trace"] }
+tokio-stream = "0.1"
+futures-util = "0.3"
+
+# (optional logging if you want nicer tracing)
+# tracing = "0.1"
+# tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile   = "3"
+
+# Server binary: `cargo run --bin neurochain-server`
+[[bin]]
+name = "neurochain-server"
+path = "src/bin/neurochain-server.rs"

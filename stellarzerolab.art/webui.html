@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NeuroChain WebUI</title>
+
+  <!-- Canonical (clean base URL) -->
+  <link rel="canonical" href="https://stellarzerolab.art/webui">
+
+  <!-- Favicons & PWA (full set) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- PNG favicons (desktop browsers) -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
+
+  <!-- Android / PWA icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512.png">
+
+  <!-- iOS PWA settings -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NeuroChain WebUI">
+	  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	  <!-- Safari pinned tab -->
+	  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0b0f14">
+
+  <!-- Windows / Edge -->
+  <meta name="msapplication-TileColor" content="#0b0f14">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Theme colors (mobile address bar) -->
+  <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+	  <!-- Social cards (~1200x630) -->
+	  <meta property="og:title" content="NeuroChain WebUI">
+	  <meta property="og:description" content="Run NeuroChain DSL in a clean WebUI. Local API integration, demo mode and quick tools for developers.">
+	  <meta property="og:type" content="website">
+	  <meta property="og:url" content="https://stellarzerolab.art/webui">
+	  <meta property="og:image" content="https://stellarzerolab.art/og-cover.png">
+	  <meta name="twitter:card" content="summary_large_image">
+	  <meta name="twitter:title" content="NeuroChain WebUI">
+	  <meta name="twitter:description" content="Lightweight WebUI for the NeuroChain DSL — with API mode and demo mode.">
+	  <meta name="twitter:image" content="https://stellarzerolab.art/og-cover.png">
+
+	  <!-- (Optional) iOS splash screens -->
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+	  <style>
+	    :root{
+      --nc-bg:#0b0f14;--nc-surface:#111826;--nc-surface-2:#0e1520;--nc-text:#e6edf3;
+      --nc-muted:#9fb3c8;--nc-accent:#7dd3fc;--nc-success:#22c55e;--nc-danger:#ef4444;
+      --radius:18px;
+    }
+    body{background:linear-gradient(180deg,#0b0f14,#0c121a 40%,#0b0f14);color:var(--nc-text);}
+    .glass{background:rgba(255,255,255,.04);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);}
+    .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35);}
+    .brand{letter-spacing:.5px}
+    /* Custom Bootstrap-like button variant (prevents hover from turning transparent). */
+    .btn-accent{
+      --bs-btn-color:#081018;
+      --bs-btn-bg:var(--nc-accent);
+      --bs-btn-border-color:var(--nc-accent);
+      --bs-btn-hover-color:#02070c;
+      --bs-btn-hover-bg:var(--nc-accent);
+      --bs-btn-hover-border-color:var(--nc-accent);
+      --bs-btn-active-color:#02070c;
+      --bs-btn-active-bg:var(--nc-accent);
+      --bs-btn-active-border-color:var(--nc-accent);
+      --bs-btn-disabled-color:#081018;
+      --bs-btn-disabled-bg:var(--nc-accent);
+      --bs-btn-disabled-border-color:var(--nc-accent);
+      --bs-btn-focus-shadow-rgb:125,211,252;
+      background-color:var(--nc-accent);
+      border-color:var(--nc-accent);
+      color:#081018
+    }
+    .btn-accent:hover{filter:brightness(1.1)}
+    .card-title{color:#cfe8ff}
+    .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+    textarea.code{min-height:220px;background:#0a1220;color:#d7e6ff;border:1px solid #1a2435;border-radius:12px}
+    .muted{color:var(--nc-muted)}
+    .pointer{cursor:pointer}
+    .kbd{border:1px solid #2b364a;border-bottom-width:3px;border-radius:8px;padding:2px 6px;font-weight:600}
+    .badge-dot{display:inline-flex;align-items:center;gap:.5ch}
+    .badge-dot::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:currentColor;display:inline-block}
+    pre{white-space:pre-wrap}
+    .dropzone{border:1.5px dashed #274062;border-radius:12px;padding:14px;background:#0a1220;color:#b7c9e6}
+    .form-switch .form-check-input{cursor:pointer}
+    a, a:visited{color:#9dd8ff}
+
+    .brand-logo{filter:drop-shadow(0 2px 6px rgba(125,211,252,.35));transition:transform .15s ease;}
+    .brand-link, .brand-link:visited{color:inherit;}
+    .brand-link:hover{text-decoration:none;}
+    .brand-link:hover .brand-logo{transform:scale(1.05);}
+    .stellar-label{font-weight:600;color:#e6edf3;text-shadow:0 0 10px rgba(125,211,252,.12);}
+    .small-note{font-size:.9rem}
+
+    /* --- Navbar brand spacing & focus --- */
+    .navbar .brand-link{
+      display:inline-flex;
+      align-items:center;
+      gap:3px !important;
+    }
+    .navbar .brand-link:focus{outline:none;box-shadow:none;}
+	    .navbar .brand-logo{display:block;}
+	    .navbar .stellar-label{line-height:1;}
+
+	    /* Models dropdown */
+	    .models-toggle{cursor:pointer}
+	    .models-menu{min-width:100%;max-width:100%}
+	    @media (max-width: 575.98px){
+	      .models-menu{
+	        position:static !important;
+	        inset:auto !important;
+	        transform:none !important;
+	        width:100%;
+	        max-height:50vh;
+	        overflow-y:auto;
+	        margin-top:.5rem;
+	        background:rgba(14,21,32,.96);
+	        backdrop-filter:none;
+	      }
+	    }
+	  </style>
+	</head>
+
+<body>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg navbar-dark glass shadow-soft sticky-top">
+    <div class="container py-1 d-flex justify-content-between align-items-center">
+      <span class="navbar-brand brand d-flex align-items-center gap-2">
+        <i class="bi bi-cpu"></i><strong>NeuroChain WebUI</strong>
+      </span>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Logo link -->
+        <a href="/" class="brand-link d-none d-md-inline-flex align-items-center gap-2 text-decoration-none" aria-label="Back to home">
+          <svg class="brand-logo" viewBox="0 0 28 28" style="width:36px;height:36px;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coreR" cx="50%" cy="50%" r="55%">
+                <stop offset="0%"  stop-color="#dff7ff"/>
+                <stop offset="45%" stop-color="#8fe6ff"/>
+                <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+              </radialGradient>
+              <linearGradient id="armR" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stop-color="rgba(157,216,255,0)"/>
+                <stop offset="30%"  stop-color="#7dd3fc"/>
+                <stop offset="80%"  stop-color="rgba(167,139,250,.9)"/>
+                <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+              </linearGradient>
+              <filter id="glowR" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <radialGradient id="fadeR" cx="50%" cy="50%" r="56%">
+                <stop offset="60%" stop-color="white"/>
+                <stop offset="100%" stop-color="black"/>
+              </radialGradient>
+              <mask id="mFadeR" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                <rect width="28" height="28" fill="url(#fadeR)"/>
+              </mask>
+            </defs>
+
+            <circle cx="14" cy="14" r="7.4" fill="url(#coreR)" opacity=".55"/>
+            <g class="spinR" filter="url(#glowR)" mask="url(#mFadeR)" stroke-linecap="round" fill="none" stroke="url(#armR)">
+              <g stroke-width="1.4" opacity=".9">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+            </g>
+            <style>
+              .spinR{ transform-origin:14px 14px; animation:spinR 18s linear infinite }
+              @keyframes spinR{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+              @media (prefers-reduced-motion: reduce){ .spinR{ animation:none } }
+            </style>
+          </svg>
+          <span class="stellar-label">StellarZeroLab</span>
+        </a>
+
+        <a class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-2" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener" aria-label="GitHub repository">
+          <i class="bi bi-github"></i><span class="d-none d-lg-inline">GitHub</span>
+        </a>
+
+        <a id="backMobile" href="#" class="btn btn-sm btn-outline-light d-inline-flex d-md-none align-items-center gap-2" aria-label="Back">
+          <i class="bi bi-arrow-left"></i><span>Back</span>
+        </a>
+
+        <button class="btn btn-sm btn-outline-light" id="clearAll"><i class="bi bi-trash3"></i> Clear</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="container my-4">
+    <div class="row g-4">
+      <!-- LEFT -->
+      <section class="col-12 col-lg-5">
+        <div class="p-3 p-md-4 glass shadow-soft h-100">
+          <h5 class="card-title mb-3"><i class="bi bi-sliders"></i> Settings</h5>
+
+          <div class="row g-3">
+            <!-- Runtime -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Runtime</label>
+              <select id="runtime" class="form-select">
+                <option value="browser">Browser (beta)</option>
+                <option value="api">API (local / same-origin)</option>
+              </select>
+              <div class="form-text muted">
+                Browser (beta): no in-browser interpreter — sends the request to a backend service.
+              </div>
+            </div>
+
+	            <div class="col-12 col-md-6">
+	              <label class="form-label">Models</label>
+
+	              <div class="dropdown" data-bs-auto-close="outside">
+	                <button
+	                  type="button"
+	                  class="form-select models-toggle"
+	                  id="modelsDropdown"
+	                  data-bs-toggle="dropdown"
+	                  aria-expanded="false"
+	                >
+	                  <span id="modelsSummary">Select models…</span>
+	                </button>
+
+	                <div class="dropdown-menu dropdown-menu-dark p-3 glass shadow-soft models-menu" aria-labelledby="modelsDropdown">
+	                  <div class="d-flex flex-wrap gap-2 mb-2">
+	                    <button type="button" class="btn btn-sm btn-outline-light" id="modelsAll">All</button>
+	                    <button type="button" class="btn btn-sm btn-outline-light" id="modelsNone">None</button>
+	                  </div>
+
+	                  <div id="models" class="row g-2">
+	                    <div class="col-12 col-sm-6">
+	                      <div class="form-check">
+	                        <input class="form-check-input" type="checkbox" name="model" id="m_sst2" value="sst2">
+	                        <label class="form-check-label" for="m_sst2">SST2 — Sentiment</label>
+	                      </div>
+	                      <div class="form-check">
+	                        <input class="form-check-input" type="checkbox" name="model" id="m_toxic" value="toxic">
+	                        <label class="form-check-label" for="m_toxic">Toxic — Binary</label>
+	                      </div>
+	                      <div class="form-check">
+	                        <input class="form-check-input" type="checkbox" name="model" id="m_factcheck" value="factcheck">
+	                        <label class="form-check-label" for="m_factcheck">FactCheck — NLI</label>
+	                      </div>
+	                    </div>
+
+	                    <div class="col-12 col-sm-6">
+	                      <div class="form-check">
+	                        <input class="form-check-input" type="checkbox" name="model" id="m_intent" value="intent">
+	                        <label class="form-check-label" for="m_intent">Intent — Commands</label>
+	                      </div>
+	                      <div class="form-check">
+	                        <input class="form-check-input" type="checkbox" name="model" id="m_macro" value="macro">
+	                        <label class="form-check-label" for="m_macro">MacroIntent — Macros</label>
+	                      </div>
+	                    </div>
+	                  </div>
+
+	                  <div class="form-text muted mt-2">
+	                    One request is sent per selected model. If the script contains explicit <code>AI:</code> lines, model selection is ignored.
+	                  </div>
+	                </div>
+	              </div>
+	            </div>
+
+            <div class="col-12 col-md-7 api-only">
+              <label class="form-label">API Base URL</label>
+              <input id="baseUrl" class="form-control" placeholder="(empty = same domain)" />
+              <div class="form-text muted">e.g. http://localhost:8081 — empty uses same-origin <code>/api</code>.</div>
+            </div>
+
+            <div class="col-12">
+	              <label class="form-label">Request (DSL)</label>
+	              <textarea id="input" class="form-control code" spellcheck="false" placeholder="e.g.
+	set mood from AI: &quot;This product is great!&quot;
+	if mood == &quot;Positive&quot;: neuro &quot;OK&quot;"></textarea>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <button id="run" class="btn btn-accent"><i class="bi bi-send"></i> Run <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span></button>
+                <button id="format" class="btn btn-outline-light"><i class="bi bi-magic"></i> Format</button>
+                <button id="download" class="btn btn-outline-light"><i class="bi bi-download"></i> Download output</button>
+              </div>
+              <div class="form-text muted mt-2">
+                Tips: Drop a <code>.nc</code> file onto the editor; <span class="kbd">Ctrl</span>+<span class="kbd">L</span> clears logs.
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div id="drop" class="dropzone text-center pointer">
+                <i class="bi bi-filetype-txt"></i> Drop a NeuroChain script here or <span class="text-decoration-underline">choose</span>...
+                <input id="file" type="file" accept=".nc,.txt,.md" hidden />
+              </div>
+            </div>
+
+            <div class="col-12 small-note">
+              <small class="muted">
+                API: <code>POST {baseUrl}/api/analyze</code> → <code>{ ok, output, logs? }</code>.
+              </small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="col-12 col-lg-7">
+        <div class="p-3 p-md-4 glass shadow-soft mb-4">
+          <h5 class="card-title mb-3 d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-terminal"></i> Output</span>
+            <span class="badge text-bg-dark badge-dot" id="statusBadge">Ready</span>
+          </h5>
+          <pre id="output" class="code mb-0" style="min-height:220px"></pre>
+        </div>
+
+        <div class="p-3 p-md-4 glass shadow-soft">
+          <h6 class="card-title mb-3"><i class="bi bi-activity"></i> Logs</h6>
+          <div id="logs" class="code" style="min-height:120px"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container my-5 text-center muted">
+    <div class="small">© <span id="year"></span> NeuroChain DSL WebUI
+      <span class="d-block">Shortcuts: <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> Run · <span class="kbd">Ctrl</span>+<span class="kbd">L</span> Clear logs</span>
+    </div>
+  </footer>
+
+  <!-- APP -->
+  <script>
+	    const $ = s => document.querySelector(s);
+		    const runtimeEl=$('#runtime'),
+		          modelBoxes=Array.from(document.querySelectorAll('input[name="model"]')),
+		          modelsAllBtn=$('#modelsAll'), modelsNoneBtn=$('#modelsNone'),
+		          modelsSummaryEl=$('#modelsSummary'),
+		          inputEl=$('#input'), outputEl=$('#output'), logsEl=$('#logs'),
+		          runBtn=$('#run'), baseUrlEl=$('#baseUrl'), formatBtn=$('#format'),
+		          clearBtn=$('#clearAll'), status=$('#statusBadge'), downloadBtn=$('#download'),
+		          drop=$('#drop'), file=$('#file'),
+		          backMobile=$('#backMobile');
+
+		    function modelTitle(id){
+		      if(!id) return 'manual';
+		      return ({
+		        sst2:'SST2',
+		        toxic:'Toxic',
+		        factcheck:'FactCheck',
+		        intent:'Intent',
+		        macro:'MacroIntent',
+		      })[id] || id;
+		    }
+
+		    function modelTitleLong(id){
+		      if(!id) return 'Manual (AI:)';
+		      return ({
+		        sst2:'SST2 — Sentiment',
+		        toxic:'Toxic — Binary',
+		        factcheck:'FactCheck — NLI',
+		        intent:'Intent — Commands',
+		        macro:'MacroIntent — Macros',
+		      })[id] || id;
+		    }
+
+		    function getSelectedModels(){
+		      return modelBoxes.filter(cb=>cb.checked).map(cb=>cb.value);
+		    }
+
+	    function setSelectedModels(models){
+	      const set = new Set((models||[]).map(String));
+	      modelBoxes.forEach(cb=>{ cb.checked = set.has(cb.value); });
+	    }
+
+	    function loadStoredModels(){
+	      const raw = (localStorage.getItem('nc.models') || '').trim();
+	      if(raw){
+	        try{
+	          const arr = JSON.parse(raw);
+	          if(Array.isArray(arr) && arr.length) return arr.map(String);
+	        }catch(_e){}
+	      }
+
+	      // Backward-compat: older UI stored a single string.
+	      const legacy = (localStorage.getItem('nc.model') || '').trim();
+	      if(legacy) return [legacy];
+
+	      // Default: keep "Intent" enabled.
+	      return ['intent'];
+	    }
+
+		    function storeSelectedModels(){
+		      const models = getSelectedModels();
+		      localStorage.setItem('nc.models', JSON.stringify(models));
+
+		      // Backward-compat: keep a single model id if exactly one is selected.
+		      if(models.length === 1) localStorage.setItem('nc.model', models[0]);
+		      else localStorage.removeItem('nc.model');
+
+		      updateModelsSummary();
+		    }
+
+		    function updateModelsSummary(){
+		      if(!modelsSummaryEl) return;
+		      const models = getSelectedModels();
+		      if(!models.length){
+		        modelsSummaryEl.textContent = modelTitleLong('');
+		        return;
+		      }
+
+		      const names = models.map(modelTitleLong);
+		      if(names.length <= 2){
+		        modelsSummaryEl.textContent = names.join(' + ');
+		        return;
+		      }
+
+		      modelsSummaryEl.textContent = `${names[0]} +${names.length - 1}`;
+		    }
+
+		    (function init(){
+		      document.title='NeuroChain WebUI';
+		      $('#year').textContent=new Date().getFullYear();
+
+	      // Restore settings
+		      runtimeEl.value = localStorage.getItem('nc.runtime') || 'browser';
+		      baseUrlEl.value = (localStorage.getItem('nc.baseUrl') ?? '').trim();
+		      setSelectedModels(loadStoredModels());
+		      updateModelsSummary();
+
+	      inputEl.value = localStorage.getItem('nc.input') || `# Example
+	set mood from AI: "This product is great!"
+	if mood == "Positive": neuro "OK"`;
+
+	      renderStatus('Ready','text-bg-dark');
+	      updateRuntimeUI();
+	    })();
+
+	    [runtimeEl, baseUrlEl].forEach(el=>{
+	      el.addEventListener('change', ()=>{
+	        if(el===runtimeEl && runtimeEl.value==='browser'){ baseUrlEl.value=''; }
+	        localStorage.setItem('nc.runtime', runtimeEl.value);
+	        localStorage.setItem('nc.baseUrl', baseUrlEl.value.trim());
+	        updateRuntimeUI();
+	      });
+	    });
+	    modelBoxes.forEach(cb => cb.addEventListener('change', storeSelectedModels));
+	    modelsAllBtn?.addEventListener('click', ()=>{ setSelectedModels(modelBoxes.map(b=>b.value)); storeSelectedModels(); });
+	    modelsNoneBtn?.addEventListener('click', ()=>{ setSelectedModels([]); storeSelectedModels(); });
+	    inputEl.addEventListener('input', ()=>localStorage.setItem('nc.input', inputEl.value));
+
+	    function updateRuntimeUI(){
+	      const isApi = runtimeEl.value==='api';
+	      document.querySelectorAll('.api-only').forEach(el=> el.style.display = isApi ? '' : 'none');
+      baseUrlEl.disabled = !isApi;
+      if(!isApi){ baseUrlEl.value=''; }
+    }
+
+    function renderStatus(text, klass){ status.className=`badge ${klass} badge-dot`; status.textContent=text; }
+    function logLine(m){ const p=document.createElement('div'); p.textContent=m; logsEl.prepend(p); }
+    function pretty(o){ return typeof o==='string' ? o : JSON.stringify(o,null,2); }
+
+    clearBtn.addEventListener('click', ()=>{ inputEl.value=''; outputEl.textContent=''; logsEl.textContent=''; });
+
+    // --- Normalization ---
+    function normalizeText(s){
+      return s
+        .replace(/\uFEFF/g, '')     // strip BOM
+        .replace(/\r\n?/g, '\n')    // CRLF/CR -> LF
+        .replace(/\t/g, '    ')     // tabs -> 4 spaces
+        .replace(/[ \t]+$/gm, '');  // trim trailing whitespace per line
+    }
+
+    formatBtn.addEventListener('click', ()=>{
+      const lines=inputEl.value.split('\n').map(l=>l.replace(/\s+$/,''));
+      inputEl.value = normalizeText(lines.join('\n').replace(/\n{3,}/g,'\n\n'));
+      logLine('Input formatted and normalized.');
+    });
+
+    downloadBtn.addEventListener('click', ()=>{
+      const blob=new Blob([outputEl.textContent||''],{type:'text/plain;charset=utf-8'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='neurochain_output.txt'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    drop.addEventListener('click', ()=>file.click());
+    drop.addEventListener('dragover', e=>{e.preventDefault(); drop.style.opacity='.85';});
+    drop.addEventListener('dragleave', ()=> drop.style.opacity='1');
+    drop.addEventListener('drop', e=>{
+      e.preventDefault(); drop.style.opacity='1';
+      const f=e.dataTransfer.files[0]; if(!f) return; readFile(f);
+    });
+    file.addEventListener('change', ()=>{ if(file.files[0]) readFile(file.files[0]); });
+    function readFile(f){
+      const reader=new FileReader();
+      reader.onload=e=>{ inputEl.value=e.target.result; logLine(`Loaded: ${f.name}`); localStorage.setItem('nc.input', inputEl.value); };
+      reader.readAsText(f);
+    }
+
+    backMobile?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      if(history.length>1){ history.back(); } else { window.location.href='/'; }
+    });
+
+    runBtn.addEventListener('click', run);
+    document.addEventListener('keydown', e=>{
+      if(e.ctrlKey && e.key==='Enter') run();
+      if(e.ctrlKey && e.key.toLowerCase()==='l'){ e.preventDefault(); logsEl.textContent=''; }
+    });
+
+	    async function run(){
+	      outputEl.textContent='';
+
+	      // base: browser(beta) -> '' (same-origin), api -> user-specified
+	      const base = (runtimeEl.value==='browser' ? '' : (baseUrlEl.value||'')).replace(/\/$/,'');
+	      const url  = `${base}/api/analyze`;
+
+      // Normalize legacy "say/print" -> "neuro"
+      const raw = inputEl.value;
+      const legacyFixed = raw.split('\n').map(line=>{
+        let out = line.replace(/^(\s*)(say|print)\b/i, (_m, indent) => `${indent}neuro`);
+        out = out.replace(/(:\s*)(say|print)\b/ig, '$1neuro');
+        return out;
+      }).join('\n');
+
+	      const normalized = normalizeText(legacyFixed);
+
+	      const hasExplicitAI = normalized.split('\n').some(l => l.trimStart().startsWith('AI:'));
+	      const selectedModels = getSelectedModels();
+	      const modelsToRun = hasExplicitAI ? [''] : (selectedModels.length ? selectedModels : ['']);
+
+	      if(hasExplicitAI && selectedModels.length){
+	        logLine('note: script contains AI: lines; model selection is ignored.');
+	      }
+
+	      renderStatus(modelsToRun.length > 1 ? `Running… (0/${modelsToRun.length})` : 'Running…','text-bg-primary');
+	      logLine(`[${runtimeEl.value}] → POST ${url} (models=${modelsToRun.map(modelTitle).join(', ')})`);
+	      logLine('payload(code): ' + (normalized.length > 160 ? normalized.slice(0,160)+'…' : normalized));
+
+	      const outputs = [];
+	      let anyError = false;
+
+	      for(let i=0;i<modelsToRun.length;i++){
+	        const modelId = modelsToRun[i];
+	        const label = modelTitle(modelId);
+	        renderStatus(modelsToRun.length > 1 ? `Running… (${i+1}/${modelsToRun.length})` : 'Running…','text-bg-primary');
+
+	        const body = { model: modelId, code: normalized, content: normalized };
+	        logLine(`request: model=${label}`);
+
+	        try{
+	          const res = await fetch(url, {
+	            method:'POST',
+	            headers:{'Content-Type':'application/json','Accept':'application/json'},
+	            body: JSON.stringify(body)
+	          });
+
+	          const contentType = res.headers.get('content-type') || '';
+	          const rawResp = await res.text();
+	          let data = null, parseErr = null;
+
+	          if(rawResp){
+	            try{ data = JSON.parse(rawResp); }catch(e){ parseErr = e; }
+	          }
+
+	          if(!data){
+	            anyError = true;
+	            outputs.push({
+	              modelId,
+	              data: { ok:false, output:`⚠️ Non-JSON response\nStatus: ${res.status} ${res.statusText}\nContent-Type: ${contentType}\n\n${rawResp || '(empty body)'}` },
+	            });
+	            logLine(`[${label}] status=${res.status} ${res.statusText} ct=${contentType}`);
+	            if(parseErr) logLine(`[${label}] JSON parse error: ${parseErr.message}`);
+	            continue;
+	          }
+
+	          if(!res.ok || data.ok === false) anyError = true;
+	          outputs.push({ modelId, data });
+	          logResponse(label, data);
+	          if(!res.ok){ logLine(`[${label}] HTTP status=${res.status} ${res.statusText}`); }
+	        }catch(err){
+	          anyError = true;
+	          outputs.push({ modelId, data: { ok:false, output:'⚠️ Request failed: '+(err?.message||err) } });
+	          logLine(`[${label}] Fetch error: ${(err?.message||err)}`);
+	        }
+	      }
+
+	      renderOutputs(outputs);
+	      renderStatus(anyError ? 'Error' : 'Ready', anyError ? 'text-bg-danger' : 'text-bg-success');
+	    }
+
+	    function renderOutputs(outputs){
+	      if(!outputs || !outputs.length){
+	        outputEl.textContent='';
+	        return;
+	      }
+
+	      if(outputs.length === 1){
+	        const data = outputs[0].data || {};
+	        const out = data.output || data.message || '';
+	        outputEl.textContent = pretty(out);
+	        return;
+	      }
+
+	      const chunks = [];
+	      for(const {modelId, data} of outputs){
+	        const label = modelTitle(modelId);
+	        const out = (data?.output || data?.message || '').toString();
+	        chunks.push(`=== ${label} ===\n${out}`.trimEnd());
+	      }
+	      outputEl.textContent = chunks.join('\n\n');
+	    }
+
+	    function logResponse(label, data){
+	      if(Array.isArray(data?.logs)){
+	        data.logs.slice().reverse().forEach(l=>logLine(`[${label}] ${l}`));
+	      }
+	      if(data?.error) logLine(`[${label}] error: ${data.error}`);
+	      if(data?.ok === false) logLine(`[${label}] ok:false`);
+	    }
+
+	  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+# ------------------------------------------------------------
+# NeuroChain (Rust) ignores
+# ------------------------------------------------------------
+/target
+/models/**
+!/models/README.md
+!/models/manifest.json
+!/models/LICENSE
+!/models/THIRD_PARTY_NOTICES.md
+!/models/*/
+!/models/*/README.md
+!/models/.gitkeep
+/logs
+.env
+
+# ------------------------------------------------------------
+# Shared/editor/OS junk
+# ------------------------------------------------------------
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.cache/
+
+# ------------------------------------------------------------
+# Website (HTML) server-specific
+# ------------------------------------------------------------
+stellarzerolab.art/.user.ini
+stellarzerolab.art/.well-known/acme-challenge/

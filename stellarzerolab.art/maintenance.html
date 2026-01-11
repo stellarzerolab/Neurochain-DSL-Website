@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Maintenance — StellarZeroLab</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <meta name="theme-color" content="#070b12" />
+    <style>
+      :root{
+        color-scheme: dark;
+        --bg:#070b12;
+        --surface:#0c121c;
+        --ink:#eaf2ff;
+        --muted:#9fb3c8;
+        --primary:#7dd3fc;
+        --accent:#a78bfa;
+        --radius:20px;
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:var(--bg);color:var(--ink);}
+
+      .glass{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius)}
+      .soft{box-shadow:0 20px 50px rgba(0,0,0,.45)}
+
+      .hero{position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:32px 16px;}
+      .nebula{position:absolute;inset:-20%;background:
+        radial-gradient(40% 30% at 20% 30%, rgba(124,58,237,.25), transparent 70%),
+        radial-gradient(35% 25% at 80% 20%, rgba(14,165,233,.25), transparent 70%),
+        radial-gradient(45% 35% at 60% 80%, rgba(59,130,246,.18), transparent 75%);
+        filter:blur(50px);opacity:.9}
+      .stars{position:absolute;inset:0}
+      .stars::before,.stars::after{content:"";position:absolute;inset:0;background:
+        radial-gradient(1px 1px at 10% 20%, #bfe4ff 70%, transparent),
+        radial-gradient(1px 1px at 30% 40%, #e6e1ff 70%, transparent),
+        radial-gradient(1px 1px at 70% 30%, #c7f3ff 70%, transparent),
+        radial-gradient(1px 1px at 85% 65%, #ffffff 70%, transparent),
+        radial-gradient(1px 1px at 55% 75%, #cde6ff 70%, transparent);
+        opacity:.8;animation:twinkle 5s infinite ease-in-out alternate}
+      .stars::after{filter:blur(.5px);opacity:.6;animation-duration:7s}
+      @keyframes twinkle{from{opacity:.4} to{opacity:.95}}
+
+      .wrap{position:relative;z-index:2;width:min(860px,100%);}
+      .brandbar{display:flex;justify-content:center;margin-bottom:14px;}
+      .brand-link{display:inline-flex;align-items:center;gap:.6rem;color:inherit;text-decoration:none;}
+      .brand-link:hover{text-decoration:none;}
+      .brand-logo{width:56px;height:56px;display:inline-block;filter:drop-shadow(0 2px 6px rgba(125,211,252,.45));}
+      @media (max-width:576px){.brand-logo{width:44px;height:44px}}
+
+      .card{padding:22px 22px 18px;}
+      h1{font-size:1.7rem;margin:0 0 10px;letter-spacing:.2px}
+      p{margin:0;color:var(--muted);line-height:1.55}
+      .lead{margin-top:8px}
+
+      .meta{
+        margin-top:14px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        align-items:center;
+      }
+      .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:8px 10px;
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:999px;
+        background:rgba(0,0,0,.18);
+        color:var(--muted);
+        font-size:.92rem;
+      }
+      .pill strong{color:var(--ink);font-weight:650}
+      .dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--primary);box-shadow:0 0 18px rgba(125,211,252,.45);flex:0 0 auto}
+
+      .actions{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+      .btn{
+        display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+        border-radius:14px;padding:10px 14px;
+        border:1px solid #2a3a55;background:rgba(255,255,255,.02);
+        color:var(--ink);text-decoration:none;font-weight:650;
+      }
+      .btn:hover{filter:brightness(1.05)}
+      .btn-primary{background:linear-gradient(135deg,var(--primary),#8bdcff);border:0;color:#04121e}
+
+      .kbd{
+        font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+        border:1px solid rgba(255,255,255,.10);
+        border-bottom-width:3px;
+        border-radius:10px;
+        padding:2px 8px;
+        color:var(--ink);
+      }
+      a{color:var(--primary);text-decoration:none}
+      a:hover{text-decoration:underline}
+      .small{
+        margin-top:14px;
+        font-size:.92rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="nebula" aria-hidden="true"></div>
+      <div class="stars" aria-hidden="true"></div>
+
+      <div class="wrap">
+        <div class="brandbar">
+          <a class="brand-link" href="/" aria-label="StellarZeroLab home">
+            <svg class="brand-logo" viewBox="0 0 28 28" aria-hidden="true">
+              <defs>
+                <radialGradient id="core" cx="50%" cy="50%" r="55%">
+                  <stop offset="0%" stop-color="#dff7ff"/>
+                  <stop offset="45%" stop-color="#8fe6ff"/>
+                  <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+                </radialGradient>
+                <linearGradient id="arm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="rgba(157,216,255,0)"/>
+                  <stop offset="30%"  stop-color="#7dd3fc"/>
+                  <stop offset="80%"  stop-color="rgba(167,139,250,.9)"/>
+                  <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+                </linearGradient>
+                <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <radialGradient id="fade" cx="50%" cy="50%" r="56%">
+                  <stop offset="60%" stop-color="white"/>
+                  <stop offset="100%" stop-color="black"/>
+                </radialGradient>
+                <mask id="mFade"><rect width="28" height="28" fill="url(#fade)"/></mask>
+              </defs>
+              <circle cx="14" cy="14" r="7.4" fill="url(#core)" opacity=".55"/>
+              <g class="spin" filter="url(#glow)" mask="url(#mFade)" stroke-linecap="round" fill="none" stroke="url(#arm)">
+                <g stroke-width="1.4" opacity=".9">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
+                  <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+                </g>
+                <g stroke-width=".9" opacity=".45">
+                  <path d="M6.5,10.5 C10,9 14,9 18,10.4" />
+                  <path d="M7.8,18.8 C10.2,20 13.2,20.5 16.2,20.1" />
+                  <path d="M20.8,9.8 C22,11 22.9,12.7 23.2,14.6" />
+                </g>
+              </g>
+              <style>
+                .spin{transform-origin:14px 14px;animation:spin 18s linear infinite}
+                @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+                @media (prefers-reduced-motion: reduce){.spin{animation:none}}
+              </style>
+            </svg>
+            <strong>StellarZeroLab</strong>
+          </a>
+        </div>
+
+        <main class="glass soft card" role="main" aria-label="Maintenance">
+          <h1>We’ll be back soon</h1>
+          <p class="lead">
+            StellarZeroLab is temporarily offline for maintenance. Thanks for your patience.
+          </p>
+
+          <div class="meta" aria-label="Status">
+            <span class="pill"><span class="dot" aria-hidden="true"></span> Status: <strong>Maintenance</strong></span>
+            <span class="pill">Try again in a few minutes</span>
+          </div>
+
+
+          <p class="small">
+            Admin note: disable maintenance by removing <span class="kbd">.maintenance</span> from the webroot.
+          </p>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

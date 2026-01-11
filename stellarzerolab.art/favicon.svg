@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b0f14"/>
+      <stop offset="1" stop-color="#0c121a"/>
+    </linearGradient>
+
+    <!-- Glowing core -->
+    <radialGradient id="core" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#dff7ff"/>
+      <stop offset="45%" stop-color="#8fe6ff"/>
+      <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+    </radialGradient>
+
+    <!-- Arm gradient -->
+    <linearGradient id="arm" x1="0" y1="0" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgba(157,216,255,0)"/>
+      <stop offset="30%" stop-color="#7dd3fc"/>
+      <stop offset="80%" stop-color="rgba(167,139,250,.9)"/>
+      <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+    </linearGradient>
+
+    <!-- Soft glow -->
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Fade mask - looser so strokes reach closer to edges -->
+    <radialGradient id="fade" cx="50%" cy="50%" r="86%">
+      <stop offset="86%" stop-color="white"/>
+      <stop offset="100%" stop-color="black"/>
+    </radialGradient>
+    <mask id="mFade"><rect width="64" height="64" fill="url(#fade)"/></mask>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+
+  <!-- Slightly larger core -->
+  <circle cx="32" cy="32" r="20" fill="url(#core)" opacity=".62"/>
+
+  <!-- Spiral scaled closer to edges -->
+  <g transform="translate(32 32) scale(1.32) translate(-32 -32)"
+     stroke="url(#arm)" stroke-linecap="round" fill="none"
+     filter="url(#glow)" mask="url(#mFade)">
+    <g stroke-width="2.3" opacity=".9">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+    <g transform="rotate(60 32 32)" stroke-width="2.1" opacity=".85">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+    <g transform="rotate(120 32 32)" stroke-width="2.0" opacity=".75">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+    <g transform="rotate(180 32 32)" stroke-width="1.9" opacity=".68">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+    <g transform="rotate(240 32 32)" stroke-width="1.6" opacity=".6">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+    <g transform="rotate(300 32 32)" stroke-width="1.9" opacity=".7">
+      <path d="M32,32 C36,28 41.5,27.5 45,29.6 C49.2,32.1 50.7,37.2 48.9,41.4
+               C46.7,46.7 40.6,49.9 34.8,49" />
+    </g>
+  </g>
+</svg>

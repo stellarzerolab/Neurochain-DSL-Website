@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Mobile: safe area + good zoom defaults -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NeuroChain DSL Snake (CPU + ONNX)</title>
+
+  <!-- Canonical (matches filename; if you use /snake route, update this) -->
+  <link rel="canonical" href="https://stellarzerolab.art/snake">
+
+  <!-- Favicons & PWA (full set so the logo shows everywhere) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- PNG-faviconit -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
+
+  <!-- Android / PWA -ikonit -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512.png">
+
+  <!-- iOS PWA -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NeuroChain Snake">
+	  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	  <!-- Safari pinned tab -->
+	  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0b0f14">
+
+  <!-- Windows / Edge -->
+  <meta name="msapplication-TileColor" content="#0b0f14">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Theme colors (dark/light) -->
+  <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+	  <!-- Open Graph / Twitter (~1200×630) -->
+	  <meta property="og:title" content="NeuroChain DSL Snake (CPU + ONNX)">
+	  <meta property="og:description" content="Real-time Snake demo controlled by the NeuroChain DSL — intent model on CPU via ONNX.">
+	  <meta property="og:type" content="website">
+	  <meta property="og:url" content="https://stellarzerolab.art/snake">
+	  <meta property="og:image" content="https://stellarzerolab.art/og-cover.png">
+	  <meta name="twitter:card" content="summary_large_image">
+	  <meta name="twitter:title" content="NeuroChain DSL Snake (CPU + ONNX)">
+	  <meta name="twitter:description" content="AI-controlled Snake using the NeuroChain DSL.">
+	  <meta name="twitter:image" content="https://stellarzerolab.art/og-cover.png">
+
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    body { background:#0b0f14; color:#e6eef7; margin:0; display:flex; flex-direction:column; align-items:center; gap:12px; }
+    header { width:min(900px, 95vw); padding:12px; display:flex; justify-content:space-between; align-items:center; }
+    .pill { background:#121a22; border:1px solid #1e2a36; padding:8px 12px; border-radius:999px; font-size:14px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    button, select { background:#12202d; color:#e6eef7; border:1px solid #2c3c4e; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    button:hover { filter:brightness(1.1); }
+    #canvasWrap { box-shadow: 0 10px 40px rgba(0,0,0,0.4); border-radius:16px; overflow:hidden; }
+    canvas { background:#0e1822; display:block; }
+    footer { opacity:0.8; font-size:12px; padding:10px; }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px; white-space:pre-wrap; background:#0e1520; border:1px solid #1b2840; color:#b3c8ff; padding:8px 10px; border-radius:10px; max-height:160px; overflow:auto; width:min(900px,95vw); }
+    .badge { padding:2px 8px; border-radius:8px; margin-left:6px; font-size:12px; border:1px solid #2c3c4e; }
+    .on  { background:#0e2a18; color:#9ff7c2; border-color:#1c4730; }
+    .off { background:#2a130e; color:#ffb49f; border-color:#5a2a1e; }
+
+    /* Navbar (kuten WebUI) */
+    .topbar{
+      position: sticky;
+      top: 10px;
+      z-index: 30;
+      width: min(1100px, 96vw);
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .topbar-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .topbar-left,
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .brand-left{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid #1e2a36;
+      background: rgba(18,26,34,.8);
+      color:#e6eef7;
+      text-decoration:none;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .brand-left:hover{ filter:brightness(1.06); text-decoration:none; }
+    .snake-logo{
+      width:22px; height:22px; display:block;
+      filter: drop-shadow(0 2px 8px rgba(125,211,252,.35));
+    }
+    .brand-home{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 6px;
+      border-radius:999px;
+      color:inherit;
+      text-decoration:none;
+    }
+    .brand-home:hover{ filter:brightness(1.06); text-decoration:none; }
+    .github-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid #1e2a36;
+      background: rgba(18,26,34,.85);
+      color:#e6eef7;
+      text-decoration:none;
+      font-size:14px;
+    }
+    .github-btn:hover{ filter:brightness(1.08); text-decoration:none; }
+    .github-icon{ width:16px; height:16px; display:block; }
+
+    .brand-logo{
+      width: 36px; height: 36px;
+      filter: drop-shadow(0 2px 8px rgba(125,211,252,.35));
+      transition: transform .15s ease, filter .15s ease;
+      display: block;
+    }
+    .brand-home:hover .brand-logo{
+      transform: scale(1.08);
+      filter: drop-shadow(0 3px 10px rgba(125,211,252,.45));
+    }
+    .stellar-label{
+      font-weight:700; color:#e6edf3; text-shadow:0 0 10px rgba(125,211,252,.12);
+      font-size:16px; letter-spacing:.3px; line-height:1;
+    }
+    .spinR { animation: spinR 18s linear infinite; transform-origin: 14px 14px; }
+    @keyframes spinR { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+    @media (prefers-reduced-motion: reduce) { .spinR { animation: none } }
+
+    /* --- Mobile fit fixes --- */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    #canvasWrap { width: min(432px, 92vw); margin: 0 auto; }
+    canvas { width: 100%; height: auto; }
+
+    @media (max-width: 560px){
+      .topbar-inner{ flex-wrap:wrap; justify-content:center; }
+      .topbar-left,
+      .topbar-right{ width:100%; justify-content:center; }
+      .stellar-label{ font-size:14px; }
+      .github-text{ display:none; }
+      header, .log { width: min(900px, 92vw) !important; }
+      .row[style*="min(900px,95vw)"] { width: min(900px, 92vw) !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="topbar" aria-label="Primary">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <a href="/snake" class="brand-left" aria-label="NeuroChain Snake">
+          <svg class="snake-logo" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7 C7 4,12 4,15 7 C17.5 9.5,17.5 14.5,15 17 C12.8 19.2,9 19.2,6.8 17 C5 15.2,5 12.2,6.8 10.4 C8.2 9,10.4 9,11.8 10.4" fill="none" stroke="#7dd3fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="15" cy="7" r="1.6" fill="#7dd3fc"/>
+            <circle cx="15.6" cy="6.7" r="0.35" fill="#0b0f14"/>
+          </svg>
+          <span>NeuroChain Snake</span>
+        </a>
+      </div>
+      <div class="topbar-right">
+        <a href="/" class="brand-home" aria-label="StellarZeroLab home">
+          <svg class="brand-logo" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <radialGradient id="coreR" cx="50%" cy="50%" r="55%">
+                <stop offset="0%"  stop-color="#dff7ff"/>
+                <stop offset="45%" stop-color="#8fe6ff"/>
+                <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+              </radialGradient>
+              <linearGradient id="armR" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stop-color="rgba(157,216,255,0)"/>
+                <stop offset="30%"  stop-color="#7dd3fc"/>
+                <stop offset="80%"  stop-color="rgba(167,139,250,.9)"/>
+                <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+              </linearGradient>
+              <filter id="glowR" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <radialGradient id="fadeR" cx="50%" cy="50%" r="56%">
+                <stop offset="60%" stop-color="white"/>
+                <stop offset="100%" stop-color="black"/>
+              </radialGradient>
+              <mask id="mFadeR" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                <rect width="28" height="28" fill="url(#fadeR)"/>
+              </mask>
+            </defs>
+
+            <circle cx="14" cy="14" r="7.4" fill="url(#coreR)" opacity=".55"/>
+            <g class="spinR" filter="url(#glowR)" mask="url(#mFadeR)" stroke-linecap="round" fill="none" stroke="url(#armR)">
+              <g stroke-width="1.4" opacity=".9">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+              <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
+                <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+              </g>
+            </g>
+          </svg>
+          <span class="stellar-label">StellarZeroLab</span>
+        </a>
+
+        <a href="https://github.com/stellarzerolab/Neurochain-DSL" class="github-btn" target="_blank" rel="noopener" aria-label="GitHub repository">
+          <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span class="github-text">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header>
+    <div class="row">
+      <div class="pill">NeuroChain DSL Snake — AI-controlled ⌁ CPU ONNX</div>
+      <div class="pill">Tick: <span id="tickRate">8</span> fps • AI: <span id="aiRate">2.5</span> Hz</div>
+      <div class="pill">Grid: <span id="gridSize">24×24</span> • Cell: <span id="cellSize">18</span>px</div>
+    </div>
+    <div class="row">
+      <label class="pill">Model:
+        <select id="modelSel">
+          <option value="intent" selected>intent (command classes)</option>
+          <option value="custom">custom policy (250 MB)</option>
+        </select>
+      </label>
+      <button id="btnToggle" class="badge off">AI: OFF</button>
+      <button id="btnReset">Reset</button>
+    </div>
+  </header>
+
+  <div id="canvasWrap">
+    <canvas id="game" width="432" height="432"></canvas>
+  </div>
+
+  <div class="row" style="width:min(900px,95vw); justify-content:space-between">
+    <div>Help: <b>R</b> = reset • <b>A</b> = toggle AI • arrow keys = manual control</div>
+    <div>API: <code>/api/analyze</code></div>
+  </div>
+
+  <div class="log" id="log"></div>
+  <footer>© NeuroChain DSL demo</footer>
+
+<script>
+(() => {
+  // ----- GAME PARAMS -----
+  const gridW = 24, gridH = 24, cell = 18;
+  const TICK_MS = 450;         // ~8 FPS
+  const AI_PERIOD_MS = 400;    // ~2.5 Hz
+  const AI_TIMEOUT_MS = 900;   // guard
+  const ctx = document.getElementById("game").getContext("2d");
+  document.getElementById("tickRate").textContent = Math.round(1000/TICK_MS);
+  document.getElementById("aiRate").textContent = (1000/AI_PERIOD_MS).toFixed(1);
+  document.getElementById("gridSize").textContent = `${gridW}×${gridH}`;
+  document.getElementById("cellSize").textContent = cell;
+
+  // ----- STATE -----
+  let snake, dir, food, aiEnabled=false, aiLastTs=0, model="intent";
+  const logEl = document.getElementById("log");
+  const modelSel = document.getElementById("modelSel");
+
+  // --- Log buffer: keep only ~2.5 KB ---
+  const MAX_LOG_CHARS = 2500;
+  function log(s) {
+    const atBottom = (logEl.scrollTop + logEl.clientHeight + 6) >= logEl.scrollHeight;
+
+    logEl.textContent += s;
+
+    const extra = logEl.textContent.length - MAX_LOG_CHARS;
+    if (extra > 0) {
+      // Prefer cutting at a newline to keep the output tidy
+      const cutAt = logEl.textContent.indexOf('\n', extra);
+      const start = cutAt >= 0 ? cutAt + 1 : (logEl.textContent.length - MAX_LOG_CHARS);
+      logEl.textContent = '[…] ' + logEl.textContent.slice(start);
+    }
+
+    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function wrap(x, max) { return (x + max) % max; }
+
+  function rndFood() {
+    while (true) {
+      const f = {x:Math.floor(Math.random()*gridW), y:Math.floor(Math.random()*gridH)};
+      if (!snake.some(s => s.x===f.x && s.y===f.y)) return f;
+    }
+  }
+
+  function reset() {
+    snake = [{x:Math.floor(gridW/2), y:Math.floor(gridH/2)}];
+    dir = {x:1, y:0};
+    food = rndFood();
+    paint();
+    log(`\n— reset —\n`);
+  }
+
+  function nextHead(d=dir) {
+    const head = snake[0];
+    return { x: wrap(head.x + d.x, gridW), y: wrap(head.y + d.y, gridH) };
+  }
+  function isOpposite(a, b) { return a.x === -b.x && a.y === -b.y; }
+  function isOccupied(pt) { return snake.some(s => s.x===pt.x && s.y===pt.y); }
+
+  // ----- RENDER -----
+  function paint() {
+    ctx.fillStyle = "#0e1822";
+    ctx.fillRect(0,0,gridW*cell,gridH*cell);
+
+    ctx.fillStyle = "#ffcc33";
+    ctx.fillRect(food.x*cell, food.y*cell, cell, cell);
+
+    ctx.fillStyle = "#5fd1ff";
+    snake.forEach((s) => ctx.fillRect(s.x*cell, s.y*cell, cell-1, cell-1));
+  }
+
+  // ----- GAME LOOP -----
+  let timer = setInterval(tick, TICK_MS);
+  async function tick() {
+    if (aiEnabled && (!aiLastTs || (performance.now() - aiLastTs) >= AI_PERIOD_MS)) {
+      aiLastTs = performance.now();
+      try {
+        const decision = await askAI();
+        if (decision) applyDecision(decision);
+      } catch (e) { log(`\nAI ERROR: ${e}\n`); }
+    }
+
+    const head = nextHead();
+    const eats = (head.x===food.x && head.y===food.y);
+    snake.unshift(head);
+    if (!eats) snake.pop(); else food = rndFood();
+
+    paint();
+  }
+
+  // ----- INPUT -----
+  const btnToggle = document.getElementById("btnToggle");
+  const btnReset = document.getElementById("btnReset");
+  btnToggle.onclick = () => toggleAI();
+  btnReset.onclick = () => reset();
+  modelSel.onchange = () => { model = modelSel.value; log(`\nmodel=${model}\n`); };
+
+  function setToggleUI() {
+    btnToggle.textContent = `AI: ${aiEnabled ? "ON" : "OFF"}`;
+    btnToggle.classList.remove("on","off");
+    btnToggle.classList.add(aiEnabled ? "on" : "off");
+  }
+  function toggleAI() { aiEnabled = !aiEnabled; setToggleUI(); log(`\nAI ${aiEnabled ? "ON" : "OFF"}\n`); }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "r" || e.key === "R") { reset(); }
+    else if (e.key === "a" || e.key === "A") { toggleAI(); }
+    else if (e.key === "ArrowUp")    setDir(0,-1);
+    else if (e.key === "ArrowDown")  setDir(0, 1);
+    else if (e.key === "ArrowLeft")  setDir(-1,0);
+    else if (e.key === "ArrowRight") setDir(1, 0);
+  });
+
+  function setDir(x,y) {
+    const nd = {x,y};
+    if (isOpposite(nd, dir) && snake.length>1) return;
+    dir = nd;
+  }
+
+  // ----- AI PROMPT BUILDERS -----
+  function buildIntentDSL() {
+    const dx = food.x - snake[0].x;
+    const dy = food.y - snake[0].y;
+    let phrase = "Go forward";
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      phrase = dx < 0 ? "Go left" : (dx > 0 ? "Go right" : phrase);
+    } else {
+      phrase = dy < 0 ? "Go up" : "Go down";
+    }
+    return (
+`set cls from AI: "${phrase}"
+if cls == "LeftCommand": neuro "LEFT"
+elif cls == "RightCommand": neuro "RIGHT"
+elif cls == "UpCommand": neuro "UP"
+elif cls == "DownCommand": neuro "DOWN"
+elif cls == "GoCommand": neuro "FORWARD"
+elif cls == "StopCommand": neuro "STOP"
+else: neuro "FORWARD"`);
+  }
+
+  function buildPolicyDSL() {
+    const head = snake[0];
+    const dx = food.x - head.x, dy = food.y - head.y;
+    return (
+`AI: "/opt/neurochain/models/policy/model.onnx"
+set decision from AI: "head=(${head.x},${head.y}); food=(${food.x},${food.y}); dx=${dx}; dy=${dy}; grid=${gridW}x${gridH}; actions=[LEFT,RIGHT,UP,DOWN,FORWARD,STOP]"
+if decision == "LEFT": neuro "LEFT"
+elif decision == "RIGHT": neuro "RIGHT"
+elif decision == "UP": neuro "UP"
+elif decision == "DOWN": neuro "DOWN"
+elif decision == "FORWARD": neuro "FORWARD"
+else: neuro "FORWARD"`);
+  }
+
+  // ----- AI CALL -----
+  async function askAI() {
+    const payload = {
+      model: model === "intent" ? "intent" : "",
+      code: model === "intent" ? buildIntentDSL() : buildPolicyDSL()
+    };
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort("timeout"), 900);
+    try {
+      const r = await fetch("/api/analyze", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload), signal: ctrl.signal
+      });
+      clearTimeout(to);
+      const j = await r.json();
+      if (!j.ok) { log(`\nAI fail: ${j.output}\n`); return null; }
+      const out = String(j.output||"").split("\n").map(s=>s.trim()).filter(Boolean).pop()||"";
+      log(`\nAI→ ${out}`);
+      return out;
+    } catch (e) {
+      clearTimeout(to);
+      log(`\nAI request error: ${e}\n`);
+      return null;
+    }
+  }
+
+  // ----- APPLY DECISION (with safety) -----
+  function applyDecision(decRaw) {
+    const dec = (decRaw || "").toUpperCase();
+    const maps = {
+      "LEFT":  {x:-1,y:0},
+      "RIGHT": {x: 1,y:0},
+      "UP":    {x: 0,y:-1},
+      "DOWN":  {x: 0,y:1}
+    };
+
+    if (dec in maps) {
+      const cand = maps[dec];
+      const nh = nextHead(cand);
+      if (isOccupied(nh)) {
+        const options = Object.values(maps).filter(o => !isOpposite(o, dir));
+        for (const o of options) {
+          const nh2 = nextHead(o);
+          if (!isOccupied(nh2)) { dir = o; return; }
+        }
+        console.log("⚠️ No safe move; using suggested direction anyway.");
+      } else {
+        if (!isOpposite(cand, dir)) dir = cand;
+        return;
+      }
+    }
+    // STOP / FORWARD / unknown → keep current direction
+  }
+
+  // ----- INIT -----
+  setToggleUI();
+  reset();
+})();
+</script>
+</body>
+</html>

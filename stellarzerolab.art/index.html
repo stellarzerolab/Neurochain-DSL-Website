@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>StellarZeroLab · NeuroChain DSL</title>
+  <meta name="description" content="StellarZeroLab — NeuroChain: a lightweight, fast, developer-friendly AI DSL and WebUI." />
+
+  <!-- Canonical (a clear base URL for search engines) -->
+  <link rel="canonical" href="https://stellarzerolab.art/">
+
+  <!-- Favicons & PWA -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- PNG favicons -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
+
+  <!-- Android / PWA icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512.png">
+
+  <!-- iOS PWA -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StellarZeroLab">
+	  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	
+	  <!-- Safari pinned tab -->
+	  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0b0f14">
+
+  <!-- Windows / Edge -->
+  <meta name="msapplication-TileColor" content="#0b0f14">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Theme colors -->
+  <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+  <!-- Social preview (OG + Twitter) -->
+  <meta property="og:title" content="StellarZeroLab · NeuroChain DSL">
+	  <meta property="og:description" content="StellarZeroLab — NeuroChain: a lightweight, fast, developer-friendly AI DSL and WebUI.">
+	  <meta property="og:type" content="website">
+	  <meta property="og:url" content="https://stellarzerolab.art/">
+	  <!-- Social preview image (recommended ~1200×630) -->
+	  <meta property="og:image" content="https://stellarzerolab.art/og-cover.png">
+	  <meta name="twitter:card" content="summary_large_image">
+	  <meta name="twitter:title" content="StellarZeroLab · NeuroChain DSL">
+	  <meta name="twitter:description" content="A lightweight and fast AI DSL — StellarZeroLab NeuroChain WebUI.">
+	  <meta name="twitter:image" content="https://stellarzerolab.art/og-cover.png">
+	
+	  <!-- Optional iOS splash screens -->
+	  <link rel="apple-touch-startup-image" href="/apple-splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (orientation: portrait)">
+	  <link rel="apple-touch-startup-image" href="/apple-splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (orientation: portrait)">
+
+  <!-- CSS / UI libraries -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root{ --bg:#070b12; --surface:#0c121c; --ink:#eaf2ff; --muted:#9fb3c8; --primary:#7dd3fc; --accent:#a78bfa; --success:#22c55e; --radius:20px; }
+    html,body{background:var(--bg);color:var(--ink);}
+    .glass{background:rgba(255,255,255,.05);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius)}
+    .soft{box-shadow:0 20px 50px rgba(0,0,0,.45)}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),#8bdcff);border:0;color:#04121e}
+    .btn-outline-light{border-color:#2a3a55}
+    .lead{color:var(--muted)}
+    .brand{letter-spacing:.3px}
+    .badge-dot{display:inline-flex;align-items:center;gap:.5ch}
+    .badge-dot::before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:currentColor}
+    .brand-logo{width:56px;height:56px;margin-right:.5rem;display:inline-block;filter:drop-shadow(0 2px 6px rgba(125,211,252,.45));}
+    @media (max-width:576px){.brand-logo{width:40px;height:40px}}
+    .hero{position:relative;overflow:hidden}
+    .nebula{position:absolute;inset:-20%;background:
+      radial-gradient(40% 30% at 20% 30%, rgba(124,58,237,.25), transparent 70%),
+      radial-gradient(35% 25% at 80% 20%, rgba(14,165,233,.25), transparent 70%),
+      radial-gradient(45% 35% at 60% 80%, rgba(59,130,246,.18), transparent 75%);
+      filter:blur(50px);opacity:.9}
+    .stars{position:absolute;inset:0}
+    .stars::before,.stars::after{content:"";position:absolute;inset:0;background:
+      radial-gradient(1px 1px at 10% 20%, #bfe4ff 70%, transparent),
+      radial-gradient(1px 1px at 30% 40%, #e6e1ff 70%, transparent),
+      radial-gradient(1px 1px at 70% 30%, #c7f3ff 70%, transparent),
+      radial-gradient(1px 1px at 85% 65%, #ffffff 70%, transparent),
+      radial-gradient(1px 1px at 55% 75%, #cde6ff 70%, transparent);
+      opacity:.8;animation:twinkle 5s infinite ease-in-out alternate}
+    .stars::after{filter:blur(.5px);opacity:.6;animation-duration:7s}
+    @keyframes twinkle{from{opacity:.4} to{opacity:.95}}
+    .feature{transition:.2s transform ease,.2s box-shadow ease}
+    .feature:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+    pre.code{background:#0a1220;border:1px solid #16233a;border-radius:16px;color:#cfe3ff}
+    .footer a{color:#9dd8ff}
+    .promo-link{display:block;position:relative;overflow:hidden;border-radius:16px;border:1px solid #16233a;background:linear-gradient(180deg,#0a1220,#0b1324);aspect-ratio:16/9;}
+    .promo-link img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease, opacity .25s ease;}
+    .promo-link:hover img{transform:scale(1.04)}
+    .promo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb3c8;text-align:center;padding:1rem;}
+
+    /* Full-bleed footer helper */
+    .footer-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
+      background:linear-gradient(180deg, transparent, rgba(255,255,255,.03));}
+  </style>
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark glass soft sticky-top">
+    <div class="container py-2">
+      <!-- Brand -->
+      <a class="navbar-brand d-flex align-items-center brand" href="/">
+        <svg class="brand-logo" viewBox="0 0 28 28" aria-hidden="true">
+          <defs>
+            <radialGradient id="core" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#dff7ff"/>
+              <stop offset="45%" stop-color="#8fe6ff"/>
+              <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+            </radialGradient>
+            <linearGradient id="arm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="rgba(157,216,255,0)"/>
+              <stop offset="30%"  stop-color="#7dd3fc"/>
+              <stop offset="80%"  stop-color="rgba(167,139,250,.9)"/>
+              <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+            </linearGradient>
+            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="fade" cx="50%" cy="50%" r="56%">
+              <stop offset="60%" stop-color="white"/>
+              <stop offset="100%" stop-color="black"/>
+            </radialGradient>
+            <mask id="mFade"><rect width="28" height="28" fill="url(#fade)"/></mask>
+          </defs>
+          <circle cx="14" cy="14" r="7.4" fill="url(#core)" opacity=".55"/>
+          <g class="spin" filter="url(#glow)" mask="url(#mFade)" stroke-linecap="round" fill="none" stroke="url(#arm)">
+            <g stroke-width="1.4" opacity=".9">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g stroke-width=".9" opacity=".45">
+              <path d="M6.5,10.5 C10,9 14,9 18,10.4" />
+              <path d="M7.8,18.8 C10.2,20 13.2,20.5 16.2,20.1" />
+              <path d="M20.8,9.8 C22,11 22.9,12.7 23.2,14.6" />
+            </g>
+          </g>
+          <style>
+            .spin{transform-origin:14px 14px;animation:spin 18s linear infinite}
+            @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+            @media (prefers-reduced-motion: reduce){.spin{animation:none}}
+          </style>
+        </svg>
+        <strong>StellarZeroLab</strong>
+      </a>
+
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+          <li class="nav-item"><a class="nav-link" href="#tech">Tech</a></li>
+          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
+          <li class="nav-item"><a class="btn btn-sm btn-outline-light" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+<header class="hero position-relative">
+  <div class="nebula"></div>
+  <div class="stars"></div>
+  <div class="container position-relative" style="z-index:2">
+    <div class="row align-items-center" style="min-height:65vh">
+      <div class="col-lg-7 py-5">
+        <h1 class="display-5 fw-bold mb-3">
+          <span class="text-info">NeuroChain DSL</span>
+          <i class="bi bi-terminal text-warning mx-2 icon-inline" aria-hidden="true"></i>
+          programming language with AI directly into code
+        </h1>
+        <p class="lead">
+          Simplicity is beautiful — NeuroChain DSL makes it real. AI operations are part of the code, not hidden layers.
+          Scripts and the CLI are the primary way to work, the WebUI is a light demo/test surface.
+          Run ONNX models on the CPU and keep full control.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <a href="/webui" class="btn btn-primary btn-lg"><i class="bi bi-play-circle"></i> Try the WebUI</a>
+          <a href="#demo" class="btn btn-outline-light btn-lg"><i class="bi bi-lightning"></i> See the demo</a>
+        </div>
+      </div>
+
+      <div class="col-lg-5 py-5">
+        <div class="glass soft p-3 p-md-4">
+          <pre class="code p-3 mb-3"><code># Sentiment
+AI: "models/distilbert-sst2/model.onnx"
+set mood from AI: "This product is great!"
+if mood == "Positive":
+    neuro "👍"
+</code></pre>
+          <div class="d-flex gap-2">
+            <a href="/webui" class="btn btn-outline-light w-50"><i class="bi bi-arrow-right"></i> Run example</a>
+            <button class="btn btn-outline-light w-50" id="copySnippet"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- optional helper to align the inline icon nicely -->
+<style>
+  .icon-inline { vertical-align: -0.05em; font-size: 0.95em; }
+</style>
+
+
+  <!-- FEATURES -->
+<section id="features" class="py-5">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold">Why <span class="text-info">NeuroChain DSL?</span></h2>
+      <p class="lead">
+        NeuroChain DSL unifies AI and logic into one language so you can build solutions smartly and simply.
+      </p>
+    </div>
+    <div class="row g-4">
+      
+      <!-- ONNX / CPU -->
+      <div class="col-md-6 col-lg-3">
+        <div class="glass p-4 feature h-100">
+          <div class="fs-3 mb-2"><i class="bi bi-cpu text-info"></i></div>
+          <h5>ONNX / CPU</h5>
+          <p class="lead">SST2, Toxic, FactCheck, Intent and MacroIntent models run on the CPU without heavy infrastructure.</p>
+        </div>
+      </div>
+
+      <!-- Local & controlled -->
+      <div class="col-md-6 col-lg-3">
+        <div class="glass p-4 feature h-100">
+          <div class="fs-3 mb-2"><i class="bi bi-shield-lock text-success"></i></div>
+          <h5>Local & Offline</h5>
+          <p class="lead">No external cloud layers and smaller attack surface, more control.</p>
+        </div>
+      </div>
+
+      <!-- AI in code -->
+<div class="col-md-6 col-lg-3">
+  <div class="glass p-4 feature h-100">
+    <div class="fs-3 mb-2"><i class="bi bi-terminal text-warning"></i></div>
+    <h5>AI in the Code</h5>
+    <p class="lead mb-2">
+      AI built-ins are part of the syntax, no hidden layers.
+    </p>
+    <p class="small mb-0">
+      <code># Intent</code><br>
+      <code>set cmd from AI: "Please stop."</code><br>
+      <code>if cmd == "StopCommand": neuro "Stopping process"</code>
+    </p>
+  </div>
+</div>
+
+
+      <!-- Lightweight -->
+      <div class="col-md-6 col-lg-3">
+        <div class="glass p-4 feature h-100">
+          <div class="fs-3 mb-2"><i class="bi bi-box-seam text-primary"></i></div>
+          <h5>Lightweight</h5>
+          <p class="lead">No heavy environments or unnecessary dependencies, just code and run.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- DEMO (WebUI: text left, image right) -->
+<section id="demo" class="py-5">
+  <div class="container">
+    <div class="row align-items-center g-4">
+
+      <!-- WebUI text -->
+      <div class="col-lg-6">
+        <div class="glass p-4 soft h-100">
+          <h4 class="mb-2"><i class="bi bi-terminal"></i> WebUI Demo</h4>
+          <p class="lead mb-3">
+            Enter NeuroChain DSL commands and run them from your browser. Pick one or many models and see output and logs instantly.
+          </p>
+          <ul class="list-unstyled small mb-0">
+            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Model picker: SST2 / Toxic / FactCheck / Intent / MacroIntent</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Multi-model runs (one request per selected model)</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Drag & Drop for <code>.nc</code> files</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Local API Base URL support (connect to your own server)</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Download output & keyboard shortcuts</li>
+          </ul>
+          <div class="mt-3">
+            <a href="/webui" class="btn btn-primary">
+              <i class="bi bi-cursor"></i> Open WebUI
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- WebUI image -->
+      <div class="col-lg-6">
+        <a href="/webui" class="promo-link glass soft" aria-label="WebUI — NeuroChain’s browser-based interface">
+          <img src="webui-promo.png" alt="NeuroChain WebUI preview"
+               onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
+               `<div class=&quot;promo-fallback&quot;>
+                  <div>
+                    <div class=&quot;display-6&quot;><i class=&quot;bi bi-terminal&quot;></i></div>
+                    <p class=&quot;mt-2 mb-0&quot;>WebUI — click to open</p>
+                    <div class=&quot;text-muted small&quot;>Add an image file named <code>webui-promo.png</code></div>
+                  </div>
+                </div>`)">
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- SNAKE DEMO -->
+  <section id="snake" class="py-4">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <!-- Snake text -->
+        <div class="col-lg-6">
+          <div class="glass p-4 soft h-100">
+            <h4 class="mb-2"><i class="bi bi-joystick"></i> Snake Demo</h4>
+            <p class="lead mb-3">NeuroChain drives Snake in real time: the intent model reads commands and the game reacts instantly.</p>
+            <ul class="list-unstyled small mb-0">
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> On-device ONNX models (CPU)</li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Commands: up / down / left / right / go / stop</li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Real-time decisions without the cloud</li>
+            </ul>
+            <div class="mt-3">
+              <a href="/snake" class="btn btn-primary"><i class="bi bi-joystick"></i> Play Snake</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Snake image -->
+        <div class="col-lg-6">
+          <a href="/snake" class="promo-link glass soft" aria-label="Snake demo — NeuroChain connected to a Snake game">
+            <img src="snake-promo.png" alt="NeuroChain Snake demo"
+                 onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
+                 `<div class=&quot;promo-fallback&quot;>
+                    <div>
+                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-joystick&quot;></i></div>
+                      <p class=&quot;mt-2 mb-0&quot;>Snake demo — click to play</p>
+                      <div class=&quot;text-muted small&quot;>Add an image file named <code>snake-promo.png</code></div>
+                    </div>
+                  </div>`)">
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- TECH -->
+<section id="tech" class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      
+      <!-- Architecture -->
+      <div class="col-lg-6">
+        <div class="glass p-4 h-100">
+          <h4 class="mb-2"><i class="bi bi-diagram-3"></i> Architecture</h4>
+<pre class="code p-3"><code>[Engine (NeuroChain)]
+Lexer → Parser → Interpreter → Inference (tract-onnx, CPU)
+# Local inference — no external cloud layers
+
+[API (Rust, Axum)]
+POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
+</code></pre>
+        </div>
+      </div>
+
+      <!-- Setup -->
+      <div class="col-lg-6 mt-lg-5">
+        <div class="glass p-4 h-90">
+          <h4 class="mb-2"><i class="bi bi-tools"></i> Setup</h4>
+          <ol class="mb-0">
+            <li><strong>Try it online:</strong> <a href="https://stellarzerolab.art/webui">stellarzerolab.art/webui</a> — no install.</li>
+            <li><strong>Locally:</strong> clone from GitHub: <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener">stellarzerolab/Neurochain-DSL</a></li>
+            <li><strong>Server:</strong> run an Axum-compatible backend if needed; WebUI can point to it.</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+  <!-- CTA (compact) -->
+<section class="py-4">
+  <div class="container">
+    <div class="glass p-3 p-md-4 text-center soft w-100 w-md-75 w-lg-50 mx-auto">
+      <h3 class="fw-bold mb-2 fs-4">Ready to build?</h3>
+      <p class="mb-3">Try the WebUI or add your own script and get moving right away.</p>
+      <div class="d-flex justify-content-center gap-2">
+        <a href="/webui" class="btn btn-primary"><i class="bi bi-rocket-takeoff"></i> Launch WebUI</a>
+        <a href="#features" class="btn btn-outline-light"><i class="bi bi-info-circle"></i> Learn more</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- FOOTER (full-bleed) -->
+  <footer class="footer footer-bleed py-4 mt-4 border-top border-secondary-subtle">
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <div class="small text">© <span id="year"></span> StellarZeroLab · NeuroChain DSL</div>
+      <div class="d-flex align-items-center gap-3 small">
+	        <a href="/webui"><i class="bi bi-terminal"></i> WebUI</a>
+	        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
+		        <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
+	      </div>
+	    </div>
+	  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const copySnippetBtn = document.getElementById('copySnippet');
+    if (copySnippetBtn) {
+      copySnippetBtn.addEventListener('click', () => {
+        const txt = `# Sentiment\nAI: "models/distilbert-sst2/model.onnx"\nset mood from AI: "This product is great!"\nif mood == "Positive":\n    neuro "👍"`;
+        navigator.clipboard.writeText(txt).then(() => {
+          copySnippetBtn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+          setTimeout(() => copySnippetBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy', 1500);
+        });
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
