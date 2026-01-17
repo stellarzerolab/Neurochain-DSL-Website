@@ -390,6 +390,59 @@
 		      })[id] || id;
 		    }
 
+		    const DEFAULT_EXAMPLE = `# Example
+set mood from AI: "This product is great!"
+if mood == "Positive": neuro "OK"`;
+
+		    const EXAMPLES = {
+		      sst2: `# Example (SST2)
+set mood from AI: "This product is great!"
+if mood == "Positive": neuro "OK"`,
+		      toxic: `# Example (Toxic)
+set label from AI: "You are awesome!"
+if label == "Not toxic": neuro "OK"`,
+		      factcheck: `# Example (FactCheck)
+set verdict from AI: "Cats are animals. | Cats are animals."
+if verdict == "entailment": neuro "OK"`,
+		      intent: `# Example (Intent)
+set cmd from AI: "Turn right"
+neuro cmd
+if cmd == "RightCommand": neuro "OK"`,
+		      macro: `# Example (MacroIntent)
+macro from AI: Show Ping 2 times`,
+		    };
+
+		    const MULTI_MODEL_EXAMPLE = `# Example (multi-model)
+# Runs once per selected model; outputs differ by model.
+# For a deterministic "OK", pick a single-model example.
+set result from AI: "The sky is blue. | The sky has a color."
+neuro result`;
+
+		    function isAutoInput(){
+		      return localStorage.getItem('nc.inputAuto') === '1';
+		    }
+
+		    function exampleForModels(models){
+		      if(!models || !models.length) return DEFAULT_EXAMPLE;
+		      if(models.length === 1) return EXAMPLES[models[0]] || DEFAULT_EXAMPLE;
+		      return MULTI_MODEL_EXAMPLE;
+		    }
+
+		    function setAutoExample(models){
+		      const next = exampleForModels(models);
+		      inputEl.value = next;
+		      localStorage.setItem('nc.input', next);
+		      localStorage.setItem('nc.inputAuto', '1');
+		      localStorage.setItem('nc.inputAutoModels', JSON.stringify(models || []));
+		    }
+
+		    function maybeUpdateExample(){
+		      const models = getSelectedModels();
+		      if(!inputEl.value.trim() || isAutoInput()){
+		        setAutoExample(models);
+		      }
+		    }
+
 		    function getSelectedModels(){
 		      return modelBoxes.filter(cb=>cb.checked).map(cb=>cb.value);
 		    }
@@ -425,6 +478,7 @@
 		      else localStorage.removeItem('nc.model');
 
 		      updateModelsSummary();
+		      maybeUpdateExample();
 		    }
 
 		    function updateModelsSummary(){
@@ -454,9 +508,12 @@
 		      setSelectedModels(loadStoredModels());
 		      updateModelsSummary();
 
-	      inputEl.value = localStorage.getItem('nc.input') || `# Example
-	set mood from AI: "This product is great!"
-	if mood == "Positive": neuro "OK"`;
+	      const storedInput = localStorage.getItem('nc.input');
+	      if(storedInput){
+	        inputEl.value = storedInput;
+	      }else{
+	        setAutoExample(getSelectedModels());
+	      }
 
 	      renderStatus('Ready','text-bg-dark');
 	      updateRuntimeUI();
@@ -473,7 +530,10 @@
 	    modelBoxes.forEach(cb => cb.addEventListener('change', storeSelectedModels));
 	    modelsAllBtn?.addEventListener('click', ()=>{ setSelectedModels(modelBoxes.map(b=>b.value)); storeSelectedModels(); });
 	    modelsNoneBtn?.addEventListener('click', ()=>{ setSelectedModels([]); storeSelectedModels(); });
-	    inputEl.addEventListener('input', ()=>localStorage.setItem('nc.input', inputEl.value));
+	    inputEl.addEventListener('input', ()=>{
+	      localStorage.setItem('nc.input', inputEl.value);
+	      localStorage.setItem('nc.inputAuto', '0');
+	    });
 
 	    function updateRuntimeUI(){
 	      const isApi = runtimeEl.value==='api';
@@ -614,6 +674,23 @@
 	      renderStatus(anyError ? 'Error' : 'Ready', anyError ? 'text-bg-danger' : 'text-bg-success');
 	    }
 
+	    const NO_OUTPUT_MESSAGES = new Set([
+	      '✅ Execution succeeded.',
+	      'Execution succeeded.',
+	      '✅ Suoritus onnistui.',
+	      'Suoritus onnistui.',
+	    ]);
+
+	    function humanizeOutput(raw, label){
+	      const out = (raw ?? '').toString();
+	      const trimmed = out.trim();
+	      if(NO_OUTPUT_MESSAGES.has(trimmed)){
+	        const target = label && label !== 'manual' ? label : 'this script';
+	        return `ℹ️ No output for ${target} (script ran successfully).`;
+	      }
+	      return out;
+	    }
+
 	    function renderOutputs(outputs){
 	      if(!outputs || !outputs.length){
 	        outputEl.textContent='';
@@ -621,8 +698,9 @@
 	      }
 
 	      if(outputs.length === 1){
-	        const data = outputs[0].data || {};
-	        const out = data.output || data.message || '';
+	        const {modelId, data} = outputs[0];
+	        const label = modelTitle(modelId);
+	        const out = humanizeOutput(data?.output || data?.message || '', label);
 	        outputEl.textContent = pretty(out);
 	        return;
 	      }
@@ -630,7 +708,7 @@
 	      const chunks = [];
 	      for(const {modelId, data} of outputs){
 	        const label = modelTitle(modelId);
-	        const out = (data?.output || data?.message || '').toString();
+	        const out = humanizeOutput(data?.output || data?.message || '', label);
 	        chunks.push(`=== ${label} ===\n${out}`.trimEnd());
 	      }
 	      outputEl.textContent = chunks.join('\n\n');
