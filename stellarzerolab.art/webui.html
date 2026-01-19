@@ -134,6 +134,10 @@
 	        background:rgba(14,21,32,.96);
 	        backdrop-filter:none;
 	      }
+	      .kbd{display:none;}
+	    }
+	    @media (max-width: 575.98px){
+	      .mobile-hide-shortcuts{display:none !important;}
 	    }
 	  </style>
 	</head>
@@ -310,7 +314,7 @@
                 <button id="format" class="btn btn-outline-light"><i class="bi bi-magic"></i> Format</button>
                 <button id="download" class="btn btn-outline-light"><i class="bi bi-download"></i> Download output</button>
               </div>
-              <div class="form-text muted mt-2">
+              <div class="form-text muted mt-2 mobile-hide-shortcuts">
                 Tips: Drop a <code>.nc</code> file onto the editor; <span class="kbd">Ctrl</span>+<span class="kbd">L</span> clears logs.
               </div>
             </div>
@@ -351,7 +355,7 @@
 
   <footer class="container my-5 text-center muted">
     <div class="small">© <span id="year"></span> NeuroChain DSL WebUI
-      <span class="d-block">Shortcuts: <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> Run · <span class="kbd">Ctrl</span>+<span class="kbd">L</span> Clear logs</span>
+      <span class="d-block mobile-hide-shortcuts">Shortcuts: <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> Run · <span class="kbd">Ctrl</span>+<span class="kbd">L</span> Clear logs</span>
     </div>
   </footer>
 
