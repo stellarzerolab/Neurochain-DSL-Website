@@ -2,9 +2,9 @@ use std::env;
 use std::fs;
 use std::io::{self, Write};
 
+use neurochain::banner;
 use neurochain::engine::{analyze, analyze_blocks};
 use neurochain::interpreter::Interpreter;
-use neurochain::banner;
 
 const NEUROCHAIN_VERSION: &str = env!("CARGO_PKG_VERSION");
 const NEUROCHAIN_ABOUT: &str =
