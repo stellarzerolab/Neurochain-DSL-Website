@@ -64,12 +64,14 @@ jobs:
 
 ## 4. Supply Chain Hardening (Later)
 - `cargo deny`: license policy, banned crates, duplicate-version checks. Recommendation: enable a baseline config (`licenses` + `bans` + `sources` + `duplicates`) for critical parts.
+- Release assets (recommended for public GitHub releases): publish `SHA256SUMS` and sign it (Sigstore/cosign keyless). This repo includes `.github/workflows/release_sha256sums.yml` to generate + upload `SHA256SUMS`, `SHA256SUMS.sig`, and `SHA256SUMS.pem` for a release. User-facing verification steps are in `docs/models.md`.
 
 ## Summary
 1) Editor: `rust-analyzer` warns while you type.  
 2) Dev: run `fmt + clippy + test + audit` before pushing.  
 3) CI: enforce the same gates to block vulnerable/warning builds.  
 4) Growing project: add `cargo deny` for supply-chain hardening.
+5) Public releases: ship signed `SHA256SUMS` for release assets.
 
 ```
 # Install tools (once):

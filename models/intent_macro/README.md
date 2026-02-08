@@ -6,6 +6,10 @@ Expected files after downloading the model pack:
 - `models/intent_macro/tokenizer.json`
 - `models/intent_macro/vocab.txt`
 
+## Verify the download (recommended)
+
+Model files are distributed via the model pack zip. To verify the zip checksum/signature, see `docs/models.md` ("Verify the download") and `models/manifest.json`.
+
 ## Licensing and provenance
 
 - Code license: Apache-2.0 (see repo root `LICENSE`).
