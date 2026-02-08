@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod banner;
 pub mod engine;
 pub mod interpreter;
 pub mod lexer;

@@ -18,6 +18,7 @@ use std::{
 };
 use tower_http::cors::{Any, CorsLayer};
 
+use neurochain::banner;
 use neurochain::engine;
 use neurochain::interpreter;
 
@@ -222,6 +223,8 @@ fn normalize(s: &str) -> String {
 
 #[tokio::main]
 async fn main() {
+    banner::print_banner();
+
     // Optional panic hook: more visible logs in journald.
     std::panic::set_hook(Box::new(|info| {
         eprintln!("PANIC: {info}");
