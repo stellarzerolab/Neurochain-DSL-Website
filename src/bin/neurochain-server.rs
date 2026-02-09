@@ -223,7 +223,7 @@ fn normalize(s: &str) -> String {
 
 #[tokio::main]
 async fn main() {
-    banner::print_banner();
+    banner::print_server_banner();
 
     // Optional panic hook: more visible logs in journald.
     std::panic::set_hook(Box::new(|info| {
