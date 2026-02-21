@@ -845,6 +845,50 @@ POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
     }
 
     (function () {
+      const hashLinks = Array.from(document.querySelectorAll('a[href^="#"]'))
+        .filter((link) => {
+          const href = link.getAttribute('href') || '';
+          return href.length > 1;
+        });
+
+      const cleanUrl = () => {
+        if (!window.location.hash) return;
+        const cleanPath = `${window.location.pathname}${window.location.search}`;
+        history.replaceState(null, document.title, cleanPath);
+      };
+
+      const scrollToHash = (hash, behavior) => {
+        let targetId = hash.slice(1);
+        try {
+          targetId = decodeURIComponent(targetId);
+        } catch (_) {
+          // Keep raw hash when decoding fails.
+        }
+        const target = document.getElementById(targetId);
+        if (!target) return false;
+        target.scrollIntoView({ behavior, block: 'start' });
+        return true;
+      };
+
+      hashLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          const hash = link.getAttribute('href');
+          if (!hash || hash.length <= 1) return;
+          if (!scrollToHash(hash, 'smooth')) return;
+          event.preventDefault();
+          cleanUrl();
+        });
+      });
+
+      if (window.location.hash.length > 1) {
+        const initialHash = window.location.hash;
+        if (scrollToHash(initialHash, 'auto')) {
+          requestAnimationFrame(() => requestAnimationFrame(cleanUrl));
+        }
+      }
+    })();
+
+    (function () {
       const progressFill = document.getElementById('scrollProgressFill');
       const sectionLinks = Array.from(document.querySelectorAll('.section-link'));
       const sectionMap = sectionLinks
