@@ -303,6 +303,12 @@
   let snake, dir, food, aiEnabled=false, aiLastTs=0, model="intent";
   const logEl = document.getElementById("log");
   const modelSel = document.getElementById("modelSel");
+  const ABS_MOVES = {
+    LEFT:  {x:-1, y: 0},
+    RIGHT: {x: 1, y: 0},
+    UP:    {x: 0, y:-1},
+    DOWN:  {x: 0, y: 1}
+  };
 
   // --- Log buffer: keep only ~2.5 KB ---
   const MAX_LOG_CHARS = 2500;
@@ -323,6 +329,125 @@
   }
 
   function wrap(x, max) { return (x + max) % max; }
+
+  function dirNameFromVector(v) {
+    if (v.x === -1 && v.y === 0) return "LEFT";
+    if (v.x === 1 && v.y === 0) return "RIGHT";
+    if (v.x === 0 && v.y === -1) return "UP";
+    if (v.x === 0 && v.y === 1) return "DOWN";
+    return "UNKNOWN";
+  }
+
+  function turnLeftName(name) {
+    if (name === "UP") return "LEFT";
+    if (name === "LEFT") return "DOWN";
+    if (name === "DOWN") return "RIGHT";
+    if (name === "RIGHT") return "UP";
+    return "UNKNOWN";
+  }
+
+  function turnRightName(name) {
+    if (name === "UP") return "RIGHT";
+    if (name === "RIGHT") return "DOWN";
+    if (name === "DOWN") return "LEFT";
+    if (name === "LEFT") return "UP";
+    return "UNKNOWN";
+  }
+
+  function shortestWrapDelta(from, to, size) {
+    const raw = to - from;
+    if (raw === 0) return 0;
+    const wrapped = raw > 0 ? raw - size : raw + size;
+    if (Math.abs(wrapped) < Math.abs(raw)) return wrapped;
+    if (Math.abs(raw) < Math.abs(wrapped)) return raw;
+    // Exact tie (even-sized grid): keep the non-wrap direction for determinism.
+    return raw;
+  }
+
+  function dirFromSignedDelta(delta, negName, posName) {
+    if (delta < 0) return negName;
+    if (delta > 0) return posName;
+    return "NONE";
+  }
+
+  function canTakeAbsMove(name) {
+    const cand = ABS_MOVES[name];
+    if (!cand) return 0;
+    if (isOpposite(cand, dir) && snake.length > 1) return 0;
+    return isOccupied(nextHead(cand)) ? 0 : 1;
+  }
+
+  // JS computes observations only; NeuroChain DSL uses them to select the move.
+  function computeObservations() {
+    const head = snake[0];
+    const heading = dirNameFromVector(dir);
+    const dx = shortestWrapDelta(head.x, food.x, gridW);
+    const dy = shortestWrapDelta(head.y, food.y, gridH);
+
+    const obs = {
+      heading,
+      foodXDir: dirFromSignedDelta(dx, "LEFT", "RIGHT"),
+      foodYDir: dirFromSignedDelta(dy, "UP", "DOWN"),
+      foodXSteps: Math.abs(dx),
+      foodYSteps: Math.abs(dy),
+      canUp: canTakeAbsMove("UP"),
+      canDown: canTakeAbsMove("DOWN"),
+      canLeft: canTakeAbsMove("LEFT"),
+      canRight: canTakeAbsMove("RIGHT")
+    };
+
+    obs.frontDir = heading;
+    obs.leftDir = turnLeftName(heading);
+    obs.rightDir = turnRightName(heading);
+    obs.canForward = canTakeAbsMove(obs.frontDir);
+    obs.canTurnLeft = canTakeAbsMove(obs.leftDir);
+    obs.canTurnRight = canTakeAbsMove(obs.rightDir);
+    obs.intentHint = buildIntentHint(obs);
+    return obs;
+  }
+
+  // Intent model remains one signal; the DSL script below applies the policy.
+  function buildIntentHint(obs) {
+    if (obs.foodXSteps === 0 && obs.foodYSteps === 0) return "Go forward";
+    if (obs.foodXSteps === 0 && obs.foodYDir !== "NONE") return `Go ${obs.foodYDir.toLowerCase()}`;
+    if (obs.foodYSteps === 0 && obs.foodXDir !== "NONE") return `Go ${obs.foodXDir.toLowerCase()}`;
+
+    if (obs.foodXSteps > obs.foodYSteps && obs.foodXDir !== "NONE") {
+      return `Go ${obs.foodXDir.toLowerCase()}`;
+    }
+    if (obs.foodYSteps > obs.foodXSteps && obs.foodYDir !== "NONE") {
+      return `Go ${obs.foodYDir.toLowerCase()}`;
+    }
+
+    if ((obs.heading === "LEFT" || obs.heading === "RIGHT") && obs.foodXDir !== "NONE") {
+      return `Go ${obs.foodXDir.toLowerCase()}`;
+    }
+    if (obs.foodYDir !== "NONE") return `Go ${obs.foodYDir.toLowerCase()}`;
+    if (obs.foodXDir !== "NONE") return `Go ${obs.foodXDir.toLowerCase()}`;
+    return "Go forward";
+  }
+
+  function shortDir(name) {
+    if (name === "LEFT") return "L";
+    if (name === "RIGHT") return "R";
+    if (name === "UP") return "U";
+    if (name === "DOWN") return "D";
+    if (name === "NONE") return "-";
+    return "?";
+  }
+
+  function logDecision(obs, decision, applied) {
+    const aiIntent = decision.aiIntent || "n/a";
+    const dslRule = decision.dslRule || "n/a";
+    const requested = (decision.move || "NONE").toUpperCase();
+    const appliedMove = applied?.applied || dirNameFromVector(dir);
+    const jsRule = applied?.jsRule || "n/a";
+    const fx = `${shortDir(obs.foodXDir)}${obs.foodXSteps}`;
+    const fy = `${shortDir(obs.foodYDir)}${obs.foodYSteps}`;
+    const can = `U${obs.canUp}D${obs.canDown}L${obs.canLeft}R${obs.canRight}`;
+
+    log(`\nAI=${aiIntent} | DSL=${dslRule} | Req=${requested} | Applied=${appliedMove} | JS=${jsRule} | h=${obs.heading} fx=${fx} fy=${fy} | can=${can}`);
+  }
 
   function rndFood() {
     while (true) {
@@ -364,8 +489,12 @@
     if (aiEnabled && (!aiLastTs || (performance.now() - aiLastTs) >= AI_PERIOD_MS)) {
       aiLastTs = performance.now();
       try {
-        const decision = await askAI();
-        if (decision) applyDecision(decision);
+        const observations = computeObservations();
+        const decision = await askAI(observations);
+        if (decision) {
+          const applied = applyDecision(decision.move);
+          logDecision(observations, decision, applied);
+        }
       } catch (e) { log(`\nAI ERROR: ${e}\n`); }
     }
 
@@ -407,24 +536,159 @@
   }
 
   // ----- AI PROMPT BUILDERS -----
-  function buildIntentDSL() {
-    const dx = food.x - snake[0].x;
-    const dy = food.y - snake[0].y;
-    let phrase = "Go forward";
-    if (Math.abs(dx) >= Math.abs(dy)) {
-      phrase = dx < 0 ? "Go left" : (dx > 0 ? "Go right" : phrase);
-    } else {
-      phrase = dy < 0 ? "Go up" : "Go down";
-    }
+  function buildIntentDSL(obs) {
     return (
-`set cls from AI: "${phrase}"
-if cls == "LeftCommand": neuro "LEFT"
-elif cls == "RightCommand": neuro "RIGHT"
-elif cls == "UpCommand": neuro "UP"
-elif cls == "DownCommand": neuro "DOWN"
-elif cls == "GoCommand": neuro "FORWARD"
-elif cls == "StopCommand": neuro "STOP"
-else: neuro "FORWARD"`);
+`# Snake policy (NeuroChain DSL)
+# JS sends observations only; this script combines AI intent + deterministic rules.
+set heading = "${obs.heading}"
+set food_x_dir = "${obs.foodXDir}"
+set food_y_dir = "${obs.foodYDir}"
+set food_x_steps = ${obs.foodXSteps}
+set food_y_steps = ${obs.foodYSteps}
+
+set can_up = ${obs.canUp}
+set can_down = ${obs.canDown}
+set can_left = ${obs.canLeft}
+set can_right = ${obs.canRight}
+
+set front_dir = "${obs.frontDir}"
+set left_dir = "${obs.leftDir}"
+set right_dir = "${obs.rightDir}"
+set can_forward = ${obs.canForward}
+set can_turn_left = ${obs.canTurnLeft}
+set can_turn_right = ${obs.canTurnRight}
+
+# Intent hint is only one signal.
+set cls from AI: "${obs.intentHint}"
+
+set ai_dir = "FORWARD"
+if cls == "LeftCommand":
+    set ai_dir = "LEFT"
+elif cls == "RightCommand":
+    set ai_dir = "RIGHT"
+elif cls == "UpCommand":
+    set ai_dir = "UP"
+elif cls == "DownCommand":
+    set ai_dir = "DOWN"
+elif cls == "GoCommand":
+    set ai_dir = "FORWARD"
+elif cls == "StopCommand":
+    set ai_dir = "STOP"
+
+set goal_primary = "FORWARD"
+set goal_secondary = "FORWARD"
+
+if food_x_steps == 0 and food_y_steps == 0:
+    set goal_primary = "FORWARD"
+    set goal_secondary = "FORWARD"
+elif food_x_steps == 0:
+    set goal_primary = food_y_dir
+    set goal_secondary = "FORWARD"
+elif food_y_steps == 0:
+    set goal_primary = food_x_dir
+    set goal_secondary = "FORWARD"
+elif food_x_steps > food_y_steps:
+    set goal_primary = food_x_dir
+    set goal_secondary = food_y_dir
+elif food_y_steps > food_x_steps:
+    set goal_primary = food_y_dir
+    set goal_secondary = food_x_dir
+elif heading == "LEFT" or heading == "RIGHT":
+    set goal_primary = food_x_dir
+    set goal_secondary = food_y_dir
+else:
+    set goal_primary = food_y_dir
+    set goal_secondary = food_x_dir
+
+set move = "FORWARD"
+set dsl_rule = "keep_forward"
+
+# Strong row/column finish rules first (reduces circling near the food).
+if food_y_steps == 0 and food_x_dir == "LEFT" and can_left == 1:
+    set move = "LEFT"
+    set dsl_rule = "same_row_target"
+elif food_y_steps == 0 and food_x_dir == "RIGHT" and can_right == 1:
+    set move = "RIGHT"
+    set dsl_rule = "same_row_target"
+elif food_x_steps == 0 and food_y_dir == "UP" and can_up == 1:
+    set move = "UP"
+    set dsl_rule = "same_col_target"
+elif food_x_steps == 0 and food_y_dir == "DOWN" and can_down == 1:
+    set move = "DOWN"
+    set dsl_rule = "same_col_target"
+
+# If the AI suggestion is legal, accept it.
+elif ai_dir == "LEFT" and can_left == 1:
+    set move = "LEFT"
+    set dsl_rule = "ai_accept"
+elif ai_dir == "RIGHT" and can_right == 1:
+    set move = "RIGHT"
+    set dsl_rule = "ai_accept"
+elif ai_dir == "UP" and can_up == 1:
+    set move = "UP"
+    set dsl_rule = "ai_accept"
+elif ai_dir == "DOWN" and can_down == 1:
+    set move = "DOWN"
+    set dsl_rule = "ai_accept"
+elif ai_dir == "STOP":
+    set move = "STOP"
+    set dsl_rule = "ai_stop"
+
+# Deterministic target chasing (wrap-aware distances are precomputed in JS observations).
+elif goal_primary == "LEFT" and can_left == 1:
+    set move = "LEFT"
+    set dsl_rule = "goal_primary"
+elif goal_primary == "RIGHT" and can_right == 1:
+    set move = "RIGHT"
+    set dsl_rule = "goal_primary"
+elif goal_primary == "UP" and can_up == 1:
+    set move = "UP"
+    set dsl_rule = "goal_primary"
+elif goal_primary == "DOWN" and can_down == 1:
+    set move = "DOWN"
+    set dsl_rule = "goal_primary"
+elif goal_secondary == "LEFT" and can_left == 1:
+    set move = "LEFT"
+    set dsl_rule = "goal_secondary"
+elif goal_secondary == "RIGHT" and can_right == 1:
+    set move = "RIGHT"
+    set dsl_rule = "goal_secondary"
+elif goal_secondary == "UP" and can_up == 1:
+    set move = "UP"
+    set dsl_rule = "goal_secondary"
+elif goal_secondary == "DOWN" and can_down == 1:
+    set move = "DOWN"
+    set dsl_rule = "goal_secondary"
+
+# Orientation-aware fallback before absolute fallback.
+elif can_forward == 1:
+    set move = "FORWARD"
+    set dsl_rule = "keep_forward"
+elif can_turn_left == 1:
+    set move = left_dir
+    set dsl_rule = "fallback_turn_left"
+elif can_turn_right == 1:
+    set move = right_dir
+    set dsl_rule = "fallback_turn_right"
+elif can_up == 1:
+    set move = "UP"
+    set dsl_rule = "fallback_abs"
+elif can_down == 1:
+    set move = "DOWN"
+    set dsl_rule = "fallback_abs"
+elif can_left == 1:
+    set move = "LEFT"
+    set dsl_rule = "fallback_abs"
+elif can_right == 1:
+    set move = "RIGHT"
+    set dsl_rule = "fallback_abs"
+else:
+    set move = "STOP"
+    set dsl_rule = "no_legal_move"
+
+neuro "AI_INTENT=" + cls
+neuro "DSL_RULE=" + dsl_rule
+neuro "MOVE=" + move`);
   }
 
   function buildPolicyDSL() {
@@ -433,22 +697,55 @@ else: neuro "FORWARD"`);
     return (
 `AI: "/opt/neurochain/models/policy/model.onnx"
 set decision from AI: "head=(${head.x},${head.y}); food=(${food.x},${food.y}); dx=${dx}; dy=${dy}; grid=${gridW}x${gridH}; actions=[LEFT,RIGHT,UP,DOWN,FORWARD,STOP]"
-if decision == "LEFT": neuro "LEFT"
-elif decision == "RIGHT": neuro "RIGHT"
-elif decision == "UP": neuro "UP"
-elif decision == "DOWN": neuro "DOWN"
-elif decision == "FORWARD": neuro "FORWARD"
-else: neuro "FORWARD"`);
+set move = "FORWARD"
+if decision == "LEFT":
+    set move = "LEFT"
+elif decision == "RIGHT":
+    set move = "RIGHT"
+elif decision == "UP":
+    set move = "UP"
+elif decision == "DOWN":
+    set move = "DOWN"
+elif decision == "FORWARD":
+    set move = "FORWARD"
+elif decision == "STOP":
+    set move = "STOP"
+neuro "AI_INTENT=PolicyModel"
+neuro "DSL_RULE=policy_model"
+neuro "MOVE=" + move`);
   }
 
   // ----- AI CALL -----
-  async function askAI() {
+  function parseDecisionOutput(rawOutput) {
+    const lines = String(rawOutput || "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const parsed = {
+      move: "",
+      aiIntent: "",
+      dslRule: "",
+      lines
+    };
+
+    for (const line of lines) {
+      if (line.startsWith("AI_INTENT=")) parsed.aiIntent = line.slice("AI_INTENT=".length).trim();
+      else if (line.startsWith("DSL_RULE=")) parsed.dslRule = line.slice("DSL_RULE=".length).trim();
+      else if (line.startsWith("MOVE=")) parsed.move = line.slice("MOVE=".length).trim();
+    }
+
+    if (!parsed.move && lines.length) parsed.move = lines[lines.length - 1];
+    return parsed;
+  }
+
+  async function askAI(observations) {
     const payload = {
       model: model === "intent" ? "intent" : "",
-      code: model === "intent" ? buildIntentDSL() : buildPolicyDSL()
+      code: model === "intent" ? buildIntentDSL(observations) : buildPolicyDSL()
     };
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort("timeout"), 900);
+    const to = setTimeout(() => ctrl.abort("timeout"), AI_TIMEOUT_MS);
     try {
       const r = await fetch("/api/analyze", {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -457,9 +754,7 @@ else: neuro "FORWARD"`);
       clearTimeout(to);
       const j = await r.json();
       if (!j.ok) { log(`\nAI fail: ${j.output}\n`); return null; }
-      const out = String(j.output||"").split("\n").map(s=>s.trim()).filter(Boolean).pop()||"";
-      log(`\nAI→ ${out}`);
-      return out;
+      return parseDecisionOutput(j.output);
     } catch (e) {
       clearTimeout(to);
       log(`\nAI request error: ${e}\n`);
@@ -470,29 +765,32 @@ else: neuro "FORWARD"`);
   // ----- APPLY DECISION (with safety) -----
   function applyDecision(decRaw) {
     const dec = (decRaw || "").toUpperCase();
-    const maps = {
-      "LEFT":  {x:-1,y:0},
-      "RIGHT": {x: 1,y:0},
-      "UP":    {x: 0,y:-1},
-      "DOWN":  {x: 0,y:1}
-    };
-
-    if (dec in maps) {
-      const cand = maps[dec];
+    if (dec in ABS_MOVES) {
+      const cand = ABS_MOVES[dec];
       const nh = nextHead(cand);
       if (isOccupied(nh)) {
-        const options = Object.values(maps).filter(o => !isOpposite(o, dir));
+        const options = Object.values(ABS_MOVES).filter(o => !isOpposite(o, dir));
         for (const o of options) {
           const nh2 = nextHead(o);
-          if (!isOccupied(nh2)) { dir = o; return; }
+          if (!isOccupied(nh2)) {
+            dir = o;
+            return { applied: dirNameFromVector(dir), jsRule: "collision_fallback" };
+          }
         }
         console.log("⚠️ No safe move; using suggested direction anyway.");
+        return { applied: dirNameFromVector(dir), jsRule: "no_safe_fallback_keep" };
       } else {
-        if (!isOpposite(cand, dir)) dir = cand;
-        return;
+        if (!isOpposite(cand, dir)) {
+          dir = cand;
+          return { applied: dirNameFromVector(dir), jsRule: "accept" };
+        }
+        return { applied: dirNameFromVector(dir), jsRule: "reverse_block_keep" };
       }
     }
     // STOP / FORWARD / unknown → keep current direction
+    if (dec === "STOP") return { applied: dirNameFromVector(dir), jsRule: "stop_keep" };
+    if (dec === "FORWARD" || dec === "") return { applied: dirNameFromVector(dir), jsRule: "forward_keep" };
+    return { applied: dirNameFromVector(dir), jsRule: "unknown_keep" };
   }
 
   // ----- INIT -----
