@@ -31,3 +31,42 @@ Thumbs.db
 # ------------------------------------------------------------
 stellarzerolab.art/.user.ini
 stellarzerolab.art/.well-known/acme-challenge/
+
+# ------------------------------------------------------------
+# Local/private example datasets and Stellar/Soroban test scripts
+# (kept locally during development; not for this repo by default)
+# ------------------------------------------------------------
+examples/_private/
+examples/golden_path_model_agnostic.nc
+examples/golden_path_model_agnostic_blocked.nc
+examples/intent_stellar_*.nc
+examples/intent_stellar_*.json
+examples/multi_model_if_payment.nc
+examples/soroban_*.nc
+examples/stellar_*.nc
+
+# ------------------------------------------------------------
+# Local/experimental tests (not tracked in this repo by default)
+# ------------------------------------------------------------
+tests/actions.rs
+tests/flow_cli.rs
+tests/intent_macro_golden2.rs
+tests/intent_stellar_*.rs
+tests/intent_stellar_server_analyze.rs
+tests/stellar_repl.rs
+tests/stellar_script.rs
+
+# ------------------------------------------------------------
+# Local/experimental Stellar helper binaries (not tracked by default)
+# ------------------------------------------------------------
+src/bin/eval-intent-stellar.rs
+src/bin/neurochain-stellar.rs
+src/bin/txrep-to-action.rs
+src/bin/txrep-to-jsonl.rs
+
+# ------------------------------------------------------------
+# Local/experimental Stellar core modules (not tracked by default)
+# ------------------------------------------------------------
+src/actions.rs
+src/help_text.rs
+src/intent_stellar.rs

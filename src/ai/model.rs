@@ -19,6 +19,7 @@ pub enum ModelKind {
     Toxic,
     FactCheck,
     Intent,
+    IntentStellar,
     MacroIntent,
     Unknown,
 }
@@ -42,6 +43,8 @@ impl AIModel {
         /* Model type (heuristic from file path) */
         let model_kind = if model_path.contains("intent_macro") {
             ModelKind::MacroIntent
+        } else if model_path.contains("intent_stellar") {
+            ModelKind::IntentStellar
         } else if model_path.contains("sst2") {
             ModelKind::SST2
         } else if model_path.contains("toxic") {
@@ -118,6 +121,19 @@ impl AIModel {
                 "GoCommand",
                 "StopCommand",
                 "OtherCommand",
+            ],
+            // IntentStellar here is classifier label mapping only.
+            // Stellar planning/policy logic lives outside this generic AI loader module.
+            ModelKind::IntentStellar => &[
+                "BalanceQuery",
+                "CreateAccount",
+                "ChangeTrust",
+                "TransferXLM",
+                "TransferAsset",
+                "FundTestnet",
+                "TxStatus",
+                "ContractInvoke",
+                "Unknown",
             ],
             ModelKind::MacroIntent => &[
                 "Loop", "Branch", "Arith", "Concat", "RoleFlag", "AIBridge", "DocPrint", "SetVar",

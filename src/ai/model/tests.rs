@@ -67,3 +67,28 @@ fn test_intent_model_loading() -> Result<()> {
     assert!(result.ends_with("Command") || result == "OtherCommand");
     Ok(())
 }
+
+#[test]
+fn test_intent_stellar_model_loading() -> Result<()> {
+    let model_path = "models/intent_stellar/model.onnx";
+    if should_skip(model_path) {
+        return Ok(());
+    }
+
+    let model = AIModel::new(model_path)?;
+    let result = model.predict("Send 5 XLM to GABC...")?;
+    println!("IntentStellar-tulos: {}", result);
+    assert!([
+        "BalanceQuery",
+        "CreateAccount",
+        "ChangeTrust",
+        "TransferXLM",
+        "TransferAsset",
+        "FundTestnet",
+        "TxStatus",
+        "ContractInvoke",
+        "Unknown",
+    ]
+    .contains(&result.as_str()));
+    Ok(())
+}

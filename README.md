@@ -15,6 +15,13 @@ NeuroChain is an **offline**, **deterministic** DSL that combines:
 >
 > If you are looking for “just the DSL engine”, it's still here — this repo simply also ships the real integration we run on our server.
 
+## Stellar Integration Status (Incremental Rollout)
+
+Stellar intent integration is under active development, and public pieces are being introduced incrementally.
+
+- Some public code paths, model labels, binaries, and tests may appear before the full end-user flow is documented.
+- Some integration tests, datasets, and policy assets remain private while the interface and safety rules are still stabilizing.
+
 NeuroChain has two binaries:
 
 - `neurochain` — CLI interpreter (run scripts + interactive mode)
