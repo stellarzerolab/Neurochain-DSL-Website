@@ -135,6 +135,7 @@ Checklist:
 ## Verify the download (recommended)
 
 The fetch scripts verify the downloaded zip's SHA256 against `models/manifest.json` when `models_zip_sha256` is set.
+If the release also includes `SHA256SUMS` + `SHA256SUMS.sig` + `SHA256SUMS.pem` and `cosign` is installed, the scripts also verify the signed checksums automatically.
 
 For manual verification, download these release assets into the **same folder**:
 

@@ -25,11 +25,13 @@ The `models/manifest.json` file contains the URL + SHA256 for the model pack.
 ## Verify the download (recommended)
 
 - The expected zip SHA256 is in `models/manifest.json` (`models_zip_sha256`).
+- The fetch scripts verify this SHA256 automatically.
+- If `cosign` is installed and release assets include `SHA256SUMS` + `SHA256SUMS.sig` + `SHA256SUMS.pem`, the fetch scripts also verify signed checksums automatically.
 - If you download manually from GitHub Releases, compute SHA256 and compare it to the release page / `SHA256SUMS` (if published).
 - If the release includes `SHA256SUMS.sig` + `SHA256SUMS.pem`, you can also verify the signed checksums with cosign (recommended).
 - Commands and maintainer guidance: see `docs/models.md` ("Verify the download").
 
-Fastest option: download the model pack from the release page and extract the zip, then copy the `models/` folder into the repo root (same level as `Cargo.toml`), replacing the existing `models/` folder.
+Another option is to download the model pack from the release page and extract the zip, then copy the `models/` folder into the repo root (same level as `Cargo.toml`), replacing the existing `models/` folder.
 Release: https://github.com/stellarzerolab/Neurochain-DSL/releases/tag/v0.1.0
 
 After downloading and extracting, you should have folders like:

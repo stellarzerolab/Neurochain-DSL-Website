@@ -69,43 +69,39 @@ macro from AI: Show Ping 3 times
 
 ## Quickstart
 
-NeuroChain loads ONNX models from `models/` by default (no internet required). See `docs/models.md`.
-
-### 1) Run per-model examples (SST2 / Toxic / FactCheck / Intent)
+Start here:
 
 ```bash
-cargo run --release --bin neurochain -- examples/distilbert-sst2check.nc
-cargo run --release --bin neurochain -- examples/toxiccheck.nc
-cargo run --release --bin neurochain -- examples/factcheck.nc
-cargo run --release --bin neurochain -- examples/intentcheck.nc
-```
-
-### 2) Run the MacroIntent suite (macro → DSL → run)
-
-```bash
-cargo run --release --bin neurochain -- examples/macro_test.nc
-```
-
-More macro regressions:
-
-```bash
-cargo run --release --bin neurochain -- examples/macro_test_edge.nc
-cargo run --release --bin neurochain -- examples/macro_test_robust.nc
-cargo run --release --bin neurochain -- examples/macro_test_semantics.nc
-cargo run --release --bin neurochain -- examples/macro_test_multimodel.nc
-cargo run --release --bin neurochain -- examples/macro_test_random.nc
-```
-
-### 3) Run the CLI (interactive)
-
-```bash
+git clone https://github.com/stellarzerolab/Neurochain-DSL.git
+cd Neurochain-DSL
+bash scripts/fetch_models.sh
 cargo run --release --bin neurochain
 ```
 
-In the interactive CLI, you can type: `help`, `about`, `version`, `exit`.
-To see command-line flags, run: `cargo run --release --bin neurochain -- --help`.
+What this does:
 
-### 4) Start the REST server
+1. Clones the repository.
+2. Downloads the model pack.
+3. Verifies model archive integrity (manifest SHA256, and signed `SHA256SUMS` if `cosign` is available).
+4. Starts the NeuroChain CLI in interactive mode.
+
+In the interactive CLI, you can type `help`, `about`, `version`, `exit`.
+
+Windows PowerShell for model download:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/fetch_models.ps1
+```
+
+### Next commands (optional)
+
+Run one model example:
+
+```bash
+cargo run --release --bin neurochain -- examples/distilbert-sst2check.nc
+```
+
+Run the REST server:
 
 ```bash
 cargo run --release --bin neurochain-server
@@ -113,7 +109,7 @@ cargo run --release --bin neurochain-server
 
 If you expose `/api/analyze` publicly, set `NC_API_KEY` and require clients/proxy to send `X-API-Key: ...` (or `Authorization: Bearer ...`).
 
-### 5) Run the same gates as CI (recommended before pushing)
+### Quality checks (recommended before pushing)
 
 ```bash
 cargo fmt --check

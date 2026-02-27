@@ -26,33 +26,51 @@ fi
 
 tmp_dir="$(mktemp -d)"
 zip_path="${tmp_dir}/neurochain-models.zip"
+sha256sums_path="${tmp_dir}/SHA256SUMS"
+sha256sig_path="${tmp_dir}/SHA256SUMS.sig"
+sha256pem_path="${tmp_dir}/SHA256SUMS.pem"
 
 cleanup() {
   rm -rf "${tmp_dir}"
 }
 trap cleanup EXIT
 
+download_file() {
+  local src="$1"
+  local dst="$2"
+  if command -v curl >/dev/null 2>&1; then
+    curl -L --fail --retry 3 --retry-delay 1 -o "${dst}" "${src}"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -O "${dst}" "${src}"
+  else
+    echo "ERROR: neither curl nor wget is available."
+    exit 1
+  fi
+}
+
+sha256_file() {
+  local file="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${file}" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "${file}" | awk '{print $1}'
+  else
+    return 1
+  fi
+}
+
 echo "Downloading model pack..."
 echo "  url: ${url}"
-
-if command -v curl >/dev/null 2>&1; then
-  curl -L --fail --retry 3 --retry-delay 1 -o "${zip_path}" "${url}"
-elif command -v wget >/dev/null 2>&1; then
-  wget -O "${zip_path}" "${url}"
-else
-  echo "ERROR: neither curl nor wget is available."
-  exit 1
-fi
+download_file "${url}" "${zip_path}"
 
 if [[ -n "${sha256}" && "${sha256}" != "TODO" ]]; then
-  echo "Verifying SHA256..."
-  if command -v sha256sum >/dev/null 2>&1; then
-    echo "${sha256}  ${zip_path}" | sha256sum -c -
-  elif command -v shasum >/dev/null 2>&1; then
-    got="$(shasum -a 256 "${zip_path}" | awk '{print $1}')"
-    if [[ "${got}" != "${sha256}" ]]; then
+  echo "Verifying SHA256 (manifest)..."
+  if got="$(sha256_file "${zip_path}")"; then
+    expected="$(echo "${sha256}" | tr '[:upper:]' '[:lower:]')"
+    got="$(echo "${got}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "${got}" != "${expected}" ]]; then
       echo "ERROR: SHA256 mismatch"
-      echo "  expected: ${sha256}"
+      echo "  expected: ${expected}"
       echo "  got:      ${got}"
       exit 1
     fi
@@ -61,6 +79,56 @@ if [[ -n "${sha256}" && "${sha256}" != "TODO" ]]; then
   fi
 else
   echo "WARN: models_zip_sha256 is not set (or TODO); skipping checksum verification."
+fi
+
+url_no_query="${url%%\?*}"
+if [[ "${url_no_query}" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/]+)$ ]]; then
+  gh_owner="${BASH_REMATCH[1]}"
+  gh_repo="${BASH_REMATCH[2]}"
+  gh_tag="${BASH_REMATCH[3]}"
+  zip_asset_name="${BASH_REMATCH[4]}"
+  release_base="https://github.com/${gh_owner}/${gh_repo}/releases/download/${gh_tag}"
+
+  echo "Checking signed release checksums..."
+  if download_file "${release_base}/SHA256SUMS" "${sha256sums_path}" \
+    && download_file "${release_base}/SHA256SUMS.sig" "${sha256sig_path}" \
+    && download_file "${release_base}/SHA256SUMS.pem" "${sha256pem_path}"; then
+    if command -v cosign >/dev/null 2>&1; then
+      identity_regex="^https://github.com/${gh_owner}/${gh_repo}/.github/workflows/release_sha256sums.yml@refs/(heads/main|tags/.*)$"
+      echo "Verifying SHA256SUMS signature (cosign)..."
+      cosign verify-blob \
+        --certificate "${sha256pem_path}" \
+        --signature "${sha256sig_path}" \
+        --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+        --certificate-identity-regexp "${identity_regex}" \
+        "${sha256sums_path}" >/dev/null
+
+      expected_signed="$(awk -v target="${zip_asset_name}" '$2==target {print $1}' "${sha256sums_path}" | head -n 1 | tr '[:upper:]' '[:lower:]')"
+      if [[ -z "${expected_signed}" ]]; then
+        echo "ERROR: ${zip_asset_name} not found in signed SHA256SUMS."
+        exit 1
+      fi
+
+      if got_signed="$(sha256_file "${zip_path}")"; then
+        got_signed="$(echo "${got_signed}" | tr '[:upper:]' '[:lower:]')"
+        if [[ "${got_signed}" != "${expected_signed}" ]]; then
+          echo "ERROR: signed SHA256SUMS mismatch"
+          echo "  expected: ${expected_signed}"
+          echo "  got:      ${got_signed}"
+          exit 1
+        fi
+        echo "Signed SHA256SUMS check: OK"
+      else
+        echo "WARN: no SHA256 tool found; skipping signed checksum match check."
+      fi
+    else
+      echo "WARN: cosign not found; skipping signed SHA256SUMS verification."
+    fi
+  else
+    echo "WARN: signed checksum assets not found in the release; skipping cosign verification."
+  fi
+else
+  echo "WARN: models_zip_url is not a GitHub release asset URL; skipping signed checksum verification."
 fi
 
 echo "Extracting into repo root: ${repo_root}"
