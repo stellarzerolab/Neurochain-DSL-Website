@@ -1,23 +1,39 @@
-﻿[package]
-name         = "neurochain"
-version      = "0.1.0"
-edition      = "2021"
-license      = "Apache-2.0"
+[package]
+name = "neurochain"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+# (optional, but explicit)
+resolver = "2"
 
 [dependencies]
-nom          = "7.1"
-serde        = { version = "1.0", features = ["derive"] }
-serde_json   = "1.0"
-tract-onnx   = "0.21.13"
-anyhow       = "1.0"
-tokenizers   = { version = "0.19.1", default-features = false, features = ["onig", "esaxx_fast"] }
-regex        = "1.10"
-axum         = "0.7"
-tokio        = { version = "1.37", features = ["full"] }
-tower-http   = { version = "0.5", features = ["cors"] }
-reqwest      = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+# --- Core dependencies ---
+nom = "7.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ndarray = "0.16"
+tract-onnx = "0.21.13"
+anyhow = "1.0"
+tokenizers = { version = "0.19.1", default-features = false, features = ["onig", "esaxx_fast"] }
+regex = "1.10"
+
+# --- HTTP server / API ---
+axum = { version = "0.7", features = ["macros", "json"] }
+tokio = { version = "1.37", features = ["full"] }
+tower-http = { version = "0.5", features = ["cors", "fs", "trace"] }
+tokio-stream = "0.1"
+futures-util = "0.3"
+
+# Stellar / helper HTTP client
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
 [dev-dependencies]
-assert_cmd   = "2"
-predicates   = "3"
-tempfile     = "3"
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
+
+# Server binary: `cargo run --bin neurochain-server`
+[[bin]]
+name = "neurochain-server"
+path = "src/bin/neurochain-server.rs"
