@@ -61,6 +61,7 @@ macro from AI: Show Ping 3 times
 ## Prerequisites (build from source)
 
 - Install Rust + Cargo (via `rustup`): https://www.rust-lang.org/tools/install
+- Install `cosign` (required by `fetch_models` scripts): https://github.com/sigstore/cosign/releases/latest
 - Models are expected under `models/` by default (see `docs/models.md`).
   - Recommended one-time download: `bash scripts/fetch_models.sh` (or PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/fetch_models.ps1`)
 - Windows (MSVC): Visual Studio 2022 Build Tools / Community with **Desktop development with C++** (+ Windows SDK)
@@ -82,7 +83,7 @@ What this does:
 
 1. Clones the repository.
 2. Downloads the model pack.
-3. Verifies model archive integrity (manifest SHA256, and signed `SHA256SUMS` if `cosign` is available).
+3. Verifies model archive integrity (manifest SHA256 + signed `SHA256SUMS` with `cosign`).
 4. Starts the NeuroChain CLI in interactive mode.
 
 In the interactive CLI, you can type `help`, `about`, `version`, `exit`.

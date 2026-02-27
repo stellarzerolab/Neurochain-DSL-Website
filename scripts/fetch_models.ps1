@@ -38,71 +38,73 @@ Write-Host "Downloading model pack..."
 Write-Host "  url: $Url"
 Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
 
-if (![string]::IsNullOrWhiteSpace($Sha) -and $Sha -ne "TODO") {
-  Write-Host "Verifying SHA256 (manifest)..."
-  $Got = (Get-FileHash -Algorithm SHA256 $ZipPath).Hash.ToLowerInvariant()
-  $Expected = $Sha.ToLowerInvariant()
-  if ($Got -ne $Expected) {
-    Fail "SHA256 mismatch. Expected $Expected, got $Got."
-  }
-} else {
-  Write-Host "WARN: models_zip_sha256 is not set (or TODO); skipping checksum verification." -ForegroundColor Yellow
+if ([string]::IsNullOrWhiteSpace($Sha) -or $Sha -eq "TODO") {
+  Fail "models_zip_sha256 is not set in $ManifestPath."
 }
+Write-Host "Verifying SHA256 (manifest)..."
+$Got = (Get-FileHash -Algorithm SHA256 $ZipPath).Hash.ToLowerInvariant()
+$Expected = $Sha.ToLowerInvariant()
+if ($Got -ne $Expected) {
+  Fail "SHA256 mismatch. Expected $Expected, got $Got."
+}
+Write-Host "Manifest SHA256 check: OK"
 
 $UrlNoQuery = $Url.Split('?')[0]
 $Match = [regex]::Match($UrlNoQuery, '^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/]+)$')
-if ($Match.Success) {
-  $Owner = $Match.Groups[1].Value
-  $Repo = $Match.Groups[2].Value
-  $Tag = $Match.Groups[3].Value
-  $ZipAssetName = $Match.Groups[4].Value
-  $ReleaseBase = "https://github.com/$Owner/$Repo/releases/download/$Tag"
-
-  Write-Host "Checking signed release checksums..."
-  try {
-    Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS" -OutFile $ShaSumsPath -UseBasicParsing
-    Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS.sig" -OutFile $ShaSigPath -UseBasicParsing
-    Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS.pem" -OutFile $ShaPemPath -UseBasicParsing
-
-    $CosignCmd = Get-Command cosign -ErrorAction SilentlyContinue
-    if ($null -ne $CosignCmd) {
-      $IdentityRegex = "^https://github.com/$Owner/$Repo/.github/workflows/release_sha256sums.yml@refs/(heads/main|tags/.*)$"
-      Write-Host "Verifying SHA256SUMS signature (cosign)..."
-      & $CosignCmd.Source verify-blob `
-        --certificate $ShaPemPath `
-        --signature $ShaSigPath `
-        --certificate-oidc-issuer https://token.actions.githubusercontent.com `
-        --certificate-identity-regexp $IdentityRegex `
-        $ShaSumsPath | Out-Null
-      if ($LASTEXITCODE -ne 0) {
-        Fail "cosign verify-blob failed."
-      }
-
-      $ExpectedSigned = ""
-      foreach ($Line in (Get-Content $ShaSumsPath)) {
-        if ($Line -match '^\s*([0-9a-fA-F]{64})\s+\*?(.+)$' -and $Matches[2] -eq $ZipAssetName) {
-          $ExpectedSigned = $Matches[1].ToLowerInvariant()
-          break
-        }
-      }
-      if ([string]::IsNullOrWhiteSpace($ExpectedSigned)) {
-        Fail "$ZipAssetName not found in signed SHA256SUMS."
-      }
-
-      $GotSigned = (Get-FileHash -Algorithm SHA256 $ZipPath).Hash.ToLowerInvariant()
-      if ($GotSigned -ne $ExpectedSigned) {
-        Fail "signed SHA256SUMS mismatch. Expected $ExpectedSigned, got $GotSigned."
-      }
-      Write-Host "Signed SHA256SUMS check: OK"
-    } else {
-      Write-Host "WARN: cosign not found; skipping signed SHA256SUMS verification." -ForegroundColor Yellow
-    }
-  } catch {
-    Write-Host "WARN: signed checksum assets not found in the release; skipping cosign verification." -ForegroundColor Yellow
-  }
-} else {
-  Write-Host "WARN: models_zip_url is not a GitHub release asset URL; skipping signed checksum verification." -ForegroundColor Yellow
+if (!$Match.Success) {
+  Fail "models_zip_url must be a GitHub release asset URL to verify signed SHA256SUMS."
 }
+$Owner = $Match.Groups[1].Value
+$Repo = $Match.Groups[2].Value
+$Tag = $Match.Groups[3].Value
+$ZipAssetName = $Match.Groups[4].Value
+$ReleaseBase = "https://github.com/$Owner/$Repo/releases/download/$Tag"
+
+Write-Host "Checking signed release checksums..."
+Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS" -OutFile $ShaSumsPath -UseBasicParsing
+Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS.sig" -OutFile $ShaSigPath -UseBasicParsing
+Invoke-WebRequest -Uri "$ReleaseBase/SHA256SUMS.pem" -OutFile $ShaPemPath -UseBasicParsing
+
+$CosignCmd = Get-Command cosign -ErrorAction SilentlyContinue
+if ($null -eq $CosignCmd) {
+  Fail "cosign is required for signed checksum verification. Install from https://github.com/sigstore/cosign/releases/latest and run again."
+}
+
+$IdentityRegex = "^https://github.com/$Owner/$Repo/.github/workflows/release_sha256sums.yml@refs/(heads/main|tags/.*)$"
+Write-Host "Verifying SHA256SUMS signature (cosign)..."
+& $CosignCmd.Source verify-blob `
+  --certificate $ShaPemPath `
+  --signature $ShaSigPath `
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com `
+  --certificate-identity-regexp $IdentityRegex `
+  $ShaSumsPath | Out-Null
+if ($LASTEXITCODE -ne 0) {
+  Fail "cosign verify-blob failed."
+}
+Write-Host "SHA256SUMS signature check: OK"
+
+$ExpectedSigned = ""
+foreach ($Line in (Get-Content $ShaSumsPath)) {
+  if ($Line -match '^\s*([0-9a-fA-F]{64})\s+\*?(.+)$') {
+    $FileName = $Matches[2]
+    if ($FileName.StartsWith('*')) {
+      $FileName = $FileName.Substring(1)
+    }
+    if ($FileName -eq $ZipAssetName) {
+      $ExpectedSigned = $Matches[1].ToLowerInvariant()
+      break
+    }
+  }
+}
+if ([string]::IsNullOrWhiteSpace($ExpectedSigned)) {
+  Fail "$ZipAssetName not found in signed SHA256SUMS."
+}
+
+$GotSigned = (Get-FileHash -Algorithm SHA256 $ZipPath).Hash.ToLowerInvariant()
+if ($GotSigned -ne $ExpectedSigned) {
+  Fail "signed SHA256SUMS mismatch. Expected $ExpectedSigned, got $GotSigned."
+}
+Write-Host "Signed SHA256SUMS check: OK"
 
 Write-Host "Extracting into repo root: $RepoRoot"
 Expand-Archive -Path $ZipPath -DestinationPath $RepoRoot -Force

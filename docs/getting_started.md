@@ -5,6 +5,7 @@ This is a short “do this” guide to run a NeuroChain script from start to fin
 ## 0) Prerequisites
 
 - Rust + Cargo installed (via `rustup`).
+- `cosign` installed (required by `scripts/fetch_models.sh` / `scripts/fetch_models.ps1`): https://github.com/sigstore/cosign/releases/latest
 - Models available under `models/` (this repo uses example paths).
   - If you cloned without models, download them once using:
     - `bash scripts/fetch_models.sh` (Linux / macOS / WSL)

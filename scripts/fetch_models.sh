@@ -63,73 +63,84 @@ echo "Downloading model pack..."
 echo "  url: ${url}"
 download_file "${url}" "${zip_path}"
 
-if [[ -n "${sha256}" && "${sha256}" != "TODO" ]]; then
-  echo "Verifying SHA256 (manifest)..."
-  if got="$(sha256_file "${zip_path}")"; then
-    expected="$(echo "${sha256}" | tr '[:upper:]' '[:lower:]')"
-    got="$(echo "${got}" | tr '[:upper:]' '[:lower:]')"
-    if [[ "${got}" != "${expected}" ]]; then
-      echo "ERROR: SHA256 mismatch"
-      echo "  expected: ${expected}"
-      echo "  got:      ${got}"
-      exit 1
-    fi
-  else
-    echo "WARN: no SHA256 tool found; skipping checksum verification."
-  fi
-else
-  echo "WARN: models_zip_sha256 is not set (or TODO); skipping checksum verification."
+if [[ -z "${sha256}" || "${sha256}" == "TODO" ]]; then
+  echo "ERROR: models_zip_sha256 is not set in ${manifest}."
+  exit 1
 fi
+
+echo "Verifying SHA256 (manifest)..."
+if ! got="$(sha256_file "${zip_path}")"; then
+  echo "ERROR: no SHA256 tool found. Install sha256sum or shasum."
+  exit 1
+fi
+expected="$(echo "${sha256}" | tr '[:upper:]' '[:lower:]')"
+got="$(echo "${got}" | tr '[:upper:]' '[:lower:]')"
+if [[ "${got}" != "${expected}" ]]; then
+  echo "ERROR: SHA256 mismatch"
+  echo "  expected: ${expected}"
+  echo "  got:      ${got}"
+  exit 1
+fi
+echo "Manifest SHA256 check: OK"
 
 url_no_query="${url%%\?*}"
-if [[ "${url_no_query}" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/]+)$ ]]; then
-  gh_owner="${BASH_REMATCH[1]}"
-  gh_repo="${BASH_REMATCH[2]}"
-  gh_tag="${BASH_REMATCH[3]}"
-  zip_asset_name="${BASH_REMATCH[4]}"
-  release_base="https://github.com/${gh_owner}/${gh_repo}/releases/download/${gh_tag}"
-
-  echo "Checking signed release checksums..."
-  if download_file "${release_base}/SHA256SUMS" "${sha256sums_path}" \
-    && download_file "${release_base}/SHA256SUMS.sig" "${sha256sig_path}" \
-    && download_file "${release_base}/SHA256SUMS.pem" "${sha256pem_path}"; then
-    if command -v cosign >/dev/null 2>&1; then
-      identity_regex="^https://github.com/${gh_owner}/${gh_repo}/.github/workflows/release_sha256sums.yml@refs/(heads/main|tags/.*)$"
-      echo "Verifying SHA256SUMS signature (cosign)..."
-      cosign verify-blob \
-        --certificate "${sha256pem_path}" \
-        --signature "${sha256sig_path}" \
-        --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-        --certificate-identity-regexp "${identity_regex}" \
-        "${sha256sums_path}" >/dev/null
-
-      expected_signed="$(awk -v target="${zip_asset_name}" '$2==target {print $1}' "${sha256sums_path}" | head -n 1 | tr '[:upper:]' '[:lower:]')"
-      if [[ -z "${expected_signed}" ]]; then
-        echo "ERROR: ${zip_asset_name} not found in signed SHA256SUMS."
-        exit 1
-      fi
-
-      if got_signed="$(sha256_file "${zip_path}")"; then
-        got_signed="$(echo "${got_signed}" | tr '[:upper:]' '[:lower:]')"
-        if [[ "${got_signed}" != "${expected_signed}" ]]; then
-          echo "ERROR: signed SHA256SUMS mismatch"
-          echo "  expected: ${expected_signed}"
-          echo "  got:      ${got_signed}"
-          exit 1
-        fi
-        echo "Signed SHA256SUMS check: OK"
-      else
-        echo "WARN: no SHA256 tool found; skipping signed checksum match check."
-      fi
-    else
-      echo "WARN: cosign not found; skipping signed SHA256SUMS verification."
-    fi
-  else
-    echo "WARN: signed checksum assets not found in the release; skipping cosign verification."
-  fi
-else
-  echo "WARN: models_zip_url is not a GitHub release asset URL; skipping signed checksum verification."
+if [[ ! "${url_no_query}" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/]+)$ ]]; then
+  echo "ERROR: models_zip_url must be a GitHub release asset URL to verify signed SHA256SUMS."
+  exit 1
 fi
+gh_owner="${BASH_REMATCH[1]}"
+gh_repo="${BASH_REMATCH[2]}"
+gh_tag="${BASH_REMATCH[3]}"
+zip_asset_name="${BASH_REMATCH[4]}"
+release_base="https://github.com/${gh_owner}/${gh_repo}/releases/download/${gh_tag}"
+
+echo "Checking signed release checksums..."
+download_file "${release_base}/SHA256SUMS" "${sha256sums_path}"
+download_file "${release_base}/SHA256SUMS.sig" "${sha256sig_path}"
+download_file "${release_base}/SHA256SUMS.pem" "${sha256pem_path}"
+
+if ! command -v cosign >/dev/null 2>&1; then
+  echo "ERROR: cosign is required for signed checksum verification."
+  echo "Install cosign from https://github.com/sigstore/cosign/releases/latest and run again."
+  exit 1
+fi
+
+identity_regex="^https://github.com/${gh_owner}/${gh_repo}/.github/workflows/release_sha256sums.yml@refs/(heads/main|tags/.*)$"
+echo "Verifying SHA256SUMS signature (cosign)..."
+cosign verify-blob \
+  --certificate "${sha256pem_path}" \
+  --signature "${sha256sig_path}" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp "${identity_regex}" \
+  "${sha256sums_path}" >/dev/null
+echo "SHA256SUMS signature check: OK"
+
+expected_signed="$(
+  awk -v target="${zip_asset_name}" '
+    {
+      f=$2
+      sub(/^\*/, "", f)
+      if (f == target) { print $1; exit }
+    }
+  ' "${sha256sums_path}" | tr '[:upper:]' '[:lower:]'
+)"
+if [[ -z "${expected_signed}" ]]; then
+  echo "ERROR: ${zip_asset_name} not found in signed SHA256SUMS."
+  exit 1
+fi
+
+if ! got_signed="$(sha256_file "${zip_path}")"; then
+  echo "ERROR: no SHA256 tool found. Install sha256sum or shasum."
+  exit 1
+fi
+got_signed="$(echo "${got_signed}" | tr '[:upper:]' '[:lower:]')"
+if [[ "${got_signed}" != "${expected_signed}" ]]; then
+  echo "ERROR: signed SHA256SUMS mismatch"
+  echo "  expected: ${expected_signed}"
+  echo "  got:      ${got_signed}"
+  exit 1
+fi
+echo "Signed SHA256SUMS check: OK"
 
 echo "Extracting into repo root: ${repo_root}"
 
