@@ -710,8 +710,6 @@ async fn main() {
         inference_sem: Arc::new(Semaphore::new(max_infer)),
     });
 
-    // Stellar intent endpoints are part of an incremental rollout:
-    // the public API surface may appear before all tooling/tests/docs are published.
     let api = Router::new()
         .route("/analyze", post(api_analyze))
         .route("/stellar/intent-plan", post(api_stellar_intent_plan))

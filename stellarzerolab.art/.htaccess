@@ -1,6 +1,12 @@
 # Pretty URLs (hide .html) + protect /api/
 RewriteEngine On
 
+# Hide legacy Snake demo endpoint (file remains in repo)
+RewriteRule ^snake(?:\.html)?/?$ - [G,L,NC]
+
+# 301: legacy Stellar demo path -> new Stellar CLI path
+RewriteRule ^stellar(?:\.html)?/?$ /stellar-cli [R=301,L,NC]
+
 # Do not touch API routes
 RewriteRule ^api/ - [L]
 

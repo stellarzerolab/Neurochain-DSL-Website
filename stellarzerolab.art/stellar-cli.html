@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NeuroChain Stellar Demo · REPL UI</title>
+  <meta name="description" content="Terminal-style Stellar testnet demo UI for one-flow classic + Soroban actions." />
+  <link rel="canonical" href="https://stellarzerolab.art/stellar-cli">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#090d14;
+      --panel:#111928;
+      --panel-2:#0d1522;
+      --ink:#e8f1fb;
+      --muted:#9fb3c8;
+      --line:rgba(157,216,255,.16);
+      --accent:#7dd3fc;
+      --accent-2:#22d3ee;
+      --warn:#f59e0b;
+      --ok:#22c55e;
+      --danger:#ef4444;
+      --radius:18px;
+      --ease:cubic-bezier(.22,.61,.36,1);
+      --panel-bg:linear-gradient(180deg, rgba(16,23,36,.82), rgba(8,13,22,.78));
+      --panel-border:rgba(255,255,255,.08);
+      --panel-glow:
+        0 0 0 1px rgba(125,211,252,.05),
+        0 22px 60px rgba(0,0,0,.36),
+        0 0 32px rgba(34,211,238,.06);
+      --mono-font:"Cascadia Mono","Cascadia Code","JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono","DejaVu Sans Mono","Courier New",monospace;
+    }
+    html,body{min-height:100%}
+    body{
+      position:relative;
+      color:var(--ink);
+      background:
+        radial-gradient(32% 24% at 15% 12%, rgba(125,211,252,.08), transparent 70%),
+        radial-gradient(28% 22% at 85% 18%, rgba(139,92,246,.08), transparent 72%),
+        radial-gradient(24% 22% at 56% 86%, rgba(34,211,238,.06), transparent 74%),
+        linear-gradient(180deg,#070b11,#0b0f14 35%,#0a1118 100%);
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-10%;
+      pointer-events:none;
+      z-index:0;
+      background:
+        radial-gradient(30% 24% at 18% 18%, rgba(125,211,252,.06), transparent 72%),
+        radial-gradient(28% 22% at 82% 24%, rgba(34,211,238,.05), transparent 74%),
+        radial-gradient(26% 22% at 55% 78%, rgba(139,92,246,.045), transparent 76%);
+      filter:blur(44px);
+      animation:nebulaFloat 20s ease-in-out infinite alternate;
+    }
+    body::after{
+      background:
+        radial-gradient(1px 1px at 10% 18%, rgba(215,240,255,.72) 70%, transparent),
+        radial-gradient(1px 1px at 24% 42%, rgba(157,216,255,.55) 70%, transparent),
+        radial-gradient(1px 1px at 38% 24%, rgba(255,255,255,.66) 70%, transparent),
+        radial-gradient(1px 1px at 56% 64%, rgba(157,216,255,.52) 70%, transparent),
+        radial-gradient(1px 1px at 72% 28%, rgba(215,240,255,.68) 70%, transparent),
+        radial-gradient(1px 1px at 84% 48%, rgba(255,255,255,.54) 70%, transparent),
+        radial-gradient(1px 1px at 68% 76%, rgba(157,216,255,.50) 70%, transparent),
+        radial-gradient(1px 1px at 18% 78%, rgba(215,240,255,.62) 70%, transparent);
+      opacity:.36;
+      animation:
+        starTwinkle 7.5s ease-in-out infinite alternate,
+        starDrift 36s linear infinite;
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+    }
+    main, footer{
+      position:relative;
+      z-index:1;
+    }
+    main{
+      position:relative;
+      isolation:isolate;
+    }
+    main::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:.22;
+      background-image:
+        linear-gradient(rgba(157,216,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(157,216,255,.05) 1px, transparent 1px);
+      background-size:32px 32px;
+      mask-image:radial-gradient(circle at center, black 30%, transparent 85%);
+      -webkit-mask-image:radial-gradient(circle at center, black 30%, transparent 85%);
+    }
+    .glass{
+      background:var(--panel-bg);
+      -webkit-backdrop-filter:blur(12px);
+      backdrop-filter:blur(12px);
+      border:1px solid var(--panel-border);
+      border-radius:var(--radius);
+      box-shadow:var(--panel-glow);
+    }
+    .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35);}
+    .navbar{
+      background:linear-gradient(180deg,rgba(11,18,30,.92),rgba(11,18,30,.72));
+      border-bottom:1px solid rgba(125,211,252,.12);
+    }
+    .brand{letter-spacing:.5px}
+    .nav-shell{
+      margin:.75rem auto 0;
+      width:min(1320px, calc(100% - 1rem));
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(13,20,31,.85), rgba(8,13,22,.82));
+      -webkit-backdrop-filter:blur(12px);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.07);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 18px 40px rgba(0,0,0,.28);
+      z-index:1030;
+    }
+    .nav-shell.sticky-top{
+      position:sticky;
+      top:0;
+      z-index:1030;
+    }
+    .testnet-badge{font-weight:700;letter-spacing:.04em}
+    .stellar-demo-icon{
+      color:#9dd8ff;
+      text-shadow:0 0 10px rgba(125,211,252,.35);
+    }
+    .nav-quick-link,
+    .nav-quick-link:visited{
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      color:#e6edf3;
+      text-decoration:none;
+      padding:.2rem .25rem;
+      line-height:1;
+    }
+    .nav-quick-link:hover{color:#9dd8ff;text-decoration:none}
+    .navbar-toggler{
+      border-color:#3a5e84;
+      padding:.42rem .62rem;
+      box-shadow:none;
+    }
+    .navbar-toggler:focus{
+      box-shadow:0 0 0 .18rem rgba(125,211,252,.18);
+    }
+    .nav-quick-shell{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+    }
+    .nav-quick-cta,
+    .nav-quick-cta:visited{
+      display:inline-flex;
+      align-items:center;
+      gap:.38rem;
+      color:#dff0ff;
+      text-decoration:none;
+      padding:.34rem .62rem;
+      font-size:.94rem;
+      line-height:1;
+      white-space:nowrap;
+      border-radius:12px;
+      border:1px solid #3a5e84;
+      background:linear-gradient(180deg,rgba(15,28,47,.82),rgba(11,22,37,.78));
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.04),
+        0 10px 24px rgba(7,14,25,.26);
+      transition:border-color .2s ease,color .2s ease,background .2s ease,box-shadow .2s ease,transform .18s ease;
+    }
+    .nav-quick-cta:hover{
+      color:#f1f8ff;
+      text-decoration:none;
+      transform:translateY(-1px);
+      border-color:#79b3df;
+      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+      box-shadow:
+        0 0 0 1px rgba(185,231,255,.14),
+        0 12px 28px rgba(7,14,25,.3),
+        0 0 18px rgba(125,211,252,.14);
+    }
+    .nav-quick-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      color:#e6edf3;
+      background:transparent;
+      border:0;
+      padding:.2rem .25rem;
+      line-height:1;
+      cursor:pointer;
+    }
+    .nav-quick-btn:hover{color:#9dd8ff}
+    .nav-quick-link:focus,.nav-quick-btn:focus{outline:none;box-shadow:none}
+    .shell{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(15,24,40,.9), rgba(9,16,29,.94));
+      box-shadow:0 18px 52px rgba(0,0,0,.35);
+    }
+    .shell-head{
+      border-bottom:1px solid var(--line);
+      padding:.8rem 1rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+    }
+    .dot{
+      width:.65rem;
+      height:.65rem;
+      border-radius:999px;
+      display:inline-block;
+      margin-right:.3rem;
+    }
+    .dot.r{background:#ef4444}
+    .dot.y{background:#f59e0b}
+    .dot.g{background:#22c55e}
+    .muted{color:var(--muted)}
+    .mono{
+      font-family:var(--mono-font);
+      font-variant-ligatures:none;
+      font-feature-settings:"liga" 0, "calt" 0;
+      text-rendering:auto;
+      font-weight:400;
+    }
+    .form-control,.form-select{
+      background:linear-gradient(180deg, rgba(7,14,24,.98), rgba(8,14,24,.94));
+      color:#dceafe;
+      border-color:rgba(125,211,252,.24);
+      border-radius:12px;
+    }
+    .form-control::placeholder{color:#82a0bf}
+    .form-control:focus,.form-select:focus{
+      border-color:rgba(125,211,252,.55);
+      box-shadow:
+        0 0 0 .2rem rgba(125,211,252,.14),
+        0 0 22px rgba(125,211,252,.16);
+      color:#f0f8ff;
+      background:#09101a;
+    }
+    #threshold{
+      color-scheme:dark;
+      background:linear-gradient(180deg, rgba(9,17,29,.98), rgba(6,13,22,.94));
+      border-color:rgba(125,211,252,.34);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.04),
+        0 0 0 1px rgba(125,211,252,.04);
+    }
+    #threshold::-webkit-outer-spin-button,
+    #threshold::-webkit-inner-spin-button{
+      -webkit-appearance:inner-spin-button;
+      opacity:1;
+      background:transparent !important;
+      box-shadow:none !important;
+      filter:drop-shadow(0 0 2px rgba(125,211,252,.45));
+    }
+    #threshold:hover::-webkit-outer-spin-button,
+    #threshold:hover::-webkit-inner-spin-button,
+    #threshold:focus::-webkit-outer-spin-button,
+    #threshold:focus::-webkit-inner-spin-button{
+      background:transparent !important;
+      box-shadow:none !important;
+      filter:drop-shadow(0 0 4px rgba(34,211,238,.75));
+    }
+    .btn{
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+      border-radius:12px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.08),
+        0 10px 24px rgba(7,14,25,.36);
+      transition:
+        transform .18s var(--ease),
+        box-shadow .22s ease,
+        filter .22s ease,
+        background .22s ease,
+        border-color .22s ease,
+        color .22s ease;
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);
+      opacity:.55;
+      z-index:0;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-30% -10%;
+      pointer-events:none;
+      background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.24) 50%,transparent 80%);
+      transform:translateX(-130%);
+      transition:transform .65s var(--ease);
+      z-index:0;
+    }
+    .btn > *{position:relative;z-index:1}
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(185,231,255,.28),
+        0 14px 30px rgba(8,18,31,.44),
+        0 0 26px rgba(125,211,252,.24);
+    }
+    .btn:hover::after{transform:translateX(130%)}
+    .btn-accent{
+      --bs-btn-color:#04121e;
+      --bs-btn-bg:transparent;
+      --bs-btn-border-color:transparent;
+      --bs-btn-hover-color:#031018;
+      --bs-btn-hover-border-color:transparent;
+      --bs-btn-active-color:#031018;
+      --bs-btn-active-border-color:transparent;
+      --bs-btn-focus-shadow-rgb:125,211,252;
+      background:linear-gradient(135deg,var(--accent),#8bdcff);
+      border:0;
+      color:#04121e;
+      font-weight:650;
+      box-shadow:
+        0 0 0 1px rgba(198,238,255,.34),
+        0 14px 34px rgba(125,211,252,.28),
+        0 0 28px rgba(125,211,252,.24);
+    }
+    .btn-accent:hover{
+      filter:brightness(1.06) saturate(1.02);
+    }
+    #runCmdBtn{
+      padding:.42rem .72rem;
+      font-size:.98rem;
+      white-space:nowrap;
+    }
+    #runCmdBtn i{
+      margin-right:.2rem;
+      font-size:.95em;
+    }
+    .btn-outline-light{
+      border-color:#3a5e84;
+      color:#dff0ff;
+      background:linear-gradient(180deg,rgba(15,28,47,.82),rgba(11,22,37,.78));
+    }
+    .btn-outline-light:hover,
+    .btn-outline-light:focus{
+      border-color:#79b3df;
+      color:#f1f8ff;
+      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+    }
+    .terminal{
+      position:relative;
+      background:linear-gradient(180deg, rgba(4,10,16,.96), rgba(6,11,18,.96));
+      border:1px solid rgba(125,211,252,.24);
+      border-radius:12px;
+      min-height:380px;
+      max-height:380px;
+      overflow:auto;
+      padding:1.2rem .95rem .95rem;
+      margin:0;
+      white-space:pre;
+      word-break:normal;
+      overflow-wrap:normal;
+      line-height:1.3;
+      font-size:14px;
+      tab-size:2;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 18px 34px rgba(0,0,0,.24);
+    }
+    .terminal .ansi-cyan{
+      color:#35dfff;
+      text-shadow:0 0 12px rgba(53,223,255,.3);
+    }
+    .terminal .ansi-green{color:#78e28d}
+    .terminal .ansi-yellow{color:#f7c45b}
+    .terminal .ansi-red{color:#ff8c6a}
+    .prompt-line{
+      display:flex;
+      gap:.5rem;
+      align-items:center;
+      margin-top:.7rem;
+    }
+    .plan-card,.state-card,.help-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(13,20,34,.9), rgba(8,14,24,.88));
+      padding:.9rem;
+      box-shadow:0 12px 28px rgba(0,0,0,.24);
+    }
+    .side-stack{
+      display:flex;
+      flex-direction:column;
+    }
+    .side-stack .help-card{
+      flex:1 1 auto;
+      min-height:0;
+    }
+    @media (min-width: 1200px){
+      .top-layout{
+        align-items:stretch;
+      }
+      .top-layout .cli-col,
+      .top-layout .side-stack{
+        display:flex;
+        flex-direction:column;
+        height:100%;
+      }
+      .top-layout .cli-col .shell{
+        flex:1 1 auto;
+      }
+    }
+    .shell,
+    .plan-card,
+    .state-card,
+    .help-card{
+      transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+    }
+    .shell:hover,
+    .plan-card:hover,
+    .state-card:hover,
+    .help-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(125,211,252,.18);
+      box-shadow:
+        0 0 0 1px rgba(125,211,252,.08),
+        0 28px 70px rgba(0,0,0,.42),
+        0 0 26px rgba(34,211,238,.10);
+    }
+    .plan-card pre{
+      margin:0;
+      min-height:196px;
+      max-height:196px;
+      overflow:auto;
+      border:1px solid rgba(157,216,255,.14);
+      border-radius:10px;
+      background:#08111c;
+      padding:.75rem;
+      color:#cfe4fa;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .terminal,
+    .plan-card pre{
+      scrollbar-width:thin;
+      scrollbar-color:#5f7d9b #050b12;
+    }
+    .terminal::-webkit-scrollbar,
+    .plan-card pre::-webkit-scrollbar{
+      width:12px;
+      height:12px;
+    }
+    .terminal::-webkit-scrollbar-track,
+    .plan-card pre::-webkit-scrollbar-track{
+      background:linear-gradient(180deg,#060c14,#040a12);
+      border-left:1px solid rgba(125,211,252,.12);
+    }
+    .terminal::-webkit-scrollbar-thumb,
+    .plan-card pre::-webkit-scrollbar-thumb{
+      background:linear-gradient(180deg,#6d8bad,#4f6987);
+      border:2px solid #050b12;
+      border-radius:999px;
+    }
+    .terminal::-webkit-scrollbar-thumb:hover,
+    .plan-card pre::-webkit-scrollbar-thumb:hover{
+      background:linear-gradient(180deg,#83a7cd,#6284aa);
+    }
+    .terminal::-webkit-scrollbar-corner,
+    .plan-card pre::-webkit-scrollbar-corner{
+      background:#050b12;
+    }
+    .terminal::-webkit-scrollbar-button,
+    .plan-card pre::-webkit-scrollbar-button{
+      width:0;
+      height:0;
+      display:none;
+      background:transparent;
+    }
+    .state-grid{
+      display:grid;
+      grid-template-columns:minmax(5.4rem, 6.8rem) minmax(0, 1fr);
+      gap:.55rem .8rem;
+      font-size:.95rem;
+      align-items:flex-start;
+    }
+    .state-grid .k{
+      color:var(--muted);
+      padding-top:.12rem;
+    }
+    .state-value,
+    .state-value-wrap{
+      min-width:0;
+    }
+    .state-value{
+      color:#dceafe;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .state-value-wrap{
+      display:flex;
+      align-items:center;
+      gap:.45rem;
+      justify-self:start;
+      width:auto;
+      max-width:100%;
+    }
+    .state-value-wrap .state-value{
+      flex:0 1 auto;
+    }
+    .state-value-compact{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:clip;
+    }
+    .state-secret-cell{
+      display:flex;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      gap:.5rem;
+      min-width:0;
+    }
+    #stSecret{
+      min-width:0;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      white-space:normal;
+      display:inline-block;
+    }
+    .secret-toggle-btn{
+      padding:.1rem .48rem;
+      font-size:.72rem;
+      line-height:1.15;
+      border-radius:8px;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+    .copy-btn{
+      width:1.75rem;
+      height:1.75rem;
+      padding:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:9px;
+      flex:0 0 auto;
+      font-size:.72rem;
+    }
+    .copy-btn:disabled{
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+    }
+    .copy-btn.is-copied{
+      border-color:rgba(34,197,94,.6);
+      color:#dfffea;
+      background:linear-gradient(180deg,rgba(11,48,31,.86),rgba(8,31,21,.82));
+      box-shadow:
+        0 0 0 1px rgba(34,197,94,.18),
+        0 0 18px rgba(34,197,94,.12);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.4ch;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:.2rem .6rem;
+      font-size:.8rem;
+      color:#cce5fa;
+    }
+    .pill::before{
+      content:"";
+      width:.5rem;
+      height:.5rem;
+      border-radius:999px;
+      background:currentColor;
+      display:inline-block;
+    }
+    .cmd-chip{
+      border:1px solid rgba(125,211,252,.28);
+      border-radius:999px;
+      padding:.2rem .62rem;
+      background:linear-gradient(180deg,rgba(10,21,36,.88),rgba(8,17,30,.86));
+      color:#bfe3ff;
+      font-size:.82rem;
+      cursor:pointer;
+      user-select:none;
+      transition:background .2s ease,border-color .2s ease,color .2s ease,transform .18s ease;
+    }
+    .cmd-chip:hover{
+      background:linear-gradient(180deg,rgba(16,31,50,.92),rgba(11,23,39,.9));
+      border-color:rgba(157,216,255,.46);
+      color:#e9f6ff;
+      transform:translateY(-1px);
+    }
+    @keyframes nebulaFloat{
+      from{transform:translate3d(0,0,0) scale(1)}
+      to{transform:translate3d(2.2%, -1.4%, 0) scale(1.04)}
+    }
+    @keyframes starTwinkle{
+      from{opacity:.22}
+      to{opacity:.44}
+    }
+    @keyframes starDrift{
+      from{transform:translate3d(0,0,0)}
+      to{transform:translate3d(-3%, -1.4%, 0)}
+    }
+    @media (prefers-reduced-motion: reduce){
+      body::before,body::after{animation:none}
+      .btn,.btn::after,.cmd-chip,.shell,.plan-card,.state-card,.help-card{
+        transition:none;
+      }
+    }
+    @media (max-width: 991.98px){
+      .side-stack .help-card{
+        flex:0 0 auto;
+      }
+      .nav-mobile-panel{
+        margin-top:.85rem;
+        padding:.45rem;
+        background:linear-gradient(180deg, rgba(6,10,17,.98), rgba(11,18,30,.98));
+        border:1px solid rgba(255,255,255,.07);
+        border-radius:16px;
+        box-shadow:0 18px 34px rgba(0,0,0,.38);
+      }
+      .navbar-collapse{
+        margin-top:0 !important;
+        padding:0 !important;
+        background:transparent !important;
+        border:0 !important;
+        box-shadow:none !important;
+      }
+      .nav-quick-shell{
+        flex-direction:column;
+        align-items:stretch;
+        gap:.65rem;
+        padding-top:.2rem;
+      }
+      .nav-quick-link,
+      .nav-quick-cta,
+      .nav-quick-btn{
+        width:100%;
+        justify-content:flex-start;
+        padding:.68rem .78rem;
+        border-radius:12px;
+      }
+      .nav-quick-link,
+      .nav-quick-btn{
+        background:rgba(255,255,255,.02);
+        border:1px solid rgba(255,255,255,.06);
+      }
+      .nav-quick-link:hover,
+      .nav-quick-btn:hover{
+        background:rgba(255,255,255,.04);
+      }
+      .terminal{min-height:300px;max-height:300px}
+      .plan-card pre{min-height:150px;max-height:150px}
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark glass shadow-soft sticky-top nav-shell">
+    <div class="container py-1">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="navbar-brand mb-0"><i class="bi bi-rocket-takeoff stellar-demo-icon"></i> <strong>NeuroChain Stellar Demo</strong></span>
+        </div>
+        <button class="navbar-toggler ms-3" type="button" data-bs-toggle="collapse" data-bs-target="#stellarCliNav" aria-controls="stellarCliNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <div id="stellarCliNav" class="collapse navbar-collapse mt-3 mt-lg-0">
+        <div class="nav-mobile-panel w-100">
+          <div class="nav-quick-shell ms-lg-auto">
+          <a href="/" class="nav-quick-link" aria-label="Home" title="Home">
+            <i class="bi bi-house"></i><span>Home</span>
+          </a>
+          <a class="nav-quick-link" href="/about" aria-label="About">
+            <i class="bi bi-stars"></i><span>About</span>
+          </a>
+          <a class="nav-quick-link" href="/roadmap" aria-label="Roadmap">
+            <i class="bi bi-signpost-2"></i><span>Roadmap</span>
+          </a>
+          <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener" aria-label="GitHub repository">
+            <i class="bi bi-github"></i><span class="d-none d-lg-inline">GitHub</span>
+          </a>
+          <a class="nav-quick-link" href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X">
+            <i class="bi bi-twitter-x"></i>
+          </a>
+          <button class="nav-quick-btn" id="clearAll"><i class="bi bi-trash3"></i> Clear</button>
+          <a class="nav-quick-cta" href="/webui" aria-label="Open WebUI">
+            <i class="bi bi-terminal"></i><span>Open WebUI</span>
+          </a>
+        </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-3 pb-4">
+    <div class="row g-3 top-layout">
+      <div class="col-12 col-xl-8 cli-col">
+        <section class="shell">
+          <div class="shell-head">
+            <div class="mono small">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="ms-2 muted">CLI REPL</span>
+            </div>
+            <span class="badge text-bg-warning testnet-badge">TESTNET AVAILABLE</span>
+          </div>
+
+          <div class="p-3">
+            <pre id="terminalOut" class="terminal mono">(type `help` and press Enter)</pre>
+
+            <div class="prompt-line">
+              <input id="commandInput" class="form-control mono" placeholder="Type a REPL command (e.g. help, show setup)" aria-label="REPL command input" />
+              <button id="runCmdBtn" class="btn btn-accent"><i class="bi bi-play-fill"></i> Run</button>
+            </div>
+            <div class="small muted mt-2">
+              Quick start: <span class="mono">help</span> -> <span class="mono">show setup</span> -> <span class="mono">setup testnet</span> -> <span class="mono">wallet_bootstrap: demo</span>.
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <span class="cmd-chip mono" data-cmd="help">help</span>
+              <span class="cmd-chip mono" data-cmd="help all">help all</span>
+              <span class="cmd-chip mono" data-cmd="show setup">show setup</span>
+              <span class="cmd-chip mono" data-cmd="show config">show config</span>
+              <span class="cmd-chip mono" data-cmd="setup testnet">setup testnet</span>
+              <span class="cmd-chip mono" data-cmd="network: testnet">network: testnet</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12 col-xl-4 side-stack">
+        <section class="state-card mb-3">
+          <h6 class="mb-2"><i class="bi bi-database"></i> Workspace</h6>
+          <div class="state-grid mono">
+            <div class="k">alias</div><div id="stAlias" class="state-value">-</div>
+            <div class="k">account</div>
+            <div class="state-value-wrap">
+              <div id="stAccount" class="state-value state-value-compact">-</div>
+              <button class="btn btn-outline-light btn-sm copy-btn" type="button" data-copy-target="stAccount" aria-label="Copy account" title="Copy account">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <div class="k">secret</div>
+            <div class="state-secret-cell">
+              <span id="stSecret" class="state-value">-</span>
+              <button id="stSecretToggle" class="btn btn-outline-light btn-sm secret-toggle-btn" type="button" aria-label="Reveal secret" aria-pressed="false">Reveal</button>
+            </div>
+            <div class="k">balances</div><div id="stBalances" class="state-value">-</div>
+            <div class="k">contract id</div>
+            <div class="state-value-wrap">
+              <div id="stContractId" class="state-value state-value-compact">-</div>
+              <button class="btn btn-outline-light btn-sm copy-btn" type="button" data-copy-target="stContractId" aria-label="Copy contract id" title="Copy contract id">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <div class="k">tx hash</div>
+            <div class="state-value-wrap">
+              <div id="stTxHash" class="state-value state-value-compact">-</div>
+              <button class="btn btn-outline-light btn-sm copy-btn" type="button" data-copy-target="stTxHash" aria-label="Copy transaction hash" title="Copy transaction hash">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+            <div class="k">tx status</div><div id="stTxStatus" class="state-value">-</div>
+          </div>
+        </section>
+
+        <section class="help-card">
+          <h6 class="mb-2"><i class="bi bi-sliders"></i> Runtime</h6>
+          <label class="form-label mb-1">Threshold</label>
+          <input id="threshold" type="number" class="form-control mono mb-2" min="0" max="1" step="0.01" value="0.55">
+          <label class="form-label mb-1">Allowlist assets (optional)</label>
+          <input id="allowlistAssets" class="form-control mono" placeholder="XLM,USDC:GISSUER">
+        </section>
+      </div>
+
+      <div class="col-12">
+        <section class="plan-card">
+          <h6 class="mb-2"><i class="bi bi-diagram-3"></i> Last Analyze Plan</h6>
+          <pre id="planOut" class="mono">(no plan yet)</pre>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="container my-5 text-center muted">
+    <div class="small">© <span id="year"></span> StellarZeroLab</div>
+  </footer>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const els = {
+      terminalOut: $("#terminalOut"),
+      commandInput: $("#commandInput"),
+      runCmdBtn: $("#runCmdBtn"),
+      clearAllBtn: $("#clearAll"),
+      cmdChips: Array.from(document.querySelectorAll(".cmd-chip")),
+      statusPill: $("#statusPill"),
+      planOut: $("#planOut"),
+      stAlias: $("#stAlias"),
+      stAccount: $("#stAccount"),
+      stSecret: $("#stSecret"),
+      stSecretToggle: $("#stSecretToggle"),
+      stBalances: $("#stBalances"),
+      stContractId: $("#stContractId"),
+      stTxHash: $("#stTxHash"),
+      stTxStatus: $("#stTxStatus"),
+      threshold: $("#threshold"),
+      allowlistAssets: $("#allowlistAssets"),
+      copyBtns: Array.from(document.querySelectorAll("[data-copy-target]")),
+    };
+
+    const FALLBACK_TEST_ACCOUNT = "GCAL4PIFKWOIFO6YT4T7TSSES7SJCWV7HN7XAUTNFFSGQK74RFUSAJBX";
+    const app = {
+      alias: "",
+      account: "",
+      secret: "",
+      secretVisible: false,
+      threshold: "0.55",
+      allowlistAssets: "XLM",
+    };
+
+    let replSocket = null;
+    let liveReplConnected = false;
+    let closingForReset = false;
+    let reconnectAfterClose = false;
+    let ansiClass = "";
+    let parseCarry = "";
+    let pendingCommand = "";
+    let busyDisconnectHint = false;
+    let autoReconnectTimer = null;
+    let autoReconnectAttempt = 0;
+
+    const BUSY_SIGNAL_PREFIX = "BUSY:";
+    const AUTO_RECONNECT_DELAYS_MS = [1000, 2000, 4000];
+    const ANSI_RESET = "\u001b[0m";
+    const ANSI_CYAN = "\u001b[96m";
+    const ANSI_GREEN = "\u001b[92m";
+    const ANSI_RED = "\u001b[91m";
+    const IDLE_PREVIEW_BANNER = [
+      `${ANSI_CYAN} _   _                      _____ _           _          _____  _____  _      `,
+      "| \\ | |                    /  __ \\ |         (_)        |  _  \\/  ___|| |     ",
+      "|  \\| | ___ _   _ _ __ ___ | /  \\/ |__   __ _ _ _ __    | | | |\\ `--. | |     ",
+      "| . ` |/ _ \\ | | | '__/ _ \\| |   | '_ \\ / _` | | '_ \\   | | | | `--. \\| |     ",
+      "| |\\  |  __/ |_| | | | (_) | \\__/\\ | | | (_| | | | | |  | |/ / /\\__/ /| |____ ",
+      `\\_| \\_/\\___|\\__,_|_|  \\___/ \\____/_| |_|\\__,_|_|_| |_|  |___/  \\____/ \\_____/${ANSI_RESET}`,
+      `${ANSI_CYAN}🌐${ANSI_RESET} Welcome to NeuroChain CLI - built for AI, logic and elegance`,
+      "NeuroChain Stellar REPL (intent -> action).",
+      "______________________________________________________________________________",
+      "Current model: /opt/neurochain/models/intent_stellar/model.onnx",
+      "Current threshold: 0.55",
+      "Current intent debug: off",
+      "Current network: testnet",
+      "Current wallet/source: (not set)",
+      "Current asset_allowlist: XLM",
+      "Flow mode: enabled (default REPL)",
+      "______________________________________________________________________________",
+      `Type ${ANSI_GREEN}help${ANSI_RESET} for quick start, ${ANSI_GREEN}help all${ANSI_RESET} for full command list, ${ANSI_RED}exit${ANSI_RESET} to quit.`,
+      "______________________________________________________________________________",
+      "Enter Stellar prompt/code (finish with an empty line):"
+    ].join("\n");
+
+    function resetTerminal() {
+      els.terminalOut.textContent = "";
+      ansiClass = "";
+      parseCarry = "";
+    }
+
+    function renderIdlePreviewBanner() {
+      resetTerminal();
+      const processed = processIncomingChunk(`${IDLE_PREVIEW_BANNER}\n`);
+      appendRawTerm(processed);
+      els.terminalOut.scrollTop = 0;
+    }
+
+    function normalizeThresholdValue(raw) {
+      const text = String(raw ?? "").trim().replace(",", ".");
+      const parsed = Number(text);
+      if (!Number.isFinite(parsed)) return null;
+      const clamped = Math.min(1, Math.max(0, parsed));
+      return clamped.toFixed(2);
+    }
+
+    function setThresholdField(rawValue) {
+      const normalized = normalizeThresholdValue(rawValue);
+      if (!normalized) return;
+      app.threshold = normalized;
+      if (els.threshold) {
+        els.threshold.value = normalized;
+      }
+    }
+
+    function normalizeAllowlistAssets(raw) {
+      return String(raw ?? "")
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .join(",");
+    }
+
+    function setAllowlistAssetsField(rawValue) {
+      const normalized = normalizeAllowlistAssets(rawValue);
+      const next = normalized || "XLM";
+      app.allowlistAssets = next;
+      if (els.allowlistAssets) {
+        els.allowlistAssets.value = next;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function ansiClassFromCodes(codes) {
+      if (codes.includes(0) || codes.includes(39)) return "";
+      if (codes.includes(96) || codes.includes(36)) return "ansi-cyan";
+      if (codes.includes(92) || codes.includes(32)) return "ansi-green";
+      if (codes.includes(93) || codes.includes(33)) return "ansi-yellow";
+      if (codes.includes(91) || codes.includes(31)) return "ansi-red";
+      return ansiClass;
+    }
+
+    function wrapAnsiTextEscaped(escapedText) {
+      if (!escapedText) return "";
+      return ansiClass ? `<span class="${ansiClass}">${escapedText}</span>` : escapedText;
+    }
+
+    function ansiToHtmlChunk(input) {
+      const src = String(input || "");
+      if (!src) return "";
+
+      const ansiRegex = /\x1b\[([0-9;]*)m/g;
+      let out = "";
+      let lastIndex = 0;
+      let match;
+
+      while ((match = ansiRegex.exec(src)) !== null) {
+        const part = src.slice(lastIndex, match.index);
+        if (part) {
+          out += wrapAnsiTextEscaped(escapeHtml(part));
+        }
+
+        const rawCodes = match[1];
+        const codes = rawCodes
+          ? rawCodes.split(";").map((v) => Number(v)).filter((v) => Number.isFinite(v))
+          : [0];
+        ansiClass = ansiClassFromCodes(codes);
+        lastIndex = ansiRegex.lastIndex;
+      }
+
+      const tail = src.slice(lastIndex);
+      if (tail) {
+        out += wrapAnsiTextEscaped(escapeHtml(tail));
+      }
+      return out;
+    }
+
+    function appendRawTerm(text = "") {
+      if (!text) return;
+      const html = ansiToHtmlChunk(text);
+      if (html) {
+        els.terminalOut.insertAdjacentHTML("beforeend", html);
+      }
+      els.terminalOut.scrollTop = els.terminalOut.scrollHeight;
+    }
+
+    function appendSystemLine(text = "") {
+      appendRawTerm(`[${new Date().toLocaleTimeString()}] ${text}\n`);
+    }
+
+    function setCell(el, value) {
+      if (!el) return;
+      const text = String(value ?? "").trim();
+      const next = text || "-";
+      el.textContent = next;
+      el.title = next === "-" ? "" : next;
+      if (next === "-") {
+        delete el.dataset.fullValue;
+      } else {
+        el.dataset.fullValue = next;
+      }
+      syncCopyButtons();
+    }
+
+    function compactMiddle(value, edge = 4) {
+      const text = String(value ?? "").trim();
+      if (!text) return "-";
+      if (text.length <= (edge * 2) + 3) return text;
+      return `${text.slice(0, edge)}...${text.slice(-edge)}`;
+    }
+
+    function setCompactCell(el, value) {
+      if (!el) return;
+      const text = String(value ?? "").trim();
+      const next = text || "-";
+      if (next === "-") {
+        el.textContent = "-";
+        el.title = "";
+        delete el.dataset.fullValue;
+      } else {
+        el.textContent = compactMiddle(next);
+        el.title = next;
+        el.dataset.fullValue = next;
+      }
+      syncCopyButtons();
+    }
+
+    function syncCopyButtons() {
+      els.copyBtns.forEach((btn) => {
+        const targetId = btn.dataset.copyTarget || "";
+        const target = targetId ? document.getElementById(targetId) : null;
+        const value = String(target?.dataset.fullValue || target?.textContent || "").trim();
+        btn.disabled = !value || value === "-";
+      });
+    }
+
+    function maskSecret(secret) {
+      const value = String(secret || "").trim();
+      if (!value) return "-";
+      if (value.length <= 10) return "••••••";
+      return `${value.slice(0, 4)}…${value.slice(-4)}`;
+    }
+
+    function renderSecretCell() {
+      if (!els.stSecret) return;
+      const hasSecret = !!app.secret;
+      if (!hasSecret) {
+        els.stSecret.textContent = "-";
+      } else if (app.secretVisible) {
+        els.stSecret.textContent = app.secret;
+      } else {
+        els.stSecret.textContent = `hidden (${maskSecret(app.secret)})`;
+      }
+      if (els.stSecretToggle) {
+        els.stSecretToggle.disabled = !hasSecret;
+        els.stSecretToggle.textContent = hasSecret ? (app.secretVisible ? "Hide" : "Reveal") : "Reveal";
+        els.stSecretToggle.setAttribute("aria-pressed", app.secretVisible ? "true" : "false");
+      }
+      syncCopyButtons();
+    }
+
+    function resetWorkspaceState() {
+      app.alias = "";
+      app.account = "";
+      app.secret = "";
+      app.secretVisible = false;
+      setThresholdField("0.55");
+      setAllowlistAssetsField("XLM");
+      setCell(els.stAlias, "-");
+      setCompactCell(els.stAccount, "-");
+      setCell(els.stBalances, "-");
+      setCompactCell(els.stContractId, "-");
+      setCompactCell(els.stTxHash, "-");
+      setCell(els.stTxStatus, "-");
+      renderSecretCell();
+      syncCopyButtons();
+    }
+
+    function updateAlias(aliasRaw) {
+      const alias = String(aliasRaw || "").trim();
+      if (!alias || alias === "(not set)") {
+        app.alias = "";
+        setCell(els.stAlias, "-");
+        return;
+      }
+      app.alias = alias;
+      setCell(els.stAlias, alias);
+      syncCopyButtons();
+    }
+
+    function updateAccount(accountRaw) {
+      const account = String(accountRaw || "").trim();
+      if (!account) return;
+      app.account = account;
+      setCompactCell(els.stAccount, account);
+      syncCopyButtons();
+    }
+
+    function updateSecret(secretRaw) {
+      const secret = String(secretRaw || "").trim();
+      if (!secret) return;
+      app.secret = secret;
+      app.secretVisible = false;
+      renderSecretCell();
+    }
+
+    function stripAnsiForParse(input = "") {
+      return String(input).replace(/\x1b\[[0-9;]*m/g, "");
+    }
+
+    function parseWorkspaceLine(rawLine) {
+      const line = String(rawLine || "").trim();
+      if (!line) return;
+
+      const currentThreshold = line.match(/^Current threshold:\s*([0-9]+(?:[.,][0-9]+)?)$/i);
+      if (currentThreshold) {
+        setThresholdField(currentThreshold[1]);
+        return;
+      }
+
+      const thresholdSet = line.match(/^Intent threshold set to:\s*([0-9]+(?:[.,][0-9]+)?)$/i);
+      if (thresholdSet) {
+        setThresholdField(thresholdSet[1]);
+        return;
+      }
+
+      const thresholdConfig = line.match(/^- intent_threshold:\s*([0-9]+(?:[.,][0-9]+)?)$/i);
+      if (thresholdConfig) {
+        setThresholdField(thresholdConfig[1]);
+        return;
+      }
+
+      const currentAllowlist = line.match(/^Current asset_allowlist:\s*(.+)$/i);
+      if (currentAllowlist) {
+        setAllowlistAssetsField(currentAllowlist[1]);
+        return;
+      }
+
+      const allowlistSet = line.match(/^Asset allowlist set to:\s*(.+)$/i);
+      if (allowlistSet) {
+        setAllowlistAssetsField(allowlistSet[1]);
+        return;
+      }
+
+      const allowlistConfig = line.match(/^- asset_allowlist:\s*(.+)$/i);
+      if (allowlistConfig) {
+        setAllowlistAssetsField(allowlistConfig[1]);
+        return;
+      }
+
+      const aliasGenerated = line.match(/^Wallet key alias generated:\s*(.+)$/i);
+      if (aliasGenerated) {
+        updateAlias(aliasGenerated[1]);
+        return;
+      }
+
+      const walletSource = line.match(/^(?:Current\s+)?Wallet\/source(?:\s+set)?\s*:\s*(.+)$/i);
+      if (walletSource) {
+        updateAlias(walletSource[1]);
+        return;
+      }
+
+      const publicKey = line.match(/Public key\/address:\s*(G[A-Z2-7]{55})/i);
+      if (publicKey) {
+        updateAccount(publicKey[1]);
+      }
+
+      const txHash = line.match(/\btx_hash=([A-Za-z0-9-]{8,})\b/i);
+      if (txHash) {
+        setCompactCell(els.stTxHash, txHash[1]);
+      }
+
+      const txStatus = line.match(/\bstatus=(ok|error|pending)\b/i);
+      if (txStatus) {
+        setCell(els.stTxStatus, txStatus[1].toLowerCase());
+      }
+
+      const contractId = line.match(/\bcontract_id=([A-Za-z0-9:_-]{6,})\b/i);
+      if (contractId) {
+        setCompactCell(els.stContractId, contractId[1]);
+      }
+    }
+
+    function captureAndRedactSecrets(rawText = "") {
+      return String(rawText).replace(/\bS[A-Z2-7]{55}\b/g, (secret) => {
+        updateSecret(secret);
+        return `[secret:${maskSecret(secret)}]`;
+      });
+    }
+
+    function processIncomingChunk(rawText = "") {
+      if (!rawText) return "";
+      const redacted = captureAndRedactSecrets(rawText);
+      const plain = stripAnsiForParse(redacted).replace(/\r/g, "\n");
+      parseCarry += plain;
+
+      let idx = parseCarry.indexOf("\n");
+      while (idx !== -1) {
+        const line = parseCarry.slice(0, idx);
+        parseCarry = parseCarry.slice(idx + 1);
+        parseWorkspaceLine(line);
+        idx = parseCarry.indexOf("\n");
+      }
+
+      if (parseCarry.length > 2048) {
+        parseCarry = parseCarry.slice(-1024);
+      }
+
+      return redacted;
+    }
+
+    function wsBaseUrl() {
+      const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+      return `${proto}//${window.location.host}`;
+    }
+
+    function wsReplUrl() {
+      return `${wsBaseUrl()}/api/stellar/repl/ws`;
+    }
+
+    function showStatus(text, type = "muted") {
+      if (!els.statusPill) return;
+      els.statusPill.textContent = text;
+      if (type === "ok") {
+        els.statusPill.style.color = "var(--ok)";
+      } else if (type === "warn") {
+        els.statusPill.style.color = "var(--warn)";
+      } else if (type === "err") {
+        els.statusPill.style.color = "var(--danger)";
+      } else {
+        els.statusPill.style.color = "#cce5fa";
+      }
+    }
+
+    function clearAutoReconnectTimer() {
+      if (!autoReconnectTimer) return;
+      window.clearTimeout(autoReconnectTimer);
+      autoReconnectTimer = null;
+    }
+
+    function scheduleBusyReconnect() {
+      if (closingForReset || reconnectAfterClose) return;
+      clearAutoReconnectTimer();
+
+      if (autoReconnectAttempt >= AUTO_RECONNECT_DELAYS_MS.length) {
+        showStatus("Server busy, retry manually", "warn");
+        appendSystemLine("busy: REPL sessions full; reconnect limit reached");
+        return;
+      }
+
+      const delayMs = AUTO_RECONNECT_DELAYS_MS[autoReconnectAttempt];
+      autoReconnectAttempt += 1;
+      const total = AUTO_RECONNECT_DELAYS_MS.length;
+      showStatus(
+        `Server busy, retrying in ${(delayMs / 1000).toFixed(1)}s (${autoReconnectAttempt}/${total})`,
+        "warn"
+      );
+      if (autoReconnectAttempt === 1) {
+        appendSystemLine("busy: REPL sessions full; retrying automatically");
+      }
+
+      autoReconnectTimer = window.setTimeout(() => {
+        autoReconnectTimer = null;
+        connectLiveRepl();
+      }, delayMs);
+    }
+
+    function queueCommandAndEnsureConnection(line) {
+      const next = String(line || "").trim();
+      if (!next) return;
+      pendingCommand = next;
+
+      if (!replSocket || replSocket.readyState === WebSocket.CLOSED || replSocket.readyState === WebSocket.CLOSING) {
+        connectLiveRepl();
+      }
+      showStatus("Connecting live REPL...", "muted");
+      appendSystemLine("info: connecting live REPL, command queued");
+    }
+
+    function flushPendingCommand() {
+      const next = String(pendingCommand || "").trim();
+      if (!next) return;
+      pendingCommand = "";
+      try {
+        sendLiveReplCommand(next);
+      } catch (err) {
+        pendingCommand = next;
+        appendSystemLine(`err: failed to send queued command (${String(err?.message || err)})`);
+        showStatus("Failed", "err");
+      }
+    }
+
+    function sendLiveReplCommand(line) {
+      if (!replSocket || replSocket.readyState !== WebSocket.OPEN) {
+        throw new Error("live REPL socket is not connected");
+      }
+      const payload = line.endsWith("\n\n") ? line : `${line}\n\n`;
+      replSocket.send(payload);
+    }
+
+    function connectLiveRepl() {
+      if (replSocket && (replSocket.readyState === WebSocket.OPEN || replSocket.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+      clearAutoReconnectTimer();
+      busyDisconnectHint = false;
+      replSocket = new WebSocket(wsReplUrl());
+      showStatus("Connecting live REPL...", "muted");
+
+      replSocket.addEventListener("open", () => {
+        liveReplConnected = true;
+        busyDisconnectHint = false;
+        autoReconnectAttempt = 0;
+        clearAutoReconnectTimer();
+        resetTerminal();
+        resetWorkspaceState();
+        showStatus("Live REPL connected", "ok");
+        flushPendingCommand();
+      });
+
+      replSocket.addEventListener("message", (event) => {
+        const text = typeof event.data === "string" ? event.data : "";
+        const plain = stripAnsiForParse(text);
+        if (plain.includes(BUSY_SIGNAL_PREFIX)) {
+          busyDisconnectHint = true;
+          showStatus("Server busy, retrying shortly...", "warn");
+        }
+        const processed = processIncomingChunk(text);
+        appendRawTerm(processed);
+      });
+
+      replSocket.addEventListener("close", () => {
+        const wasResetClose = closingForReset;
+        const shouldReconnect = reconnectAfterClose;
+        closingForReset = false;
+        reconnectAfterClose = false;
+        replSocket = null;
+        liveReplConnected = false;
+        if (wasResetClose) {
+          showStatus("Session reset", "muted");
+          if (shouldReconnect) {
+            connectLiveRepl();
+          }
+          return;
+        }
+        if (busyDisconnectHint) {
+          scheduleBusyReconnect();
+          return;
+        }
+        showStatus("Live REPL disconnected", "warn");
+      });
+
+      replSocket.addEventListener("error", () => {
+        liveReplConnected = false;
+        showStatus("Live REPL error", "err");
+      });
+    }
+
+    function resetLiveReplSession({ reconnect = true, clearTerminal = true } = {}) {
+      clearAutoReconnectTimer();
+      autoReconnectAttempt = 0;
+      busyDisconnectHint = false;
+      pendingCommand = "";
+      closingForReset = true;
+      reconnectAfterClose = reconnect;
+      liveReplConnected = false;
+
+      if (clearTerminal) {
+        resetTerminal();
+      }
+
+      if (replSocket && (replSocket.readyState === WebSocket.OPEN || replSocket.readyState === WebSocket.CONNECTING)) {
+        try {
+          replSocket.close(1000, "session reset");
+        } catch {
+          replSocket = null;
+          closingForReset = false;
+          reconnectAfterClose = false;
+          if (reconnect) connectLiveRepl();
+        }
+        return;
+      }
+
+      replSocket = null;
+      closingForReset = false;
+      reconnectAfterClose = false;
+      if (reconnect) connectLiveRepl();
+    }
+
+    function runLiveOrError(line) {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+
+      if (!liveReplConnected) {
+        queueCommandAndEnsureConnection(trimmed);
+        return;
+      }
+
+      if (!liveReplConnected || !replSocket || replSocket.readyState !== WebSocket.OPEN) {
+        queueCommandAndEnsureConnection(trimmed);
+        return;
+      }
+
+      try {
+        sendLiveReplCommand(trimmed);
+      } catch (err) {
+        appendSystemLine(`err: ${String(err?.message || err)}`);
+        showStatus("Failed", "err");
+      }
+    }
+
+    function wire() {
+      els.runCmdBtn?.addEventListener("click", () => {
+        const line = els.commandInput.value;
+        els.commandInput.value = "";
+        runLiveOrError(line);
+      });
+
+      els.commandInput?.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        const line = els.commandInput.value;
+        els.commandInput.value = "";
+        runLiveOrError(line);
+      });
+
+      els.clearAllBtn?.addEventListener("click", () => {
+        if (els.planOut) els.planOut.textContent = "(no plan yet)";
+        resetWorkspaceState();
+        showStatus("Resetting session...", "muted");
+        resetLiveReplSession({ reconnect: false, clearTerminal: true });
+        renderIdlePreviewBanner();
+        showStatus("Idle (connect on first command)", "muted");
+      });
+
+      els.stSecretToggle?.addEventListener("click", () => {
+        if (!app.secret) return;
+        app.secretVisible = !app.secretVisible;
+        renderSecretCell();
+      });
+
+      els.threshold?.addEventListener("change", () => {
+        const normalized = normalizeThresholdValue(els.threshold.value);
+        if (!normalized) {
+          setThresholdField(app.threshold || "0.55");
+          return;
+        }
+        if (normalized === app.threshold) {
+          setThresholdField(normalized);
+          return;
+        }
+        setThresholdField(normalized);
+        runLiveOrError(`intent_threshold: ${normalized}`);
+      });
+
+      els.allowlistAssets?.addEventListener("change", () => {
+        const normalized = normalizeAllowlistAssets(els.allowlistAssets.value);
+        if (!normalized) {
+          setAllowlistAssetsField(app.allowlistAssets || "XLM");
+          return;
+        }
+        if (normalized === app.allowlistAssets) {
+          setAllowlistAssetsField(normalized);
+          return;
+        }
+        setAllowlistAssetsField(normalized);
+        runLiveOrError(`asset_allowlist: ${normalized}`);
+      });
+
+      els.copyBtns.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const targetId = btn.dataset.copyTarget || "";
+          const target = targetId ? document.getElementById(targetId) : null;
+          const value = String(target?.dataset.fullValue || target?.textContent || "").trim();
+          if (!target || !value || value === "-") return;
+          try {
+            await navigator.clipboard.writeText(value);
+            btn.classList.add("is-copied");
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            window.setTimeout(() => {
+              btn.classList.remove("is-copied");
+              btn.innerHTML = '<i class="bi bi-copy"></i>';
+            }, 1200);
+          } catch {
+            appendSystemLine("err: failed to copy value");
+          }
+        });
+      });
+
+      els.cmdChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const template = chip.dataset.cmd || "";
+          const line = template
+            .replaceAll("${account}", app.account || FALLBACK_TEST_ACCOUNT)
+            .replaceAll("${alias}", app.alias || "demo");
+          runLiveOrError(line);
+        });
+      });
+    }
+
+    function init() {
+      const yearEl = document.getElementById("year");
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+      setThresholdField(app.threshold);
+      setAllowlistAssetsField(app.allowlistAssets);
+      wire();
+      renderIdlePreviewBanner();
+      resetWorkspaceState();
+      syncCopyButtons();
+      showStatus("Idle (connect on first command)", "muted");
+      window.addEventListener("beforeunload", () => {
+        resetLiveReplSession({ reconnect: false, clearTerminal: false });
+      });
+    }
+
+    init();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

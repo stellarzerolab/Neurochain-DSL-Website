@@ -162,6 +162,28 @@
       color:#f1f8ff;
       background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
     }
+    .nav-demo-menu{
+      min-width:14.5rem;
+      padding:.42rem;
+      border-radius:16px;
+      border:1px solid rgba(125,211,252,.18);
+      background:linear-gradient(180deg,rgba(14,23,40,.96),rgba(10,17,30,.94));
+      box-shadow:0 18px 34px rgba(0,0,0,.4);
+      backdrop-filter:blur(12px);
+    }
+    .nav-demo-menu .dropdown-item{
+      display:flex;
+      align-items:center;
+      gap:.55rem;
+      border-radius:10px;
+      color:#dff0ff;
+      padding:.58rem .7rem;
+    }
+    .nav-demo-menu .dropdown-item:hover,
+    .nav-demo-menu .dropdown-item:focus{
+      color:#ffffff;
+      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+    }
     .lead{color:var(--muted)}
     .brand{letter-spacing:.3px}
     .badge-dot{display:inline-flex;align-items:center;gap:.5ch}
@@ -190,7 +212,7 @@
     .nav-link{position:relative}
     .interactive-nav{
       position:relative;
-      overflow:hidden;
+      overflow:visible;
       isolation:isolate;
     }
     .interactive-nav::after{
@@ -200,6 +222,7 @@
       pointer-events:none;
       opacity:0;
       transition:opacity .24s ease;
+      border-radius:inherit;
       background:radial-gradient(
         340px circle at var(--mx, 50%) var(--my, 50%),
         rgba(125,211,252,.14),
@@ -427,12 +450,274 @@
       color:#ffffff !important;
     }
     .setup-link-icon i{font-size:.95rem;line-height:1}
+    .arch-intro{
+      color:#a9bed3;
+      line-height:1.62;
+      margin:.35rem 0 1rem;
+      max-width:58ch;
+    }
+    .arch-shell{
+      position:relative;
+      overflow:hidden;
+      display:grid;
+      gap:.88rem;
+      margin-top:1rem;
+      padding:1rem;
+      border-radius:22px;
+      border:1px solid rgba(125,211,252,.12);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 46%),
+        linear-gradient(180deg,rgba(7,18,34,.78),rgba(5,12,24,.82));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .arch-shell::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size:28px 28px;
+      mask-image:linear-gradient(180deg,rgba(0,0,0,.6),transparent 92%);
+      opacity:.38;
+    }
+    .arch-layer{
+      position:relative;
+      padding:1rem 1rem 1.05rem;
+      border-radius:18px;
+      border:1px solid rgba(125,211,252,.18);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.09), transparent 44%),
+        linear-gradient(180deg,rgba(8,24,42,.84),rgba(6,16,31,.86));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.04),
+        0 12px 26px rgba(0,0,0,.16);
+      transition:
+        transform .18s var(--ease),
+        border-color .22s ease,
+        box-shadow .22s ease,
+        filter .22s ease;
+    }
+    .arch-layer:hover{
+      transform:translateY(-1px);
+      border-color:rgba(167,225,255,.34);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.05),
+        0 16px 30px rgba(0,0,0,.22),
+        0 0 24px rgba(125,211,252,.14);
+      filter:brightness(1.02);
+    }
+    .arch-layer::before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:1px;
+      pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(167,225,255,.3),transparent);
+    }
+    .arch-layer::after{
+      content:"";
+      position:absolute;
+      left:1.1rem;
+      right:1.1rem;
+      bottom:-.48rem;
+      height:1px;
+      pointer-events:none;
+      background:linear-gradient(90deg,rgba(125,211,252,.1),rgba(167,139,250,.24),rgba(125,211,252,.1));
+    }
+    .arch-layer-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.8rem;
+      margin-bottom:.55rem;
+    }
+    .arch-kicker{
+      font-size:.74rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#8ccfff;
+      font-weight:700;
+    }
+    .arch-mini{
+      padding:.25rem .55rem;
+      border-radius:999px;
+      border:1px solid rgba(125,211,252,.18);
+      background:rgba(11,24,40,.7);
+      color:#d9efff;
+      font-size:.74rem;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .arch-layer h5{
+      margin:0 0 .42rem;
+      font-size:1.12rem;
+      color:#f2f8ff;
+    }
+    .arch-flow,
+    .arch-copy{
+      margin:0;
+      color:#b7ccde;
+      line-height:1.65;
+    }
+    .arch-flow strong,
+    .arch-copy strong{
+      color:#f4fbff;
+      font-weight:700;
+    }
+    .arch-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.5rem;
+      margin-top:.75rem;
+    }
+    .arch-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:.38rem .66rem;
+      border-radius:999px;
+      border:1px solid rgba(125,211,252,.18);
+      background:linear-gradient(180deg,rgba(12,32,53,.82),rgba(8,21,37,.8));
+      color:#d5e6f5;
+      font-size:.86rem;
+      line-height:1;
+    }
+    .arch-routes{
+      display:grid;
+      gap:.62rem;
+      margin-top:.7rem;
+    }
+    .arch-route{
+      padding:.72rem .8rem;
+      border-radius:14px;
+      border:1px solid rgba(125,211,252,.18);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 42%),
+        linear-gradient(180deg,rgba(8,22,39,.82),rgba(6,16,30,.84));
+    }
+    .arch-route code{
+      display:block;
+      color:#8fe6ff;
+      font-size:.94rem;
+      margin-bottom:.22rem;
+    }
+    .arch-route span{
+      display:block;
+      color:#abc0d4;
+      line-height:1.5;
+      font-size:.92rem;
+    }
+    .arch-note{
+      margin-top:.78rem;
+      padding:.68rem .8rem;
+      border-radius:14px;
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 44%),
+        linear-gradient(180deg,rgba(14,36,58,.88),rgba(9,24,41,.88));
+      border:1px solid rgba(125,211,252,.18);
+      color:#dcecff;
+      font-size:.92rem;
+      line-height:1.5;
+    }
+    .arch-engine .arch-mini{color:#d9f8ff}
+    .arch-runtime .arch-mini{color:#def7eb}
+    .arch-api .arch-mini{color:#e4ecff}
+    .arch-stellar .arch-mini{color:#ffe6bc}
     #tech ol{
       line-height:1.62;
       padding-left:1.55rem;
     }
     #tech ol li{
       margin:.52rem 0;
+    }
+    .guarantee-card{
+      border:1px solid rgba(125,211,252,.14);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.07), transparent 44%),
+        linear-gradient(180deg,rgba(10,19,34,.84),rgba(7,14,26,.84));
+    }
+    .setup-card{
+      border:1px solid rgba(125,211,252,.16);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 44%),
+        linear-gradient(180deg,rgba(10,21,37,.84),rgba(7,15,29,.84));
+    }
+    .arch-card{
+      border:1px solid rgba(125,211,252,.16);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.1), transparent 44%),
+        linear-gradient(180deg,rgba(10,22,39,.84),rgba(7,15,30,.84));
+    }
+    .build-card{
+      border:1px solid rgba(125,211,252,.16);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.09), transparent 44%),
+        linear-gradient(180deg,rgba(10,21,37,.84),rgba(7,15,29,.84));
+    }
+    .guarantee-intro{
+      color:#a9bed3;
+      line-height:1.62;
+      margin:.35rem 0 1rem;
+      max-width:54ch;
+    }
+    .guarantee-list{
+      display:grid;
+      gap:.78rem;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+    .guarantee-item{
+      display:flex;
+      align-items:flex-start;
+      gap:.78rem;
+      padding:.88rem .92rem;
+      border-radius:16px;
+      border:1px solid rgba(125,211,252,.18);
+      background:
+        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 42%),
+        linear-gradient(180deg,rgba(8,24,42,.82),rgba(6,16,30,.84));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .guarantee-icon{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:2rem;
+      height:2rem;
+      border-radius:999px;
+      border:1px solid rgba(125,211,252,.22);
+      background:linear-gradient(180deg,rgba(12,33,54,.86),rgba(8,21,37,.84));
+      color:#8fe6ff;
+      box-shadow:0 0 0 1px rgba(255,255,255,.03);
+    }
+    .guarantee-copy strong{
+      display:block;
+      color:#f1f8ff;
+      margin-bottom:.12rem;
+      font-size:.98rem;
+    }
+    .guarantee-copy span{
+      display:block;
+      color:#aec2d6;
+      line-height:1.56;
+      font-size:.93rem;
+    }
+    @media (min-width:992px){
+      .tech-side-stack{height:100%}
+      .guarantee-card{
+        display:flex;
+        flex-direction:column;
+        flex:1 1 auto;
+      }
+      .guarantee-list{
+        flex:1 1 auto;
+        grid-template-rows:repeat(4, minmax(0,1fr));
+      }
     }
     .icon-inline { vertical-align: -0.05em; font-size: 0.95em; }
     .code-actions{display:grid;grid-template-columns:1fr 1fr;gap:.58rem}
@@ -446,6 +731,8 @@
       content:"";
       position:absolute;
       inset:0;
+      width:auto;
+      height:auto;
       pointer-events:none;
       opacity:0;
       transition:opacity .28s ease;
@@ -457,6 +744,23 @@
       );
       z-index:0;
     }
+    .arch-layer.interactive-card::after{
+      background:radial-gradient(
+        320px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(125,211,252,.18),
+        rgba(34,211,238,.12) 34%,
+        transparent 72%
+      );
+    }
+    .arch-route.interactive-card::after,
+    .arch-note.interactive-card::after{
+      background:radial-gradient(
+        240px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(125,211,252,.22),
+        rgba(34,211,238,.14) 36%,
+        transparent 74%
+      );
+    }
     .interactive-card > *{position:relative;z-index:1}
     @media (hover:hover) and (pointer:fine){
       .interactive-card:hover::after{opacity:1}
@@ -465,6 +769,18 @@
     /* Full-bleed footer helper */
     .footer-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
       background:linear-gradient(180deg, transparent, rgba(255,255,255,.03));}
+    .footer-links{
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .footer-links a{
+      display:inline-flex;
+      align-items:center;
+      gap:.36rem;
+    }
 
     /* Reveal system */
     .reveal{opacity:0;transform:translate3d(0,18px,0);transition:opacity .7s var(--ease),transform .7s var(--ease)}
@@ -482,7 +798,36 @@
       .page-progress i,.interactive-card::after,.interactive-nav::after,.promo-link::after{transition:none}
     }
     @media (max-width:991.98px){
+      .navbar-nav .nav-link{
+        display:inline-flex;
+        align-items:center;
+        gap:.45rem;
+        width:max-content;
+        padding-left:0;
+        padding-right:0;
+      }
+      .nav-link.is-active::after{
+        left:0;
+        right:0;
+        width:auto;
+      }
+      .arch-shell{padding:.82rem}
+      .arch-layer{padding:.9rem .86rem}
+      .arch-layer-top{align-items:flex-start;flex-direction:column}
+      .arch-route{padding:.68rem .72rem}
       .code-actions{grid-template-columns:1fr}
+      .footer-links{
+        width:100%;
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0,1fr));
+        gap:.9rem .8rem;
+        justify-items:center;
+      }
+      .footer-links a{
+        justify-content:center;
+        text-align:center;
+      }
+      .footer-x-link{display:none !important}
     }
   </style>
 </head>
@@ -559,11 +904,21 @@
       <div id="nav" class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
           <li class="nav-item"><a class="nav-link section-link" href="#features">Features</a></li>
-          <li class="nav-item"><a class="nav-link section-link" href="#demo">Demo</a></li>
+          <li class="nav-item"><a class="nav-link section-link" href="#demo">Surfaces</a></li>
           <li class="nav-item"><a class="nav-link section-link" href="#tech">Tech</a></li>
+          <li class="nav-item"><a class="nav-link" href="/about"><i class="bi bi-stars"></i> About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a></li>
           <li class="nav-item"><a class="nav-link" href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X"><i class="bi bi-twitter-x"></i></a></li>
           <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
-          <li class="nav-item"><a class="btn btn-sm btn-outline-light" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
+          <li class="nav-item dropdown">
+            <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-terminal"></i> Open Demo
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
+              <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
+              <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </div>
@@ -583,12 +938,12 @@
         </h1>
         <p class="lead reveal">
           Simplicity is beautiful — NeuroChain DSL makes it real. AI operations are part of the code, not hidden layers.
-          Scripts and the CLI are the primary way to work, the WebUI is a light demo/test surface.
+          Scripts and the CLI are the primary way to work, while the demos are light public test surfaces.
           Run ONNX models on the CPU and keep full control.
         </p>
         <div class="d-flex flex-wrap gap-2 mt-3 hero-cta reveal">
           <a href="/webui" class="btn btn-primary btn-lg"><i class="bi bi-play-circle"></i> Try the WebUI</a>
-          <a href="#demo" class="btn btn-outline-light btn-lg"><i class="bi bi-lightning"></i> See the demo</a>
+          <a href="#demo" class="btn btn-outline-light btn-lg"><i class="bi bi-lightning"></i> See the surfaces</a>
         </div>
       </div>
 
@@ -632,7 +987,7 @@ if mood == "Positive":
         <div class="glass p-4 feature feature-card interactive-card h-100">
           <div class="fs-3 mb-2"><i class="bi bi-cpu text-info"></i></div>
           <h5>ONNX / CPU</h5>
-          <p class="lead">SST2, Toxic, FactCheck, Intent and MacroIntent models run on the CPU without heavy infrastructure.</p>
+          <p class="lead">SST2, Toxic, FactCheck, Intent, MacroIntent and Intent Stellar models run on the CPU without heavy infrastructure.</p>
         </div>
       </div>
 
@@ -682,7 +1037,7 @@ if mood == "Positive":
       <!-- WebUI text -->
       <div class="col-lg-6 reveal">
         <div class="glass p-4 soft h-100 demo-card interactive-card">
-          <h4 class="mb-2"><i class="bi bi-terminal"></i> WebUI Demo</h4>
+          <h4 class="mb-2"><i class="bi bi-cpu"></i> WebUI Demo</h4>
           <p class="lead mb-3">
             Enter NeuroChain DSL commands and run them from your browser. Pick one or many models and see output and logs instantly.
           </p>
@@ -709,7 +1064,7 @@ if mood == "Positive":
                  onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
                  `<div class=&quot;promo-fallback&quot;>
                     <div>
-                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-terminal&quot;></i></div>
+                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-cpu&quot;></i></div>
                       <p class=&quot;mt-2 mb-0&quot;>WebUI — click to open</p>
                       <div class=&quot;text-muted small&quot;>Add an image file named <code>webui-promo.png</code></div>
                     </div>
@@ -721,36 +1076,37 @@ if mood == "Positive":
   </div>
 </section>
 
-  <!-- SNAKE DEMO -->
-  <section id="snake" class="py-4">
+  <!-- STELLAR DEMO -->
+  <section id="stellar" class="py-4">
     <div class="container">
       <div class="row align-items-center g-4" data-stagger>
-        <!-- Snake text -->
+        <!-- Stellar text -->
         <div class="col-lg-6 reveal">
           <div class="glass p-4 soft h-100 demo-card interactive-card">
-            <h4 class="mb-2"><i class="bi bi-joystick"></i> Snake Demo</h4>
-            <p class="lead mb-3">NeuroChain drives Snake in real time: the intent model reads commands and the game reacts instantly.</p>
+            <h4 class="mb-2"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</h4>
+            <p class="lead mb-3">NeuroChain parses Stellar/Soroban intents into typed plans with explicit guardrails before submit.</p>
             <ul class="list-unstyled small mb-0">
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> On-device ONNX models (CPU)</li>
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Commands: up / down / left / right / go / stop</li>
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Real-time decisions without the cloud</li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Model picker: Intent Stellar</li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Dedicated endpoint: <code>POST /api/stellar/intent-plan</code></li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Guardrails: allowlist / policy / intent safety (exit 3 / 4 / 5)</li>
+              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Testnet-first workflow for reviewer-friendly verification</li>
             </ul>
             <div class="mt-3">
-              <a href="/snake" class="btn btn-primary"><i class="bi bi-joystick"></i> Play Snake</a>
+              <a href="/stellar-cli" class="btn btn-primary"><i class="bi bi-cursor"></i> Open Stellar Demo</a>
             </div>
           </div>
         </div>
 
-        <!-- Snake image -->
+        <!-- Stellar image -->
         <div class="col-lg-6 reveal">
-          <a href="/snake" class="promo-link glass soft" aria-label="Snake demo — NeuroChain connected to a Snake game">
-            <img src="snake-promo.png" alt="NeuroChain Snake demo"
+          <a href="/stellar-cli" class="promo-link glass soft" aria-label="Stellar demo — NeuroChain intent-plan guardrails on testnet">
+            <img src="stellar-promo.png" alt="NeuroChain Stellar demo"
                  onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
                  `<div class=&quot;promo-fallback&quot;>
                     <div>
-                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-joystick&quot;></i></div>
-                      <p class=&quot;mt-2 mb-0&quot;>Snake demo — click to play</p>
-                      <div class=&quot;text-muted small&quot;>Add an image file named <code>snake-promo.png</code></div>
+                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-rocket-takeoff&quot;></i></div>
+                      <p class=&quot;mt-2 mb-0&quot;>Stellar demo — click to open</p>
+                      <div class=&quot;text-muted small&quot;>Add an image file named <code>stellar-promo.png</code></div>
                     </div>
                   </div>`)">
           </a>
@@ -766,37 +1122,133 @@ if mood == "Positive":
       
       <!-- Architecture -->
       <div class="col-lg-6 reveal">
-        <div class="glass p-4 h-100 interactive-card">
+        <div class="glass p-4 h-100 interactive-card arch-card">
           <h4 class="mb-2"><i class="bi bi-diagram-3"></i> Architecture</h4>
-<pre class="code p-3"><code>[Engine (NeuroChain)]
-Lexer → Parser → Interpreter → Inference (tract-onnx, CPU)
-# Local inference — no external cloud layers
+          <p class="arch-intro mb-0">
+            One local-first engine, multiple runtime surfaces, and a guarded Stellar intent layer presented as one coherent stack.
+          </p>
+          <div class="arch-shell">
+            <div class="arch-layer arch-engine interactive-card">
+              <div class="arch-layer-top">
+                <span class="arch-kicker">Engine</span>
+                <span class="arch-mini">Local-first</span>
+              </div>
+              <h5>NeuroChain Core</h5>
+              <p class="arch-flow"><strong>Lexer -> Parser -> Interpreter -> Intent/Template -> Inference</strong></p>
+              <div class="arch-pills">
+                <span class="arch-pill">tract-onnx</span>
+                <span class="arch-pill">CPU runtime</span>
+                <span class="arch-pill">No external cloud layers</span>
+              </div>
+            </div>
 
-[API (Rust, Axum)]
-POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
-</code></pre>
+            <div class="arch-layer arch-runtime interactive-card">
+              <div class="arch-layer-top">
+                <span class="arch-kicker">Runtime Surfaces</span>
+                <span class="arch-mini">Shared path</span>
+              </div>
+              <h5>One runtime, many entry points</h5>
+              <div class="arch-pills">
+                <span class="arch-pill">REPL</span>
+                <span class="arch-pill">.nc scripts</span>
+                <span class="arch-pill">CLI</span>
+                <span class="arch-pill">API</span>
+              </div>
+            </div>
+
+            <div class="arch-layer arch-api interactive-card">
+              <div class="arch-layer-top">
+                <span class="arch-kicker">API</span>
+                <span class="arch-mini">Rust / Axum</span>
+              </div>
+              <h5>Live endpoints</h5>
+              <div class="arch-routes">
+                <div class="arch-route interactive-card">
+                  <code>POST /api/analyze</code>
+                  <span>DSL analysis and local inference.</span>
+                </div>
+                <div class="arch-route interactive-card">
+                  <code>POST /api/stellar/intent-plan</code>
+                  <span>Typed Stellar planning surface.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="arch-layer arch-stellar interactive-card">
+              <div class="arch-layer-top">
+                <span class="arch-kicker">Stellar Layer</span>
+                <span class="arch-mini">Guarded by default</span>
+              </div>
+              <h5>IntentStellar planning</h5>
+              <p class="arch-copy">
+                Typed plans flow through <strong>allowlist</strong>, <strong>contract policy</strong>, and <strong>intent safety</strong> before anything deeper happens.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Setup -->
       <div class="col-lg-6 mt-lg-5 reveal">
-        <div class="glass p-4 h-90 interactive-card">
-          <h4 class="mb-2"><i class="bi bi-tools"></i> Setup</h4>
-          <ol class="mb-0">
-            <li>
-              <strong>Try it online:</strong> no install.
-              <a href="https://stellarzerolab.art/webui" class="setup-link-icon" aria-label="Open WebUI" title="Open WebUI">
-                <i class="bi bi-terminal"></i>
-              </a>
-            </li>
-            <li>
-              <strong>Locally:</strong> clone from GitHub.
-              <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener" class="setup-link-icon" aria-label="Open GitHub repository" title="Open GitHub repository">
-                <i class="bi bi-github"></i>
-              </a>
-            </li>
-            <li><strong>Server:</strong> run an Axum-compatible backend if needed; WebUI can point to it.</li>
-          </ol>
+        <div class="d-flex flex-column gap-4 h-100 tech-side-stack">
+          <div class="glass p-4 h-90 interactive-card setup-card">
+            <h4 class="mb-2"><i class="bi bi-tools"></i> Setup</h4>
+            <ol class="mb-0">
+              <li>
+                <strong>Try it online:</strong> no install.
+                <a href="/webui" class="setup-link-icon" aria-label="Open WebUI" title="Open WebUI">
+                  <i class="bi bi-terminal"></i>
+                </a>
+                <a href="/stellar-cli" class="setup-link-icon" aria-label="Open Stellar Demo" title="Open Stellar Demo">
+                  <i class="bi bi-rocket-takeoff"></i>
+                </a>
+              </li>
+              <li>
+                <strong>Locally:</strong> clone from GitHub.
+                <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener" class="setup-link-icon" aria-label="Open GitHub repository" title="Open GitHub repository">
+                  <i class="bi bi-github"></i>
+                </a>
+              </li>
+              <li><strong>Server:</strong> run an Axum-compatible backend if needed; WebUI and Stellar Demo can point to it.</li>
+            </ol>
+          </div>
+
+          <div class="glass p-4 interactive-card guarantee-card">
+            <h4 class="mb-2"><i class="bi bi-shield-check"></i> Execution Guarantees</h4>
+            <p class="guarantee-intro mb-0">
+              Built to stay legible under load: explicit execution flow, safer defaults, and guardrails before anything deeper happens.
+            </p>
+            <ul class="guarantee-list">
+              <li class="guarantee-item interactive-card">
+                <span class="guarantee-icon"><i class="bi bi-cpu"></i></span>
+                <div class="guarantee-copy">
+                  <strong>Inspectable execution</strong>
+                  <span>Parser, interpreter, inference, and policy steps stay visible instead of disappearing into hidden orchestration.</span>
+                </div>
+              </li>
+              <li class="guarantee-item interactive-card">
+                <span class="guarantee-icon"><i class="bi bi-shuffle"></i></span>
+                <div class="guarantee-copy">
+                  <strong>Explicit runtime path</strong>
+                  <span>Scripts, CLI, and API all trace back to the same readable engine behavior.</span>
+                </div>
+              </li>
+              <li class="guarantee-item interactive-card">
+                <span class="guarantee-icon"><i class="bi bi-shield-lock"></i></span>
+                <div class="guarantee-copy">
+                  <strong>Policy-gated execution</strong>
+                  <span>Allowlist, contract policy, and intent safety are checked before any deeper action path.</span>
+                </div>
+              </li>
+              <li class="guarantee-item interactive-card">
+                <span class="guarantee-icon"><i class="bi bi-lock"></i></span>
+                <div class="guarantee-copy">
+                  <strong>Testnet-proven rollout</strong>
+                  <span>Developer flows harden on testnet first, creating a clearer path toward mainnet once behavior and guardrails are stable.</span>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -807,7 +1259,7 @@ POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
   <!-- CTA (compact) -->
 <section class="py-4">
   <div class="container">
-    <div class="glass p-3 p-md-4 text-center soft w-100 w-md-75 w-lg-50 mx-auto reveal interactive-card">
+    <div class="glass p-3 p-md-4 text-center soft w-100 w-md-75 w-lg-50 mx-auto reveal interactive-card build-card">
       <h3 class="fw-bold mb-2 fs-4">Ready to build?</h3>
       <p class="mb-3">Try the WebUI or add your own script and get moving right away.</p>
       <div class="d-flex justify-content-center gap-2">
@@ -822,9 +1274,12 @@ POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
   <footer class="footer footer-bleed py-4 mt-4 border-top border-secondary-subtle interactive-nav">
     <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
       <div class="small text">© <span id="year"></span> StellarZeroLab · NeuroChain DSL</div>
-      <div class="d-flex align-items-center gap-3 small">
+	      <div class="footer-links small">
 	        <a href="/webui"><i class="bi bi-terminal"></i> WebUI</a>
-	        <a href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X"><i class="bi bi-twitter-x"></i></a>
+	        <a href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</a>
+	        <a href="/about"><i class="bi bi-stars"></i> About</a>
+	        <a href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a>
+	        <a href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X" class="footer-x-link"><i class="bi bi-twitter-x"></i></a>
 	        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
 		        <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
 	      </div>
@@ -938,12 +1393,39 @@ POST /api/analyze   # parses NeuroChain DSL and runs tract-onnx inference (CPU)
       if (!(window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches)) return;
       const interactiveEls = document.querySelectorAll('.interactive-card, .interactive-nav, .promo-link');
       interactiveEls.forEach((el) => {
+        let rafId = null;
+        let lastX = '50%';
+        let lastY = '50%';
+
+        const flush = () => {
+          rafId = null;
+          el.style.setProperty('--mx', lastX);
+          el.style.setProperty('--my', lastY);
+        };
+
+        const queue = () => {
+          if (rafId !== null) return;
+          rafId = requestAnimationFrame(flush);
+        };
+
+        el.addEventListener('pointerenter', (event) => {
+          const rect = el.getBoundingClientRect();
+          lastX = `${event.clientX - rect.left}px`;
+          lastY = `${event.clientY - rect.top}px`;
+          queue();
+        });
+
         el.addEventListener('pointermove', (event) => {
           const rect = el.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          el.style.setProperty('--mx', `${x}px`);
-          el.style.setProperty('--my', `${y}px`);
+          lastX = `${event.clientX - rect.left}px`;
+          lastY = `${event.clientY - rect.top}px`;
+          queue();
+        });
+
+        el.addEventListener('pointerleave', () => {
+          lastX = '50%';
+          lastY = '50%';
+          queue();
         });
       });
     })();

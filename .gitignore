@@ -60,6 +60,7 @@ tests/stellar_script.rs
 # Local/experimental Stellar helper binaries (not tracked by default)
 # ------------------------------------------------------------
 src/bin/eval-intent-stellar.rs
+src/bin/neurochain-stellar-demo-server.rs
 src/bin/neurochain-stellar.rs
 src/bin/txrep-to-action.rs
 src/bin/txrep-to-jsonl.rs

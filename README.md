@@ -7,7 +7,7 @@ NeuroChain is an **offline**, **deterministic** DSL that combines:
 - and an intent-based macro system (`macro from AI: ...`) that turns clear English prompts into deterministic DSL templates
 
 > This repository is the production codebase behind https://stellarzerolab.art.  
-> It includes the NeuroChain engine + CLI **and** our website demos (WebUI + Snake) plus the REST API server they use.
+> It includes the NeuroChain engine + CLI **and** our website demos (WebUI + Stellar Demo) plus the REST API server they use.
 >
 > The key difference vs an “engine-only” repo is the split of responsibilities:
 > - **Engine**: deterministic DSL execution (preprocessing + legacy compatibility + panic-safe execution).
@@ -30,8 +30,8 @@ NeuroChain has two binaries:
 ## Repository layout (website + integration)
 
 - `src/` — NeuroChain DSL engine + CLI
-- `src/bin/neurochain-server.rs` — Axum REST API used by the WebUI/Snake demos
-- `stellarzerolab.art/` — website root (static pages + `webui.html` + `snake.html`)
+- `src/bin/neurochain-server.rs` — Axum REST API used by the WebUI/Stellar demos
+- `stellarzerolab.art/` — website root (static pages + `webui.html` + `stellar-cli.html`)
 - `RUNBOOK.md` — aaPanel/Apache/systemd deployment notes for our host
 
 ## Highlights

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>StellarZeroLab · About</title>
+  <meta name="description" content="About StellarZeroLab: the lab behind NeuroChain DSL, its local-first AI workflow, and the public demos we ship." />
+  <link rel="canonical" href="https://stellarzerolab.art/about">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <meta property="og:title" content="StellarZeroLab · About">
+  <meta property="og:description" content="The thinking behind NeuroChain DSL, the public demos, and why StellarZeroLab builds AI integration around explicit logic and guardrails.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://stellarzerolab.art/about">
+  <meta property="og:image" content="https://stellarzerolab.art/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="StellarZeroLab · About">
+  <meta name="twitter:description" content="About StellarZeroLab and the design philosophy behind NeuroChain DSL.">
+  <meta name="twitter:image" content="https://stellarzerolab.art/og-cover.png">
+  <meta name="theme-color" content="#0b0f14">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#070b12;
+      --surface:#0c121c;
+      --surface-2:#0f1726;
+      --ink:#eaf2ff;
+      --muted:#9fb3c8;
+      --primary:#7dd3fc;
+      --accent:#a78bfa;
+      --success:#22c55e;
+      --warn:#f59e0b;
+      --danger:#fb7185;
+      --radius:20px;
+      --ease:cubic-bezier(.22,.61,.36,1);
+    }
+    html,body{
+      background:
+        radial-gradient(120% 80% at 0% 0%, rgba(15,23,42,.75), transparent 55%),
+        radial-gradient(120% 80% at 100% 0%, rgba(30,58,138,.18), transparent 55%),
+        var(--bg);
+      color:var(--ink);
+      overflow-x:hidden;
+    }
+    body{min-height:100vh}
+    .glass{
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+    }
+    .soft{box-shadow:0 20px 50px rgba(0,0,0,.45)}
+    .brand{letter-spacing:.3px}
+    .brand-logo{
+      width:46px;
+      height:46px;
+      margin-right:.5rem;
+      display:inline-block;
+      filter:drop-shadow(0 2px 6px rgba(125,211,252,.45));
+    }
+    .navbar-brand strong{font-size:1.08rem;line-height:1}
+    .spin{transform-origin:14px 14px;animation:spin 18s linear infinite}
+    .navbar{background:linear-gradient(180deg,rgba(11,18,30,.9),rgba(11,18,30,.68))}
+    .nav-link{color:#c4d7ea;position:relative}
+    .nav-link:hover,
+    .nav-link.is-active{color:#ffffff}
+    .nav-link.is-active::after{
+      content:"";
+      position:absolute;
+      left:.5rem;
+      right:.5rem;
+      bottom:.2rem;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg,rgba(34,211,238,.9),rgba(125,211,252,.95));
+      box-shadow:0 0 10px rgba(125,211,252,.5);
+    }
+    .btn{
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+      border-radius:12px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.08),
+        0 10px 24px rgba(7,14,25,.36);
+      transition:
+        transform .18s var(--ease),
+        box-shadow .22s ease,
+        filter .22s ease,
+        background .22s ease,
+        border-color .22s ease,
+        color .22s ease;
+    }
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);
+      opacity:.55;
+      z-index:0;
+    }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-30% -10%;
+      pointer-events:none;
+      background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.24) 50%,transparent 80%);
+      transform:translateX(-130%);
+      transition:transform .65s var(--ease);
+      z-index:0;
+    }
+    .btn > *{position:relative;z-index:1}
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(185,231,255,.28),
+        0 14px 30px rgba(8,18,31,.44),
+        0 0 26px rgba(125,211,252,.24);
+    }
+    .btn:hover::after{transform:translateX(130%)}
+    .btn-primary{
+      background:linear-gradient(135deg,var(--primary),#8bdcff);
+      border:0;
+      color:#04121e;
+      box-shadow:
+        0 0 0 1px rgba(198,238,255,.34),
+        0 14px 34px rgba(125,211,252,.28),
+        0 0 28px rgba(125,211,252,.24);
+    }
+    .btn-outline-light{
+      border-color:#3a5e84;
+      color:#dff0ff;
+      background:linear-gradient(180deg,rgba(15,28,47,.82),rgba(11,22,37,.78));
+    }
+    .btn-outline-light:hover{
+      border-color:#79b3df;
+      color:#f1f8ff;
+      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+    }
+    .nav-demo-menu{
+      min-width:14.5rem;
+      padding:.42rem;
+      border-radius:16px;
+      border:1px solid rgba(125,211,252,.18);
+      background:linear-gradient(180deg,rgba(14,23,40,.96),rgba(10,17,30,.94));
+      box-shadow:0 18px 34px rgba(0,0,0,.4);
+      backdrop-filter:blur(12px);
+      z-index:1300;
+    }
+    .nav-demo-menu .dropdown-item{
+      display:flex;
+      align-items:center;
+      gap:.55rem;
+      border-radius:10px;
+      color:#dff0ff;
+      padding:.58rem .7rem;
+    }
+    .nav-demo-menu .dropdown-item:hover,
+    .nav-demo-menu .dropdown-item:focus{
+      color:#ffffff;
+      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+    }
+    .interactive-nav,
+    .interactive-card{
+      position:relative;
+      isolation:isolate;
+      --mx:50%;
+      --my:50%;
+    }
+    .interactive-nav{overflow:visible}
+    .interactive-card{overflow:hidden}
+    .interactive-nav::after,
+    .interactive-card::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .24s ease;
+      border-radius:inherit;
+      background:radial-gradient(
+        320px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(125,211,252,.14),
+        rgba(167,139,250,.1) 32%,
+        transparent 70%
+      );
+      z-index:0;
+    }
+    .interactive-nav > .container,
+    .interactive-card > *{position:relative;z-index:1}
+    @media (hover:hover) and (pointer:fine){
+      .interactive-nav:hover::after,
+      .interactive-card:hover::after{opacity:1}
+    }
+    .page-progress{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:3px;
+      z-index:1200;
+      pointer-events:none;
+    }
+    .page-progress i{
+      display:block;
+      height:100%;
+      width:0;
+      background:linear-gradient(90deg,#22d3ee,#7dd3fc,#a78bfa);
+      box-shadow:0 0 18px rgba(125,211,252,.55);
+      transition:width .08s linear;
+    }
+    .hero{
+      position:relative;
+      overflow:hidden;
+      padding:4.5rem 0 3rem;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size:36px 36px;
+      mask-image:radial-gradient(circle at 50% 38%, black 24%, transparent 78%);
+      opacity:.2;
+      animation:grid-drift 22s linear infinite;
+    }
+    .nebula{
+      position:absolute;
+      inset:-22%;
+      background:
+        radial-gradient(38% 30% at 18% 26%, rgba(124,58,237,.26), transparent 70%),
+        radial-gradient(42% 30% at 82% 18%, rgba(14,165,233,.22), transparent 72%),
+        radial-gradient(44% 34% at 58% 82%, rgba(59,130,246,.16), transparent 75%);
+      filter:blur(54px);
+      opacity:.96;
+    }
+    .stars{position:absolute;inset:0}
+    .stars::before,
+    .stars::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(1px 1px at 10% 20%, #bfe4ff 70%, transparent),
+        radial-gradient(1px 1px at 30% 44%, #e6e1ff 70%, transparent),
+        radial-gradient(1px 1px at 72% 28%, #c7f3ff 70%, transparent),
+        radial-gradient(1px 1px at 86% 62%, #ffffff 70%, transparent),
+        radial-gradient(1px 1px at 52% 74%, #cde6ff 70%, transparent);
+      opacity:.8;
+      animation:twinkle 5s infinite ease-in-out alternate;
+    }
+    .stars::after{
+      filter:blur(.5px);
+      opacity:.6;
+      animation-duration:7s;
+    }
+    .hero-copy{max-width:760px}
+    .hero-copy h1{
+      line-height:.98;
+      letter-spacing:-.04em;
+      max-width:11ch;
+      margin:1rem 0 1.15rem;
+      font-size:clamp(3rem, 7vw, 6rem);
+    }
+    .hero-copy .lead{
+      color:var(--muted);
+      font-size:clamp(1.03rem, 1.35vw, 1.28rem);
+      max-width:62ch;
+    }
+    .hero-copy .accent{color:#12d0ff}
+    .hero-copy .muted-strong{color:#dfe9f6}
+    .hero-metrics{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:1rem;
+      margin-top:2rem;
+    }
+    .metric-card{
+      padding:1rem 1.05rem;
+      background:linear-gradient(180deg,rgba(12,21,36,.82),rgba(8,15,27,.78));
+      border:1px solid rgba(125,211,252,.14);
+      border-radius:16px;
+    }
+    .metric-card strong{
+      display:block;
+      font-size:1.55rem;
+      line-height:1;
+      margin-bottom:.35rem;
+      color:#eaf5ff;
+    }
+    .metric-card span{color:#9fb3c8;font-size:.95rem}
+    .hero-panel{
+      padding:1rem;
+      background:linear-gradient(180deg,rgba(14,23,40,.84),rgba(10,17,30,.8));
+      border:1px solid rgba(125,211,252,.18);
+    }
+    .hero-panel-head{
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      margin-bottom:1rem;
+      padding:.4rem .5rem .8rem;
+      border-bottom:1px solid rgba(125,211,252,.14);
+    }
+    .hero-panel-title{
+      display:flex;
+      align-items:center;
+      gap:.65rem;
+      font-size:.9rem;
+      color:#dcecff;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .hero-panel-title i{color:#7dd3fc}
+    .panel-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+    .panel-list li{
+      margin:.82rem 0;
+      padding:.95rem 1rem;
+      border-radius:16px;
+      border:1px solid rgba(125,211,252,.12);
+      background:linear-gradient(180deg,rgba(12,21,36,.74),rgba(9,16,28,.74));
+    }
+    .panel-list strong{
+      display:block;
+      margin-bottom:.25rem;
+      font-size:1.06rem;
+    }
+    .panel-list span{
+      color:#b8cadc;
+      line-height:1.55;
+    }
+    .section-shell{margin-top:2.2rem}
+    .section-card{
+      padding:1.25rem;
+      background:linear-gradient(180deg,rgba(14,22,37,.84),rgba(11,18,30,.78));
+      border:1px solid rgba(125,211,252,.16);
+    }
+    .section-card h2{
+      font-size:1.9rem;
+      margin-bottom:.55rem;
+    }
+    .section-card .lead{margin-bottom:0}
+    .card-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:1rem;
+      margin-top:1.25rem;
+    }
+    .info-card{
+      padding:1rem 1rem 1.05rem;
+      border-radius:18px;
+      border:1px solid rgba(125,211,252,.14);
+      background:linear-gradient(180deg,rgba(12,21,36,.72),rgba(8,15,27,.72));
+    }
+    .info-card .icon{
+      font-size:1.45rem;
+      margin-bottom:.65rem;
+    }
+    .info-card h4{
+      margin-bottom:.45rem;
+      font-size:1.15rem;
+    }
+    .info-card p{
+      margin:0;
+      color:#9fb3c8;
+      line-height:1.55;
+    }
+    .info-card.dsl .icon{color:#38bdf8}
+    .info-card.web .icon{color:#22c55e}
+    .info-card.stellar .icon{color:#f59e0b}
+    .split-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:1rem;
+      margin-top:1.25rem;
+    }
+    .copy-card,
+    .list-card{
+      padding:1.15rem;
+      border-radius:18px;
+      border:1px solid rgba(125,211,252,.14);
+      background:linear-gradient(180deg,rgba(12,21,36,.72),rgba(8,15,27,.72));
+    }
+    .copy-card p,
+    .list-card p{
+      color:#9fb3c8;
+      line-height:1.62;
+      margin:0;
+    }
+    .principles{
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+    .principles li{
+      display:flex;
+      gap:.7rem;
+      margin:.7rem 0;
+      color:#c3d4e5;
+      line-height:1.55;
+    }
+    .principles i{
+      color:#38bdf8;
+      margin-top:.12rem;
+    }
+    .cta-card{
+      margin-top:1.4rem;
+      padding:1.4rem;
+      text-align:center;
+      background:linear-gradient(180deg,rgba(14,22,37,.84),rgba(11,18,30,.78));
+      border:1px solid rgba(125,211,252,.16);
+    }
+    .cta-card p{color:#aebfd0;margin-bottom:1rem}
+    .footer-bleed{
+      width:100vw;
+      margin-left:calc(50% - 50vw);
+      margin-right:calc(50% - 50vw);
+      background:linear-gradient(180deg, transparent, rgba(255,255,255,.03));
+    }
+    .footer a{
+      color:#9dd8ff;
+      text-decoration:none;
+    }
+    .footer a:hover{color:#e6f6ff}
+    .footer-links{
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .footer-links a{
+      display:inline-flex;
+      align-items:center;
+      gap:.36rem;
+    }
+    .reveal{
+      opacity:0;
+      transform:translate3d(0,18px,0);
+      transition:opacity .7s var(--ease), transform .7s var(--ease);
+    }
+    .reveal.in{
+      opacity:1;
+      transform:translate3d(0,0,0);
+    }
+    [data-stagger] .reveal:nth-child(1){transition-delay:.04s}
+    [data-stagger] .reveal:nth-child(2){transition-delay:.11s}
+    [data-stagger] .reveal:nth-child(3){transition-delay:.18s}
+    [data-stagger] .reveal:nth-child(4){transition-delay:.25s}
+    [data-stagger] .reveal:nth-child(5){transition-delay:.32s}
+    @keyframes twinkle{from{opacity:.4}to{opacity:.95}}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes grid-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-36px,-36px,0)}}
+    @media (max-width: 991.98px){
+      .navbar-nav .nav-link{
+        display:inline-flex;
+        align-items:center;
+        gap:.45rem;
+        width:max-content;
+        padding-left:0;
+        padding-right:0;
+      }
+      .nav-link.is-active::after{
+        left:0;
+        right:0;
+        width:auto;
+      }
+      .footer-links{
+        width:100%;
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0,1fr));
+        gap:.9rem .8rem;
+        justify-items:center;
+      }
+      .footer-links a{
+        justify-content:center;
+        text-align:center;
+      }
+      .footer-x-link{display:none !important}
+      .hero-copy h1{max-width:none}
+      .hero-metrics,
+      .card-grid,
+      .split-grid{grid-template-columns:1fr}
+    }
+    @media (max-width: 767.98px){
+      .brand-logo{width:36px;height:36px}
+      .hero{padding-top:3.25rem}
+      .hero-copy h1{font-size:clamp(2.55rem, 14vw, 4.25rem)}
+    }
+    @media (prefers-reduced-motion: reduce){
+      .spin,
+      .hero::before,
+      .stars::before,
+      .stars::after{animation:none}
+      .reveal,
+      .btn,
+      .btn::after,
+      .interactive-nav::after,
+      .interactive-card::after{transition:none}
+      .reveal{opacity:1;transform:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="page-progress" aria-hidden="true"><i id="scrollProgressFill"></i></div>
+
+  <nav class="navbar navbar-expand-lg navbar-dark glass soft sticky-top interactive-nav">
+    <div class="container py-1">
+      <a class="navbar-brand d-flex align-items-center brand" href="/">
+        <svg class="brand-logo" viewBox="0 0 28 28" aria-hidden="true">
+          <defs>
+            <radialGradient id="core" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#dff7ff"/>
+              <stop offset="45%" stop-color="#8fe6ff"/>
+              <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
+            </radialGradient>
+            <linearGradient id="arm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="rgba(157,216,255,0)"/>
+              <stop offset="30%" stop-color="#7dd3fc"/>
+              <stop offset="80%" stop-color="rgba(167,139,250,.9)"/>
+              <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+            </linearGradient>
+            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="fade" cx="50%" cy="50%" r="56%">
+              <stop offset="60%" stop-color="white"/>
+              <stop offset="100%" stop-color="black"/>
+            </radialGradient>
+            <mask id="mFade"><rect width="28" height="28" fill="url(#fade)"/></mask>
+          </defs>
+          <circle cx="14" cy="14" r="7.4" fill="url(#core)" opacity=".55"/>
+          <g class="spin" filter="url(#glow)" mask="url(#mFade)" stroke-linecap="round" fill="none" stroke="url(#arm)">
+            <g stroke-width="1.4" opacity=".9">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
+              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+            </g>
+          </g>
+        </svg>
+        <strong>StellarZeroLab</strong>
+      </a>
+
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Home</a></li>
+          <li class="nav-item"><a class="nav-link is-active" href="/about"><i class="bi bi-stars"></i> About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a></li>
+          <li class="nav-item"><a class="nav-link" href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X"><i class="bi bi-twitter-x"></i></a></li>
+          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
+          <li class="nav-item dropdown">
+            <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-terminal"></i> Open Demo
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
+              <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
+              <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="nebula"></div>
+    <div class="stars"></div>
+    <div class="container position-relative" style="z-index:2">
+      <div class="row align-items-center g-4">
+        <div class="col-xl-7">
+          <div class="hero-copy reveal">
+            <h1><span class="accent">About</span> the lab behind <span class="muted-strong">NeuroChain DSL</span>.</h1>
+            <p class="lead">
+              StellarZeroLab is the product surface around NeuroChain DSL: a lightweight, developer-first language and demo stack built to keep AI operations explicit, local when possible, and easy to reason about.
+            </p>
+            <div class="hero-metrics">
+              <div class="metric-card glass interactive-card">
+                <strong>DSL</strong>
+                <span>AI and logic kept in one readable flow</span>
+              </div>
+              <div class="metric-card glass interactive-card">
+                <strong>Local-first</strong>
+                <span>CPU ONNX inference and smaller moving parts</span>
+              </div>
+              <div class="metric-card glass interactive-card">
+                <strong>Real demos</strong>
+                <span>WebUI and Stellar surfaces tied to live code paths</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-5">
+          <div class="hero-panel glass soft interactive-card reveal">
+            <div class="hero-panel-head">
+              <div class="hero-panel-title"><i class="bi bi-stars"></i> What matters here</div>
+            </div>
+            <ul class="panel-list">
+              <li class="interactive-card">
+                <strong>Deterministic over magical</strong>
+                <span>The goal is not vague AI orchestration. The goal is explicit behavior that can be inspected, tested, and reviewed.</span>
+              </li>
+              <li class="interactive-card">
+                <strong>Integration over mockups</strong>
+                <span>The public pages are not just screenshots. They reflect the actual server, runtime, and product direction we are building.</span>
+              </li>
+              <li class="interactive-card">
+                <strong>Guardrails before automation</strong>
+                <span>Especially on the Stellar path, typed plans and safety checks come before any ambition to automate more.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="pb-5">
+    <section class="container section-shell">
+      <div class="section-card glass soft interactive-card reveal">
+        <h2>What StellarZeroLab builds</h2>
+        <p class="lead">The public surface is intentionally compact: one engine, one real server path, and demos that explain the design through use rather than marketing copy alone.</p>
+        <div class="card-grid" data-stagger>
+          <div class="info-card dsl interactive-card reveal">
+            <div class="icon"><i class="bi bi-code-slash"></i></div>
+            <h4>NeuroChain DSL</h4>
+            <p>A language where AI-builtins sit directly in the script instead of being pushed into opaque wrappers and side systems.</p>
+          </div>
+          <div class="info-card web interactive-card reveal">
+            <div class="icon"><i class="bi bi-terminal"></i></div>
+            <h4>WebUI</h4>
+            <p>A browser surface for trying the DSL quickly, selecting models, viewing output, and testing the same runtime path exposed by the API.</p>
+          </div>
+          <div class="info-card stellar interactive-card reveal">
+            <div class="icon"><i class="bi bi-rocket-takeoff"></i></div>
+            <h4>Stellar Demo</h4>
+            <p>A guarded testnet-first path for turning user intent into typed plans that can later deepen into contract-aware Soroban workflows.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section-shell">
+      <div class="section-card glass soft interactive-card reveal">
+        <h2>How we think about the stack</h2>
+        <p class="lead">The design bias is simple: keep the execution model understandable, keep the public demos honest, and keep the system small enough that behavior stays legible.</p>
+        <div class="split-grid">
+          <div class="copy-card interactive-card reveal">
+            <p>
+              NeuroChain DSL exists because AI integration too often disappears into glue code, black-box orchestration, and UI layers that look impressive but reveal very little. The approach here is narrower and more deliberate: put AI operations into code, keep the runtime explicit, and make the public surfaces reflect the real architecture.
+            </p>
+          </div>
+          <div class="list-card interactive-card reveal">
+            <ul class="principles">
+              <li><i class="bi bi-check2-circle"></i><span>Local inference on CPU where it makes sense, instead of defaulting to hidden remote layers.</span></li>
+              <li><i class="bi bi-check2-circle"></i><span>Typed plans and guardrails before any action path becomes deeper or more automatic.</span></li>
+              <li><i class="bi bi-check2-circle"></i><span>One production repo and one public story, so technical reviewers can connect the dots quickly.</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section-shell">
+      <div class="section-card glass soft interactive-card reveal">
+        <h2>How this started</h2>
+        <p class="lead">This did not begin as a polished product plan. It spent roughly a year taking shape through technical curiosity, iteration, and a growing interest in blockchain infrastructure, especially Stellar.</p>
+        <div class="card-grid" data-stagger>
+          <div class="info-card interactive-card reveal">
+            <div class="icon"><i class="bi bi-hourglass-split"></i></div>
+            <h4>A year of shaping</h4>
+            <p>The project developed gradually rather than all at once: first as a line of thought, then as experiments, and finally as a clearer system with one readable direction.</p>
+          </div>
+          <div class="info-card interactive-card reveal">
+            <div class="icon"><i class="bi bi-rocket-takeoff"></i></div>
+            <h4>Stellar as a catalyst</h4>
+            <p>Interest in blockchain technology, and especially Stellar, pushed the work toward typed plans, explicit guardrails, and flows that can be reasoned about before anything is submitted.</p>
+          </div>
+          <div class="info-card interactive-card reveal">
+            <div class="icon"><i class="bi bi-person-badge"></i></div>
+            <h4>One-person core project</h4>
+            <p>At its core, this is a one-person project. The public site, demos, and direction are being shaped and built by one person.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <div class="cta-card glass soft interactive-card reveal">
+        <h3 class="fw-bold mb-2">See the lab through the live surfaces</h3>
+        <p>The clearest way to understand StellarZeroLab is still to open the public demos and follow the roadmap from there.</p>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+          <a href="/webui" class="btn btn-primary"><i class="bi bi-terminal"></i> Open WebUI</a>
+          <a href="/roadmap" class="btn btn-outline-light"><i class="bi bi-signpost-2"></i> View Roadmap</a>
+          <a href="/stellar-cli" class="btn btn-outline-light"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer-bleed py-4 mt-4 border-top border-secondary-subtle interactive-nav">
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <div class="small text">© <span id="year"></span> StellarZeroLab · NeuroChain DSL</div>
+      <div class="footer-links small">
+        <a href="/webui"><i class="bi bi-terminal"></i> WebUI</a>
+        <a href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</a>
+        <a href="/about"><i class="bi bi-stars"></i> About</a>
+        <a href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a>
+        <a href="https://x.com/StellarZeroLab" target="_blank" rel="noopener" aria-label="StellarZeroLab on X" class="footer-x-link"><i class="bi bi-twitter-x"></i></a>
+        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
+        <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    (function () {
+      const progressFill = document.getElementById('scrollProgressFill');
+      let rafPending = false;
+
+      const updateProgress = () => {
+        rafPending = false;
+        const doc = document.documentElement;
+        const maxScroll = doc.scrollHeight - window.innerHeight;
+        const progress = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+        if (progressFill) {
+          const clamped = Math.min(100, Math.max(0, progress));
+          progressFill.style.width = `${clamped}%`;
+        }
+      };
+
+      const queue = () => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(updateProgress);
+      };
+
+      queue();
+      window.addEventListener('scroll', queue, { passive: true });
+      window.addEventListener('resize', queue);
+    })();
+
+    (function () {
+      if (!(window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches)) return;
+      const interactiveEls = document.querySelectorAll('.interactive-card, .interactive-nav');
+      interactiveEls.forEach((el) => {
+        let rafId = null;
+        let lastX = '50%';
+        let lastY = '50%';
+
+        const flush = () => {
+          rafId = null;
+          el.style.setProperty('--mx', lastX);
+          el.style.setProperty('--my', lastY);
+        };
+
+        const queue = () => {
+          if (rafId !== null) return;
+          rafId = requestAnimationFrame(flush);
+        };
+
+        el.addEventListener('pointerenter', (event) => {
+          const rect = el.getBoundingClientRect();
+          lastX = `${event.clientX - rect.left}px`;
+          lastY = `${event.clientY - rect.top}px`;
+          queue();
+        });
+
+        el.addEventListener('pointermove', (event) => {
+          const rect = el.getBoundingClientRect();
+          lastX = `${event.clientX - rect.left}px`;
+          lastY = `${event.clientY - rect.top}px`;
+          queue();
+        });
+
+        el.addEventListener('pointerleave', () => {
+          lastX = '50%';
+          lastY = '50%';
+          queue();
+        });
+      });
+    })();
+
+    (function () {
+      const revealEls = Array.from(document.querySelectorAll('.reveal'));
+      if (!revealEls.length) return;
+
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced || !('IntersectionObserver' in window)) {
+        revealEls.forEach((el) => el.classList.add('in'));
+        return;
+      }
+
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('in');
+          obs.unobserve(entry.target);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+      revealEls.forEach((el) => io.observe(el));
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
