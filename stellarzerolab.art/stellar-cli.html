@@ -406,9 +406,76 @@
       display:flex;
       flex-direction:column;
     }
-    .side-stack .help-card{
+    .side-stack .runtime-card{
       flex:1 1 auto;
       min-height:0;
+    }
+    .docs-card{
+      position:relative;
+      overflow:hidden;
+      border-color:rgba(125,211,252,.22);
+      padding:.4rem .56rem;
+      background:
+        radial-gradient(130% 120% at 100% 0%, rgba(34,211,238,.14), transparent 56%),
+        linear-gradient(180deg, rgba(13,20,34,.94), rgba(8,14,24,.9));
+    }
+    .docs-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -24% -56% -24%;
+      height:68%;
+      pointer-events:none;
+      background:radial-gradient(ellipse at center, rgba(125,211,252,.2), transparent 68%);
+      opacity:.5;
+    }
+    .docs-icon{
+      width:1.38rem;
+      height:1.38rem;
+      border-radius:7px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:#bcecff;
+      background:linear-gradient(180deg, rgba(24,52,83,.92), rgba(11,28,45,.9));
+      border:1px solid rgba(125,211,252,.38);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 10px 18px rgba(0,0,0,.24);
+    }
+    .docs-inline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
+      min-height:1.7rem;
+      position:relative;
+      z-index:1;
+    }
+    .docs-label{
+      display:inline-flex;
+      align-items:center;
+      gap:.34rem;
+      font-size:.82rem;
+      color:#dceafe;
+      line-height:1;
+    }
+    .docs-sub{
+      font-size:.72rem;
+      color:#9fb3c8;
+      letter-spacing:.01em;
+      opacity:.94;
+    }
+    .docs-btn{
+      width:auto;
+      min-width:5.8rem;
+      padding:.15rem 1.02rem;
+      font-size:.74rem;
+      border-radius:8px;
+      justify-content:center;
+      gap:.3rem;
+      line-height:1;
+      position:relative;
+      z-index:1;
     }
     @media (min-width: 1200px){
       .top-layout{
@@ -630,7 +697,14 @@
       }
     }
     @media (max-width: 991.98px){
-      .side-stack .help-card{
+      .navbar-collapse.collapsing{
+        transition:height .12s ease !important;
+      }
+      .nav-shell{
+        -webkit-backdrop-filter:none;
+        backdrop-filter:none;
+      }
+      .side-stack .runtime-card{
         flex:0 0 auto;
       }
       .nav-mobile-panel{
@@ -787,12 +861,25 @@
           </div>
         </section>
 
-        <section class="help-card">
+        <section class="help-card runtime-card">
           <h6 class="mb-2"><i class="bi bi-sliders"></i> Runtime</h6>
           <label class="form-label mb-1">Threshold</label>
           <input id="threshold" type="number" class="form-control mono mb-2" min="0" max="1" step="0.01" value="0.55">
           <label class="form-label mb-1">Allowlist assets (optional)</label>
           <input id="allowlistAssets" class="form-control mono" placeholder="XLM,USDC:GISSUER">
+        </section>
+
+        <section class="help-card docs-card mt-3 mb-3">
+          <div class="docs-inline">
+            <div class="docs-label">
+              <span class="docs-icon" aria-hidden="true"><i class="bi bi-journal-richtext"></i></span>
+              <strong>Help &amp; Docs</strong>
+              <span class="docs-sub">commands + examples</span>
+            </div>
+            <a class="btn btn-accent docs-btn" href="/help.html" aria-label="Open help documentation">
+              <i class="bi bi-box-arrow-up-right"></i> Open
+            </a>
+          </div>
         </section>
       </div>
 
@@ -833,6 +920,7 @@
     };
 
     const FALLBACK_TEST_ACCOUNT = "GCAL4PIFKWOIFO6YT4T7TSSES7SJCWV7HN7XAUTNFFSGQK74RFUSAJBX";
+    const ALIAS_ACCOUNT_CACHE_KEY = "nc_stellar_alias_account_cache_v1";
     const app = {
       alias: "",
       account: "",
@@ -848,10 +936,12 @@
     let reconnectAfterClose = false;
     let ansiClass = "";
     let parseCarry = "";
+    let planScanBuffer = "";
     let pendingCommand = "";
     let busyDisconnectHint = false;
     let autoReconnectTimer = null;
     let autoReconnectAttempt = 0;
+    const aliasAccountCache = loadAliasAccountCache();
 
     const BUSY_SIGNAL_PREFIX = "BUSY:";
     const AUTO_RECONNECT_DELAYS_MS = [1000, 2000, 4000];
@@ -882,10 +972,192 @@
       "Enter Stellar prompt/code (finish with an empty line):"
     ].join("\n");
 
+    function looksLikeAccount(value) {
+      return /^G[A-Z2-7]{55}$/i.test(String(value || "").trim());
+    }
+
+    function normalizeAliasCacheKey(aliasRaw) {
+      return String(aliasRaw || "").trim().toLowerCase();
+    }
+
+    function loadAliasAccountCache() {
+      try {
+        const raw = window.localStorage.getItem(ALIAS_ACCOUNT_CACHE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+        return parsed;
+      } catch {
+        return {};
+      }
+    }
+
+    function saveAliasAccountCache() {
+      try {
+        window.localStorage.setItem(ALIAS_ACCOUNT_CACHE_KEY, JSON.stringify(aliasAccountCache));
+      } catch {
+        // Ignore storage errors; workspace will still work for current session.
+      }
+    }
+
+    function rememberAliasAccount(aliasRaw, accountRaw) {
+      const alias = String(aliasRaw || "").trim();
+      const account = String(accountRaw || "").trim().toUpperCase();
+      if (!alias || !looksLikeAccount(account)) return;
+      const key = normalizeAliasCacheKey(alias);
+      if (!key) return;
+      if (aliasAccountCache[key] === account) return;
+      aliasAccountCache[key] = account;
+      saveAliasAccountCache();
+    }
+
+    function accountForAlias(aliasRaw) {
+      const key = normalizeAliasCacheKey(aliasRaw);
+      if (!key) return "";
+      const cached = String(aliasAccountCache[key] || "").trim();
+      return looksLikeAccount(cached) ? cached.toUpperCase() : "";
+    }
+
+    function stripWrappingQuotes(value) {
+      const text = String(value || "").trim();
+      if (text.length >= 2) {
+        const starts = text[0];
+        const ends = text[text.length - 1];
+        if ((starts === '"' && ends === '"') || (starts === "'" && ends === "'")) {
+          return text.slice(1, -1).trim();
+        }
+      }
+      return text;
+    }
+
+    function parseWalletAliasFromCommand(input) {
+      const line = String(input || "").trim();
+      if (!line) return "";
+      const lower = line.toLowerCase();
+      const names = ["wallet", "source", "lompakko"];
+
+      for (const name of names) {
+        const prefixes = [`${name}:`, `${name}=`, `${name} `, `set ${name} =`];
+        for (const prefix of prefixes) {
+          if (!lower.startsWith(prefix)) continue;
+          const rawValue = line.slice(prefix.length).trimStart();
+          const alias = stripWrappingQuotes(rawValue);
+          if (alias) return alias;
+        }
+      }
+
+      return "";
+    }
+
+    function parseContractIdFromCommand(input) {
+      const line = String(input || "").trim();
+      if (!line) return "";
+
+      const explicit = line.match(/\bcontract_id\s*[:=]\s*["']?(C[A-Z2-7]{55})["']?/i);
+      if (explicit) return explicit[1].toUpperCase();
+
+      const policyPath = line.match(/\/contracts\/(C[A-Z2-7]{55})\/policy\.json\b/i)
+        || line.match(/\bcontracts\/(C[A-Z2-7]{55})\/policy\.json\b/i);
+      if (policyPath) return policyPath[1].toUpperCase();
+
+      const intentInvoke = line.match(/\bInvoke contract\s+(C[A-Z2-7]{55})\b/i);
+      if (intentInvoke) return intentInvoke[1].toUpperCase();
+
+      // Fallback for manual invoke/deploy command forms.
+      if (/\bsoroban\.contract\.(?:invoke|deploy)\b/i.test(line)) {
+        const anyContractId = line.match(/\b(C[A-Z2-7]{55})\b/i);
+        if (anyContractId) return anyContractId[1].toUpperCase();
+      }
+
+      return "";
+    }
+
+    function applyOptimisticWorkspaceUpdate(command) {
+      const alias = parseWalletAliasFromCommand(command);
+      if (alias) {
+        updateAlias(alias);
+      }
+
+      const contractId = parseContractIdFromCommand(command);
+      if (contractId) {
+        setCompactCell(els.stContractId, contractId);
+      }
+    }
+
     function resetTerminal() {
       els.terminalOut.textContent = "";
       ansiClass = "";
       parseCarry = "";
+      planScanBuffer = "";
+    }
+
+    function findMatchingBrace(text, startIndex) {
+      let depth = 0;
+      let inString = false;
+      let escaped = false;
+
+      for (let i = startIndex; i < text.length; i += 1) {
+        const ch = text[i];
+
+        if (inString) {
+          if (escaped) {
+            escaped = false;
+          } else if (ch === "\\") {
+            escaped = true;
+          } else if (ch === "\"") {
+            inString = false;
+          }
+          continue;
+        }
+
+        if (ch === "\"") {
+          inString = true;
+          continue;
+        }
+
+        if (ch === "{") {
+          depth += 1;
+        } else if (ch === "}") {
+          depth -= 1;
+          if (depth === 0) return i;
+        }
+      }
+
+      return -1;
+    }
+
+    function extractLastPlanJson(text) {
+      let cursor = 0;
+      let latestPlan = "";
+
+      while (true) {
+        const marker = text.indexOf("\"schema_version\"", cursor);
+        if (marker === -1) break;
+        cursor = marker + 1;
+
+        const startBrace = text.lastIndexOf("{", marker);
+        if (startBrace === -1) continue;
+
+        const endBrace = findMatchingBrace(text, startBrace);
+        if (endBrace === -1) continue;
+
+        const candidate = text.slice(startBrace, endBrace + 1);
+        try {
+          const parsed = JSON.parse(candidate);
+          if (
+            parsed
+            && typeof parsed === "object"
+            && Object.prototype.hasOwnProperty.call(parsed, "schema_version")
+            && Array.isArray(parsed.actions)
+          ) {
+            latestPlan = JSON.stringify(parsed, null, 2);
+          }
+        } catch {
+          // Ignore non-JSON fragments in stream.
+        }
+      }
+
+      return latestPlan;
     }
 
     function renderIdlePreviewBanner() {
@@ -995,6 +1267,13 @@
       appendRawTerm(`[${new Date().toLocaleTimeString()}] ${text}\n`);
     }
 
+    function echoUserCommand(line = "") {
+      const text = String(line || "").trim();
+      if (!text) return;
+      // Show user-entered command in terminal before server response.
+      appendRawTerm(`${ANSI_CYAN}›${ANSI_RESET} ${text}\n`);
+    }
+
     function setCell(el, value) {
       if (!el) return;
       const text = String(value ?? "").trim();
@@ -1088,18 +1367,35 @@
       if (!alias || alias === "(not set)") {
         app.alias = "";
         setCell(els.stAlias, "-");
+        app.account = "";
+        setCompactCell(els.stAccount, "-");
         return;
       }
       app.alias = alias;
       setCell(els.stAlias, alias);
+
+      if (looksLikeAccount(alias)) {
+        const account = alias.toUpperCase();
+        updateAccount(account);
+        rememberAliasAccount(alias, account);
+      } else {
+        const cachedAccount = accountForAlias(alias);
+        if (cachedAccount) {
+          updateAccount(cachedAccount);
+        }
+      }
       syncCopyButtons();
     }
 
     function updateAccount(accountRaw) {
       const account = String(accountRaw || "").trim();
       if (!account) return;
-      app.account = account;
-      setCompactCell(els.stAccount, account);
+      const normalized = account.toUpperCase();
+      app.account = normalized;
+      setCompactCell(els.stAccount, normalized);
+      if (app.alias && app.alias !== "(not set)") {
+        rememberAliasAccount(app.alias, normalized);
+      }
       syncCopyButtons();
     }
 
@@ -1116,7 +1412,11 @@
     }
 
     function parseWorkspaceLine(rawLine) {
-      const line = String(rawLine || "").trim();
+      const line = String(rawLine || "")
+        .replace(/\r/g, "")
+        .trim()
+        .replace(/^(?:\.\.\.\s*)+/, "")
+        .trim();
       if (!line) return;
 
       const currentThreshold = line.match(/^Current threshold:\s*([0-9]+(?:[.,][0-9]+)?)$/i);
@@ -1161,7 +1461,7 @@
         return;
       }
 
-      const walletSource = line.match(/^(?:Current\s+)?Wallet\/source(?:\s+set)?\s*:\s*(.+)$/i);
+      const walletSource = line.match(/^(?:-\s*)?(?:Current\s+)?Wallet\/source(?:\s+set)?\s*:\s*(.+)$/i);
       if (walletSource) {
         updateAlias(walletSource[1]);
         return;
@@ -1170,6 +1470,12 @@
       const publicKey = line.match(/Public key\/address:\s*(G[A-Z2-7]{55})/i);
       if (publicKey) {
         updateAccount(publicKey[1]);
+      }
+
+      const balanceLine = line.match(/\bbalance\s+(G[A-Z2-7]{55})\s*:\s*(.+)$/i);
+      if (balanceLine) {
+        updateAccount(balanceLine[1]);
+        setCell(els.stBalances, balanceLine[2]);
       }
 
       const txHash = line.match(/\btx_hash=([A-Za-z0-9-]{8,})\b/i);
@@ -1186,6 +1492,21 @@
       if (contractId) {
         setCompactCell(els.stContractId, contractId[1]);
       }
+
+      const contractAddress = line.match(/"contract_address"\s*:\s*"([A-Za-z0-9:_-]{6,})"/i);
+      if (contractAddress) {
+        setCompactCell(els.stContractId, contractAddress[1]);
+      }
+
+      const sorobanSubmit = line.match(/\bsoroban submit\s+(C[A-Z2-7]{55})\b/i);
+      if (sorobanSubmit) {
+        setCompactCell(els.stContractId, sorobanSubmit[1]);
+      }
+
+      const sorobanSim = line.match(/\bsoroban simulate\s+(C[A-Z2-7]{55})\b/i);
+      if (sorobanSim) {
+        setCompactCell(els.stContractId, sorobanSim[1]);
+      }
     }
 
     function captureAndRedactSecrets(rawText = "") {
@@ -1199,6 +1520,10 @@
       if (!rawText) return "";
       const redacted = captureAndRedactSecrets(rawText);
       const plain = stripAnsiForParse(redacted).replace(/\r/g, "\n");
+      planScanBuffer += plain;
+      if (planScanBuffer.length > 200000) {
+        planScanBuffer = planScanBuffer.slice(-120000);
+      }
       parseCarry += plain;
 
       let idx = parseCarry.indexOf("\n");
@@ -1211,6 +1536,11 @@
 
       if (parseCarry.length > 2048) {
         parseCarry = parseCarry.slice(-1024);
+      }
+
+      const latestPlan = extractLastPlanJson(planScanBuffer);
+      if (latestPlan && els.planOut && els.planOut.textContent !== latestPlan) {
+        els.planOut.textContent = latestPlan;
       }
 
       return redacted;
@@ -1397,6 +1727,8 @@
     function runLiveOrError(line) {
       const trimmed = line.trim();
       if (!trimmed) return;
+      echoUserCommand(trimmed);
+      applyOptimisticWorkspaceUpdate(trimmed);
 
       if (!liveReplConnected) {
         queueCommandAndEnsureConnection(trimmed);

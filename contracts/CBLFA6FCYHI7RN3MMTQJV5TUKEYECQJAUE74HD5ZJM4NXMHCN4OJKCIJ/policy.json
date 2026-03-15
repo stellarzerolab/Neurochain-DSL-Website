@@ -1,0 +1,12 @@
+{
+  "contract_id": "CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ",
+  "allowed_functions": ["hello"],
+  "args_schema": {
+    "hello": {
+      "required": {
+        "to": "string"
+      },
+      "optional": {}
+    }
+  }
+}

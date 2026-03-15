@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NeuroChain DSL Stellar CLI</title>
+  <meta name="description" content="NeuroChain Stellar CLI documentation and demo usage guide." />
+  <link rel="canonical" href="https://stellarzerolab.art/help" />
+
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --line: rgba(157,216,255,.16);
+      --ink: #e8f1fb;
+      --muted: #9fb3c8;
+      --panel-bg: linear-gradient(180deg, rgba(16,23,36,.86), rgba(8,13,22,.82));
+      --mono-font: "Cascadia Mono","Cascadia Code","JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono","DejaVu Sans Mono","Courier New",monospace;
+    }
+    html, body { min-height: 100%; }
+    body {
+      color: var(--ink);
+      background:
+        radial-gradient(32% 24% at 15% 12%, rgba(125,211,252,.08), transparent 70%),
+        radial-gradient(28% 22% at 85% 18%, rgba(139,92,246,.08), transparent 72%),
+        radial-gradient(24% 22% at 56% 86%, rgba(34,211,238,.06), transparent 74%),
+        linear-gradient(180deg,#070b11,#0b0f14 35%,#0a1118 100%);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -10%;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(30% 24% at 18% 18%, rgba(125,211,252,.06), transparent 72%),
+        radial-gradient(28% 22% at 82% 24%, rgba(34,211,238,.05), transparent 74%),
+        radial-gradient(26% 22% at 55% 78%, rgba(139,92,246,.045), transparent 76%);
+      filter: blur(44px);
+    }
+    main, footer { position: relative; z-index: 1; }
+    .mono { font-family: var(--mono-font); }
+    .muted { color: var(--muted); }
+    .glass {
+      background: var(--panel-bg);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 1px rgba(125,211,252,.05),
+        0 22px 60px rgba(0,0,0,.36),
+        0 0 32px rgba(34,211,238,.06);
+    }
+    .nav-shell {
+      margin: .75rem auto 0;
+      width: min(1320px, calc(100% - 1rem));
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(13,20,31,.85), rgba(8,13,22,.82));
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.07);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 18px 40px rgba(0,0,0,.28);
+      z-index: 1030;
+    }
+    .nav-shell.sticky-top { position: sticky; top: 0; z-index: 1030; }
+    .stellar-icon { color: #9dd8ff; text-shadow: 0 0 10px rgba(125,211,252,.35); }
+    .nav-quick-shell { display: flex; align-items: center; gap: .75rem; }
+    .nav-quick-link,
+    .nav-quick-link:visited {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      color: #e6edf3;
+      text-decoration: none;
+      padding: .2rem .25rem;
+      line-height: 1;
+    }
+    .nav-quick-link:hover { color: #9dd8ff; }
+    .nav-quick-link.icon-only,
+    .nav-quick-link.icon-only:visited {
+      padding: .2rem .34rem;
+    }
+    .icon-only-label {
+      display: none;
+    }
+    .nav-quick-cta,
+    .nav-quick-cta:visited {
+      display: inline-flex;
+      align-items: center;
+      gap: .38rem;
+      color: #dff0ff;
+      text-decoration: none;
+      padding: .34rem .62rem;
+      font-size: .94rem;
+      line-height: 1;
+      white-space: nowrap;
+      border-radius: 12px;
+      border: 1px solid #3a5e84;
+      background: linear-gradient(180deg,rgba(15,28,47,.82),rgba(11,22,37,.78));
+    }
+    .nav-quick-cta:hover {
+      color: #f1f8ff;
+      border-color: #79b3df;
+      background: linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+      text-decoration: none;
+    }
+    .nav-demo-dropdown .dropdown-menu {
+      margin-top: .45rem;
+    }
+    .nav-demo-menu {
+      min-width: 14.5rem;
+      padding: .42rem;
+      border-radius: 16px;
+      border: 1px solid rgba(125,211,252,.18);
+      background: linear-gradient(180deg,rgba(14,23,40,.96),rgba(10,17,30,.94));
+      box-shadow: 0 18px 34px rgba(0,0,0,.4);
+      backdrop-filter: blur(12px);
+    }
+    .nav-demo-menu .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      border-radius: 10px;
+      color: #dff0ff;
+      padding: .58rem .7rem;
+    }
+    .nav-demo-menu .dropdown-item:hover,
+    .nav-demo-menu .dropdown-item:focus {
+      color: #ffffff;
+      background: linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
+    }
+    .hero-card,
+    .toc-card,
+    .doc-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(13,20,34,.94), rgba(8,14,24,.9));
+      box-shadow: 0 12px 28px rgba(0,0,0,.24);
+    }
+    .hero-card { padding: 1rem 1.05rem; }
+    .hero-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+    .hero-title { margin: 0; font-size: clamp(1.1rem, 2vw, 1.45rem); }
+    .hero-back,
+    .hero-back:visited {
+      display: inline-flex;
+      align-items: center;
+      gap: .36rem;
+      justify-content: center;
+      color: #d6e8fb;
+      text-decoration: none;
+      padding: .3rem .56rem;
+      font-size: .79rem;
+      font-weight: 600;
+      line-height: 1;
+      border-radius: 10px;
+      border: 1px solid rgba(125,211,252,.24);
+      background: linear-gradient(180deg, rgba(10,21,36,.82), rgba(8,17,30,.8));
+      flex: 0 0 auto;
+      transition: border-color .18s ease, color .18s ease, background .18s ease;
+    }
+    .hero-back:hover {
+      color: #eef7ff;
+      text-decoration: none;
+      border-color: rgba(157,216,255,.42);
+      background: linear-gradient(180deg, rgba(16,31,50,.9), rgba(11,23,39,.88));
+    }
+    .hero-sub { margin: .4rem 0 0; color: #b7cbe1; font-size: .94rem; }
+    .docs-grid {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .toc-card { padding: .8rem; position: sticky; top: 90px; height: fit-content; }
+    .toc-title {
+      font-size: .86rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #a9c6e0;
+      margin-bottom: .55rem;
+    }
+    .toc-link {
+      display: block;
+      color: #c8def3;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: .3rem .45rem;
+      margin-bottom: .32rem;
+      text-decoration: none;
+      font-size: .86rem;
+      line-height: 1.25;
+    }
+    .toc-link:hover,
+    .toc-link.active {
+      color: #ebf7ff;
+      border-color: rgba(125,211,252,.3);
+      background: linear-gradient(180deg, rgba(18,36,59,.86), rgba(11,25,40,.84));
+      text-decoration: none;
+    }
+    .doc-card { padding: 1rem; }
+    .start-hint {
+      margin-bottom: .82rem;
+      border: 1px solid rgba(34,197,94,.42);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(7,33,21,.94), rgba(5,22,15,.92));
+      box-shadow:
+        0 0 0 1px rgba(34,197,94,.12),
+        0 10px 22px rgba(0,0,0,.26),
+        0 0 18px rgba(34,197,94,.1);
+      padding: .5rem .64rem;
+      font-size: .8rem;
+      line-height: 1.35;
+      color: #dcffea;
+    }
+    .start-hint .label {
+      display: inline-flex;
+      align-items: center;
+      gap: .32rem;
+      font-weight: 700;
+      color: #9ef5bc;
+      margin-right: .42rem;
+    }
+    .start-hint .flow {
+      color: #e9fff1;
+      opacity: .96;
+    }
+    .guide-render > h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #eaf6ff;
+      letter-spacing: .01em;
+    }
+    .guide-render > h2 {
+      margin: 1.15rem 0 .5rem;
+      font-size: 1.02rem;
+      color: #d6ecff;
+      border-top: 1px solid rgba(125,211,252,.14);
+      padding-top: .9rem;
+    }
+    .guide-render > h2:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: .8rem;
+    }
+    .guide-render h3 {
+      margin: .9rem 0 .38rem;
+      font-size: .93rem;
+      color: #c0ddf8;
+    }
+    .guide-render p {
+      color: #b8cde3;
+      line-height: 1.48;
+      margin: .35rem 0;
+    }
+    .guide-render ul,
+    .guide-render ol {
+      margin: .35rem 0 .55rem;
+      padding-left: 1.15rem;
+      color: #d3e7fb;
+    }
+    .guide-render li { margin-bottom: .26rem; }
+    .guide-render pre {
+      margin: .52rem 0 .72rem;
+      border: 1px solid rgba(157,216,255,.18);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(6,12,20,.98), rgba(4,9,16,.98));
+      padding: 1.18rem .74rem .7rem;
+      font-family: var(--mono-font);
+      font-size: .8rem;
+      line-height: 1.36;
+      color: #d3e8ff;
+      overflow: auto;
+      white-space: pre;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: #5f7d9b #050b12;
+    }
+    .code-copy-btn {
+      position: absolute;
+      top: .38rem;
+      right: .44rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      border: 1px solid rgba(125,211,252,.35);
+      border-radius: 8px;
+      padding: .22rem .5rem;
+      font-size: .68rem;
+      line-height: 1;
+      font-weight: 700;
+      color: #dff1ff;
+      background: linear-gradient(180deg, rgba(15,32,52,.92), rgba(10,22,37,.9));
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      cursor: pointer;
+      transition: border-color .14s ease, color .14s ease, background .14s ease;
+    }
+    .code-copy-btn:hover {
+      color: #f3faff;
+      border-color: rgba(157,216,255,.58);
+      background: linear-gradient(180deg, rgba(20,42,68,.95), rgba(13,28,46,.93));
+    }
+    .code-copy-btn.copied {
+      color: #eafff2;
+      border-color: rgba(90,214,145,.62);
+      background: linear-gradient(180deg, rgba(14,53,38,.96), rgba(9,39,28,.94));
+    }
+    .guide-render pre::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    .guide-render pre::-webkit-scrollbar-track {
+      background: linear-gradient(180deg, #060c14, #040a12);
+      border-top: 1px solid rgba(125,211,252,.12);
+    }
+    .guide-render pre::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #6d8bad, #4f6987);
+      border: 2px solid #050b12;
+      border-radius: 999px;
+    }
+    .guide-render pre::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #83a7cd, #6284aa);
+    }
+    .guide-render pre::-webkit-scrollbar-corner {
+      background: #050b12;
+    }
+    .guide-render pre::-webkit-scrollbar-button {
+      width: 0;
+      height: 0;
+      display: none;
+      background: transparent;
+    }
+    .guide-render code {
+      font-family: var(--mono-font);
+      font-size: .8em;
+      color: #cfe6ff;
+      background: rgba(17,31,51,.65);
+      border: 1px solid rgba(125,211,252,.2);
+      border-radius: 6px;
+      padding: .08rem .3rem;
+    }
+    .guide-render pre code {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+    .guide-render hr {
+      border: 0;
+      border-top: 1px solid rgba(125,211,252,.14);
+      margin: .9rem 0;
+    }
+    @media (max-width: 991.98px) {
+      .navbar-collapse.collapsing{
+        transition:height .12s ease !important;
+      }
+      .nav-shell{
+        -webkit-backdrop-filter:none;
+        backdrop-filter:none;
+      }
+      .docs-grid { grid-template-columns: 1fr; }
+      .toc-card { position: static; top: auto; }
+      .nav-quick-shell {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .65rem;
+        padding-top: .2rem;
+      }
+      .nav-quick-link,
+      .nav-quick-cta {
+        width: 100%;
+        justify-content: flex-start;
+        padding: .64rem .78rem;
+        border-radius: 12px;
+      }
+      .icon-only-label {
+        display: inline;
+      }
+      .nav-demo-dropdown {
+        width: 100%;
+      }
+      .nav-demo-dropdown .nav-quick-cta {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .nav-demo-menu {
+        min-width: 100%;
+      }
+      .nav-quick-link {
+        background: rgba(255,255,255,.02);
+        border: 1px solid rgba(255,255,255,.06);
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark glass sticky-top nav-shell">
+    <div class="container py-1">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="navbar-brand mb-0">
+            <i class="bi bi-journal-richtext stellar-icon"></i>
+            <strong>Help &amp; Docs</strong>
+          </span>
+        </div>
+        <button class="navbar-toggler ms-3" type="button" data-bs-toggle="collapse" data-bs-target="#helpNav" aria-controls="helpNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <div id="helpNav" class="collapse navbar-collapse mt-3 mt-lg-0">
+        <div class="w-100">
+          <div class="nav-quick-shell ms-lg-auto">
+            <a class="nav-quick-link" href="/" aria-label="Home"><i class="bi bi-house"></i><span>Home</span></a>
+            <a class="nav-quick-link" href="/about" aria-label="About"><i class="bi bi-stars"></i><span>About</span></a>
+            <a class="nav-quick-link" href="/roadmap" aria-label="Roadmap"><i class="bi bi-signpost-split"></i><span>Roadmap</span></a>
+            <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="bi bi-github"></i><span>GitHub</span></a>
+            <a class="nav-quick-link icon-only" href="https://x.com/StellarZeroLab" target="_blank" rel="noopener noreferrer" aria-label="StellarZeroLab on X" title="StellarZeroLab on X">
+              <i class="bi bi-twitter-x"></i><span class="icon-only-label">X</span>
+            </a>
+            <div class="dropdown nav-demo-dropdown">
+              <a class="nav-quick-cta dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open Demo menu">
+                <i class="bi bi-rocket-takeoff"></i><span>Open Demo</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
+                <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
+                <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 py-lg-5">
+    <section class="hero-card">
+      <div class="hero-head">
+        <h1 class="hero-title"><i class="bi bi-book-half"></i> NeuroChain DSL Stellar CLI</h1>
+        <a class="hero-back mono" href="/stellar-cli" aria-label="Back to Stellar CLI">
+          <i class="bi bi-arrow-left"></i> Back to CLI
+        </a>
+      </div>
+    </section>
+
+    <div class="docs-grid">
+      <aside class="toc-card">
+        <div class="toc-title">On This Page</div>
+        <nav id="tocList"></nav>
+      </aside>
+
+      <section class="doc-card">
+        <div class="start-hint mono">
+          <span class="label"><i class="bi bi-play-circle"></i> Start here</span>
+          <span class="flow">help -> help all -> show setup -> setup testnet -> wallet_bootstrap: demo-boot</span>
+        </div>
+        <article id="guideContent" class="guide-render"></article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container my-5 text-center muted">
+    <div class="small">© <span id="year"></span> StellarZeroLab</div>
+  </footer>
+
+  <script id="guideMarkdown" type="text/plain">
+# NeuroChain Stellar CLI - Comprehensive User Guide (Demo)
+
+This guide is intended for the **browser-based CLI REPL demo**.
+
+- You do not need to run local binary commands.
+- The demo uses a server-side `neurochain-stellar` REPL.
+- You only type REPL commands into the demo input.
+
+If you need local build/run instructions or deeper server/API references, see:
+
+- `docs/stellar_actions_guide.md`
+
+## 1) Get started in 10 minutes (demo)
+
+Run these in REPL, in order:
+
+```text
+help
+help all
+show setup
+setup testnet
+wallet_bootstrap: demo-boot
+show setup
+```
+
+What this does:
+
+- shows commands (`help`, `help all`)
+- applies testnet baseline (`setup testnet`)
+- creates a wallet alias + friendbot funding (`wallet_bootstrap`)
+
+## 2) Operating model in short
+
+- REPL interprets your commands into an ActionPlan.
+- Flow pipeline is: `simulate -> preview -> confirm -> submit`.
+- At startup, wallet/source may be `(not set)`; set it with `wallet: <alias>` or use `wallet_bootstrap`.
+- Startup default `asset_allowlist` is `XLM`.
+- Important allowlist note:
+  - `asset_allowlist` is a session safety filter, it does **not** create/mint tokens on-chain.
+  - Example `asset_allowlist: XLM,TESTUSD:<ISSUER_G>` means only these assets are allowed in this session.
+  - Keep `XLM` in the list unless you intentionally want to block XLM operations.
+- Idle timeout is 30 minutes in this demo server: if no command is sent for 30 minutes, the REPL session expires and session key-material is cleared.
+
+## 3) Base setup (REPL commands)
+
+### 3.1 Wallet + network
+
+Quick wallet actions:
+
+- Create a new wallet alias/keypair:
+
+```text
+wallet_generate: demo-alias
+```
+
+- Use an existing alias as active wallet/source:
+
+```text
+wallet: demo-alias
+```
+
+```text
+network: testnet
+wallet_generate: demo-alias
+wallet: demo-alias
+show setup
+```
+
+Note for existing/older wallet aliases:
+
+- After `wallet: <alias>`, run `show setup` once so UI workspace syncs `wallet/source` immediately.
+- If account (`G...`) is still empty, run one balance query:
+  - `stellar.account.balance account="<YOUR_G_ADDRESS>" asset="XLM"`
+
+### 3.2 Testnet wallet ready in one command
+
+```text
+setup testnet
+wallet_bootstrap: demo-user
+show setup
+```
+
+### 3.3 Runtime settings
+
+```text
+horizon: https://horizon-testnet.stellar.org
+friendbot: https://friendbot.stellar.org
+stellar_cli: stellar
+simulate_flag: "--send no"
+```
+
+### 3.4 Threshold (`intent_threshold`): why it matters and when to use it
+
+`intent_threshold` defines how confident the model must be before an intent is accepted as an action plan.
+
+```text
+intent_threshold: 0.55
+show setup
+```
+
+Higher value means:
+
+- safer behavior (model must be more certain)
+- more `Unknown`/low-confidence blocks (exit `5`)
+- good for public demos or cases where wrong actions are unacceptable
+
+Lower value means:
+
+- more permissive behavior (accepts less certain intents)
+- fewer blocks, but higher risk of wrong interpretation
+- good for internal testing when you want to inspect model behavior
+
+Practical recommendation:
+
+- Start at `0.55` (demo default).
+- Raise to `0.65-0.75` for a more production-like cautious demo.
+- Lower to `0.40-0.50` only for controlled testing.
+
+Note:
+
+- In REPL command, use decimal point (`0.55`), not comma.
+- UI field may display value as `0,55`, but REPL setting command uses point notation.
+
+## 4) Stellar Classic operations (REPL, manual “hard-coded”)
+
+### 4.1 Account balance
+
+```text
+stellar.account.balance account="G..." asset="XLM"
+```
+
+### 4.2 Account creation (from source wallet)
+
+```text
+stellar.account.create destination="G..." starting_balance="2"
+```
+
+Tip:
+
+- Easiest way in demo is to duplicate the Stellar CLI tab.
+- In the second tab create a receiver account (for example `wallet_generate: recv1` or `wallet_bootstrap: recv1`).
+- Use that `G...` address in the `destination` field.
+
+### 4.3 Friendbot funding on testnet
+
+```text
+stellar.account.fund_testnet account="G..."
+```
+
+### 4.4 Create your own test token (clear step-by-step)
+
+If you do not have public testnet USDC access, create and use your own Classic issued asset (example: `TESTUSD`).
+
+Full demo-safe flow (issuer + dist + user):
+
+```text
+# Create/fund three wallets on testnet:
+setup testnet
+wallet_bootstrap: issuer
+wallet_bootstrap: dist
+wallet_bootstrap: user
+
+# Save addresses from output:
+# <ISSUER_G> <DIST_G> <USER_G>
+
+# Allowlist for this issued asset (if using enforce mode):
+asset_allowlist: XLM,TESTUSD:<ISSUER_G>
+
+# dist trusts issuer asset:
+wallet: dist
+stellar.change_trust asset_code="TESTUSD" asset_issuer="<ISSUER_G>" limit="1000000"
+
+# issuer "mints" by paying TESTUSD to dist:
+wallet: issuer
+stellar.payment to="<DIST_G>" amount="10000" asset_code="TESTUSD" asset_issuer="<ISSUER_G>"
+
+# user trusts issuer asset:
+wallet: user
+stellar.change_trust asset_code="TESTUSD" asset_issuer="<ISSUER_G>" limit="1000"
+
+# dist pays user in TESTUSD:
+wallet: dist
+stellar.payment to="<USER_G>" amount="12.5" asset_code="TESTUSD" asset_issuer="<ISSUER_G>"
+```
+
+Quick 2-tab model with existing accounts:
+
+```text
+# Example model:
+# USER_G   = <A_USER_G>
+# ISSUER_G = <B_ISSUER_G>
+
+# User tab:
+setup testnet
+wallet: <A_ALIAS>
+asset_allowlist: XLM,TESTUSD:<B_ISSUER_G>
+stellar.change_trust asset_code="TESTUSD" asset_issuer="<B_ISSUER_G>" limit="1000"
+
+# Issuer tab:
+setup testnet
+wallet: <B_ALIAS>
+asset_allowlist: XLM,TESTUSD:<B_ISSUER_G>
+stellar.payment to="<A_USER_G>" amount="12.5" asset_code="TESTUSD" asset_issuer="<B_ISSUER_G>"
+
+# Verify in User tab:
+stellar.account.balance account="<A_USER_G>" asset="TESTUSD:<B_ISSUER_G>"
+```
+
+Important:
+
+- `wallet:` must be an alias (`issuer`, `dist`, `user`), not only a raw `G...` address.
+- If `allowlist_enforce` is ON, set `asset_allowlist` before trustline/payment steps.
+- Destination account must have trustline before receiving issued asset payments.
+- If you get `No sign with key provided`, the active alias/tab has no signing secret in this session (wrong alias/tab or expired session).
+
+### 4.5 Trustline
+
+```text
+stellar.change_trust asset_code="TESTUSD" asset_issuer="<ASSET_ISSUER_G>" limit="1000"
+```
+
+### 4.6 Payment (XLM / issued asset)
+
+```text
+stellar.payment to="G..." amount="5" asset_code="XLM"
+```
+
+Issued asset example:
+
+```text
+stellar.payment to="G..." amount="12.5" asset_code="TESTUSD" asset_issuer="<ASSET_ISSUER_G>"
+```
+
+### 4.7 Tx status
+
+```text
+stellar.tx.status hash="ABC123..."
+```
+
+## 5) Stellar Classic operations (intent model)
+
+Here you use the same Classic logic as in section 4, but via intent commands.
+
+### 5.1 Intent base setup
+
+```text
+AI: "models/intent_stellar/model.onnx"
+network: testnet
+wallet: demo_sender
+txrep
+```
+
+### 5.2 Account balance (intent)
+
+```text
+set stellar intent from AI: "Check balance for <DEMO_SENDER_G> asset XLM"
+```
+
+### 5.3 Account creation (intent)
+
+```text
+set stellar intent from AI: "Create account <DEMO_RECEIVER_G> with starting balance 2"
+```
+
+### 5.4 Friendbot funding (intent)
+
+```text
+set stellar intent from AI: "Fund testnet account <DEMO_RECEIVER_G>"
+```
+
+### 5.5 Trustline (intent)
+
+```text
+set stellar intent from AI: "Add trustline TESTUSD:<ASSET_ISSUER_G> limit 1000"
+```
+
+### 5.6 Payment (intent)
+
+```text
+set stellar intent from AI: "Transfer 1 XLM to <DEMO_RECEIVER_G>"
+```
+
+### 5.7 Tx status (intent)
+
+```text
+set stellar intent from AI: "Check tx status <PASTE_TX_HASH>"
+```
+
+Note:
+
+- XLM works as-is.
+- Issued asset requires format `CODE:ISSUER` (e.g. `TESTUSD:G...`).
+
+## 6) Smart contract / Soroban (REPL, manual “hard-coded”)
+
+### 6.1 Deploy (manual)
+
+```text
+soroban.contract.deploy alias="hello-demo" wasm="./contracts/hello.wasm"
+```
+
+### 6.2 Invoke (manual)
+
+```text
+soroban.contract.invoke contract_id="<DEPLOYED_CONTRACT_ID>" function="hello" args={"to":"World"}
+```
+
+Ready-to-use public test contract ID (invoke-only quick test):
+
+```text
+soroban.contract.invoke contract_id="CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ" function="hello" args={"to":"World"}
+```
+
+### 6.3 Enable policy enforce (recommended)
+
+```text
+contract_policy: contracts/<DEPLOYED_CONTRACT_ID>/policy.json
+contract_policy_enforce
+```
+
+Important:
+
+- `contract_policy` must point to a real file on server disk.
+- The public test contract ID above is for invoke testing; it does not automatically provide a local `contracts/<ID>/policy.json`.
+- If REPL prints `Policy file not found`, policy checks are not active for that path.
+- Prefer an absolute path when setting policy, for example:
+
+```text
+contract_policy: /opt/neurochain/contracts/<DEPLOYED_CONTRACT_ID>/policy.json
+```
+
+### 6.4 Disable policy enforce (warning mode)
+
+```text
+contract_policy_enforce off
+```
+
+### 6.5 Soroban manual full flow
+
+```text
+setup testnet
+wallet_bootstrap: demo_soroban
+txrep
+contract_policy: /opt/neurochain/contracts/<DEPLOYED_CONTRACT_ID>/policy.json
+contract_policy_enforce
+soroban.contract.deploy alias="hello-demo" wasm="./contracts/hello.wasm"
+soroban.contract.invoke contract_id="<DEPLOYED_CONTRACT_ID>" function="hello" args={"to":"World"}
+```
+
+Ready full flow with the current public test ID (invoke-only, no deploy step):
+
+```text
+setup testnet
+wallet_bootstrap: demo_soroban
+txrep
+contract_policy: /opt/neurochain/contracts/CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ/policy.json
+contract_policy_enforce
+soroban.contract.invoke contract_id="CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ" function="hello" args={"to":"World"}
+```
+
+## 7) Smart contract / Soroban (intent model)
+
+### 7.1 Intent base setup
+
+```text
+AI: "models/intent_stellar/model.onnx"
+network: testnet
+wallet: demo_sender
+txrep
+```
+
+### 7.2 Soroban invoke with intent
+
+```text
+set stellar intent from AI: 'Invoke contract <DEPLOYED_CONTRACT_ID> function hello args={"to":"World"}'
+```
+
+Ready-to-use public test contract ID (intent quick test):
+
+```text
+set stellar intent from AI: 'Invoke contract CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ function hello args={"to":"World"}'
+```
+
+### 7.3 Policy enforce + intent
+
+```text
+contract_policy: /opt/neurochain/contracts/<DEPLOYED_CONTRACT_ID>/policy.json
+contract_policy_enforce
+set stellar intent from AI: 'Invoke contract <DEPLOYED_CONTRACT_ID> function hello args={"to":"World"}'
+```
+
+### 7.4 Disable policy enforce (warning mode)
+
+```text
+contract_policy_enforce off
+```
+
+### 7.5 Ready full flow (intent + current public test ID)
+
+```text
+AI: "models/intent_stellar/model.onnx"
+setup testnet
+wallet_bootstrap: demo_soroban_intent
+txrep
+contract_policy: /opt/neurochain/contracts/CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ/policy.json
+contract_policy_enforce
+set stellar intent from AI: 'Invoke contract CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ function hello args={"to":"World"}'
+```
+
+### 7.6 Policy reaction test (expected block)
+
+Keep `contract_policy_enforce` ON and run an intent command that omits required arg `to`:
+
+```text
+set stellar intent from AI: "Invoke contract CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ function hello"
+```
+
+Expected result:
+
+- policy block with exit `4`
+- error similar to `policy_args_missing: ...:hello missing to`
+
+Note:
+
+- Section 6 = direct manual action.
+- Section 7 = same Soroban path via intent classification.
+- With `contract_policy_enforce` ON, policy violation blocks execution (exit `4`); with OFF it remains a warning.
+
+## 8) Guardrails, enforce modes, and exit codes
+
+### 8.1 Enable enforce
+
+```text
+asset_allowlist: XLM,USDC:GISSUER
+soroban_allowlist: C1:transfer,C2
+allowlist_enforce
+contract_policy: contracts/C.../policy.json
+contract_policy_enforce
+```
+
+### 8.2 Disable enforce
+
+```text
+allowlist_enforce off
+contract_policy_enforce off
+```
+
+### 8.3 Exit codes
+
+- `3` = allowlist block (enforce)
+- `4` = contract policy block (enforce)
+- `5` = intent safety block (`Unknown` / `slot_missing` / `slot_type_error` / low confidence)
+
+`intent_threshold` directly affects `low confidence` cases: higher threshold increases exit `5` blocks.
+
+### 8.4 What does `contract_policy_enforce` mean?
+
+`contract_policy_enforce` means Soroban calls are checked against policy rules before submit.
+
+- `contract_policy_enforce` ON:
+  - policy violation stops execution immediately (hard fail)
+  - REPL returns a block and exit code `4`
+  - transaction is not submitted
+- `contract_policy_enforce off`:
+  - policy violation appears as warning/diagnostics
+  - this switch does not force a hard block
+
+Why this is useful:
+
+- blocks wrong function execution:
+  - if intent tries to call a function not allowed by policy, the call is blocked
+- blocks wrong arguments:
+  - if policy requires specific arg type/shape, invalid payload cannot reach chain
+- reduces “AI misunderstood prompt” risk:
+  - even if intent classification is wrong, enforce acts as final safety net
+- saves time and cost:
+  - error stops before submit, avoiding unnecessary tx fees and failed chain operations
+
+Practical interpretation:
+
+- For a safe demo: keep `contract_policy_enforce` ON.
+- For freer experimentation: you can set it OFF, but accept higher error risk.
+
+Typical safe usage:
+
+```text
+contract_policy: /opt/neurochain/contracts/<DEPLOYED_CONTRACT_ID>/policy.json
+contract_policy_enforce
+set stellar intent from AI: 'Invoke contract <DEPLOYED_CONTRACT_ID> function hello args={"to":"World"}'
+```
+
+## 9) txrep in demo REPL
+
+### 9.1 txrep preview on/off
+
+```text
+txrep
+# ... run your desired action
+txrep off
+```
+
+Note:
+
+- txrep is shown in flow preview.
+- under the hood it uses `stellar tx to-rep` and fallback `stellar tx decode`.
+
+## 10) Command catalog (`help all` structure)
+
+### 10.1 Core setup (value required)
+
+- `AI: "path"` -> set intent model path
+- `intent_threshold: <f32>` -> set intent confidence threshold
+- `network: testnet|mainnet|public` -> set active network for flow
+- `wallet: <stellar-key-alias>` -> set active source wallet alias
+- `wallet_generate: <alias>` -> generate a local stellar key alias
+- `wallet_bootstrap: <alias>` -> generate alias + friendbot-fund it
+- `horizon: https://...` -> set Horizon URL override
+- `friendbot: https://...|off` -> set Friendbot URL or disable it
+- `stellar_cli: <bin>` -> set stellar CLI binary path/name
+- `simulate_flag: "--send no"` -> set soroban simulate flag
+- `asset_allowlist: XLM,USDC:G...` -> set NC_ASSET_ALLOWLIST equivalent
+- `soroban_allowlist: C1:transfer,C2` -> set NC_SOROBAN_ALLOWLIST equivalent
+- `contract_policy: <path>` -> set NC_CONTRACT_POLICY equivalent
+- `contract_policy_dir: <dir>` -> set NC_CONTRACT_POLICY_DIR equivalent
+
+### 10.2 Toggles (on/off)
+
+- `txrep` -> enable txrep preview in flow
+- `txrep off` -> disable txrep preview in flow
+- `allowlist_enforce` -> enable allowlist enforce
+- `allowlist_enforce off` -> disable allowlist enforce
+- `contract_policy_enforce` -> enable contract policy enforce
+- `contract_policy_enforce off` -> disable contract policy enforce
+- `debug` -> enable intent pipeline trace
+- `debug off` -> disable intent pipeline trace
+
+### 10.3 Prompt/Action
+
+- `set <var> from AI: "..."` -> predict with active model and store variable (fail-fast: no raw-prompt fallback on model/predict error)
+- `set stellar intent from AI: "..."` -> classify prompt -> ActionPlan
+- `set intent from AI: "Transfer 5 XLM to G..."` -> legacy alias (still supported)
+- `macro from AI: "..."` -> not supported in `neurochain-stellar` (use `set stellar intent from AI`)
+- `plain text prompt` -> classify prompt -> ActionPlan
+- `stellar.* / soroban.* lines` -> manual action-plan mode
+- `soroban.contract.deploy alias="..." wasm="..."` -> manual deploy action (`.nc` / REPL)
+
+### 10.4 Utility
+
+- `help` -> quick start
+- `help all` -> show every command
+- `help dsl` -> show normal NeuroChain DSL language help
+- `show setup` -> print active setup
+- `show config` -> print active config
+- `setup testnet` -> set network+horizon+friendbot baseline
+- `exit` -> leave REPL
+
+Unified toggle rule:
+
+- settings line by itself enables (`txrep`, `allowlist_enforce`, `contract_policy_enforce`, `debug`)
+- `off` in same line disables (`txrep off`, `allowlist_enforce off`, `contract_policy_enforce off`, `debug off`)
+
+## 11) Most common demo issues
+
+- `friendbot unavailable`:
+  - run `setup testnet` and ensure `friendbot` is not `off`
+- wallet/source missing:
+  - run `wallet_bootstrap: <alias>` or `wallet: <alias>`
+- alias/account not visible in Workspace right away:
+  - run `show setup` once after `wallet: <alias>`
+  - run one balance query to populate account:
+    - `stellar.account.balance account="<YOUR_G_ADDRESS>" asset="XLM"`
+- session expires while idle:
+  - if no command is sent for 30 minutes, session closes and wallet key-material is cleared
+  - reconnect and set wallet/source again (`wallet: <alias>`)
+- transaction does not go through:
+  - check allowlist/policy/enforce settings
+  - check whether `exit_code` is 3/4/5
+- expected txrep but not visible:
+  - run `txrep` before action
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const md = document.getElementById("guideMarkdown").textContent.trim();
+    const content = document.getElementById("guideContent");
+    const tocList = document.getElementById("tocList");
+
+    marked.setOptions({
+      gfm: true,
+      breaks: false,
+      mangle: false,
+      headerIds: false
+    });
+
+    content.innerHTML = marked.parse(md);
+
+    const copyToClipboard = async (text) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      area.style.pointerEvents = "none";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+
+      const ok = document.execCommand("copy");
+      document.body.removeChild(area);
+      if (!ok) throw new Error("copy_failed");
+    };
+
+    const addCopyButtons = (root) => {
+      const blocks = root.querySelectorAll("pre");
+      blocks.forEach((pre) => {
+        if (pre.dataset.copyButtonReady === "1") return;
+
+        const codeEl = pre.querySelector("code");
+        const copyText = (codeEl ? codeEl.textContent : pre.textContent || "").replace(/\n$/, "");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "code-copy-btn mono";
+        btn.innerHTML = '<i class="bi bi-copy"></i><span>Copy</span>';
+
+        btn.addEventListener("click", async () => {
+          try {
+            await copyToClipboard(copyText);
+            btn.classList.add("copied");
+            btn.innerHTML = '<i class="bi bi-check2"></i><span>Copied</span>';
+          } catch (_err) {
+            btn.classList.remove("copied");
+            btn.innerHTML = '<i class="bi bi-exclamation-circle"></i><span>Failed</span>';
+          }
+
+          window.setTimeout(() => {
+            btn.classList.remove("copied");
+            btn.innerHTML = '<i class="bi bi-copy"></i><span>Copy</span>';
+          }, 1200);
+        });
+
+        pre.appendChild(btn);
+        pre.dataset.copyButtonReady = "1";
+      });
+    };
+
+    addCopyButtons(content);
+
+    const headings = Array.from(content.querySelectorAll("h2"));
+    headings.forEach((h, i) => {
+      const id = "sec-" + (i + 1);
+      h.id = id;
+      const a = document.createElement("a");
+      a.href = "#" + id;
+      a.className = "toc-link";
+      const headingText = h.textContent.trim();
+      a.textContent = /^\d+\)\s+/.test(headingText)
+        ? headingText
+        : `${i + 1}) ${headingText}`;
+      tocList.appendChild(a);
+    });
+
+    const links = Array.from(document.querySelectorAll(".toc-link"));
+    if (links[0]) links[0].classList.add("active");
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        links.forEach((link) => link.classList.remove("active"));
+        const active = document.querySelector('.toc-link[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add("active");
+      });
+    }, { rootMargin: "-35% 0px -55% 0px", threshold: 0.01 });
+
+    headings.forEach((h) => observer.observe(h));
+  </script>
+</body>
+</html>
