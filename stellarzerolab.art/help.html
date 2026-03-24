@@ -429,7 +429,7 @@
             <a class="nav-quick-link" href="/" aria-label="Home"><i class="bi bi-house"></i><span>Home</span></a>
             <a class="nav-quick-link" href="/about" aria-label="About"><i class="bi bi-stars"></i><span>About</span></a>
             <a class="nav-quick-link" href="/roadmap" aria-label="Roadmap"><i class="bi bi-signpost-split"></i><span>Roadmap</span></a>
-            <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="bi bi-github"></i><span>GitHub</span></a>
+            <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="bi bi-github"></i><span>GitHub</span></a>
             <a class="nav-quick-link icon-only" href="https://x.com/StellarZeroLab" target="_blank" rel="noopener noreferrer" aria-label="StellarZeroLab on X" title="StellarZeroLab on X">
               <i class="bi bi-twitter-x"></i><span class="icon-only-label">X</span>
             </a>
@@ -919,6 +919,12 @@ contract_policy: contracts/C.../policy.json
 contract_policy_enforce
 ```
 
+`soroban_allowlist` format:
+
+- `CONTRACT_ID` = allow all functions for that contract
+- `CONTRACT_ID:FUNCTION` = allow only that function
+- example above: only `transfer` is allowed for `C1`, while all functions are allowed for `C2`
+
 ### 8.2 Disable enforce
 
 ```text
@@ -933,6 +939,57 @@ contract_policy_enforce off
 - `5` = intent safety block (`Unknown` / `slot_missing` / `slot_type_error` / low confidence)
 
 `intent_threshold` directly affects `low confidence` cases: higher threshold increases exit `5` blocks.
+
+Quick test for exit `3` (allowlist block):
+
+```text
+setup testnet
+wallet_bootstrap: allowtest
+asset_allowlist: XLM
+allowlist_enforce
+stellar.change_trust asset_code="TESTUSD" asset_issuer="GB3UZWK7YWO6HFGPYTCJTH4UUVR5VVHVRYOJPJ4GIDAE42ADRTTOHUVA" limit="1000"
+```
+
+Expected:
+
+- REPL blocks before submit
+- `repl step returned code 3`
+
+Reset after test:
+
+```text
+allowlist_enforce off
+asset_allowlist: XLM,TESTUSD:GB3UZWK7YWO6HFGPYTCJTH4UUVR5VVHVRYOJPJ4GIDAE42ADRTTOHUVA
+```
+
+Quick test for exit `4` (contract policy block):
+
+```text
+setup testnet
+wallet_bootstrap: policytest
+contract_policy: /opt/neurochain/contracts/CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ/policy.json
+contract_policy_enforce
+set stellar intent from AI: "Invoke contract CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ function hello"
+```
+
+Expected:
+
+- REPL blocks before submit
+- `repl step returned code 4`
+
+Quick test for exit `5` (intent safety block):
+
+```text
+setup testnet
+wallet_bootstrap: intenttest
+set stellar intent from AI: "blablabla not a valid stellar action"
+```
+
+Expected:
+
+- action becomes `unknown`
+- flow is blocked by intent safety
+- `repl step returned code 5`
 
 ### 8.4 What does `contract_policy_enforce` mean?
 
@@ -1000,7 +1057,7 @@ Note:
 - `stellar_cli: <bin>` -> set stellar CLI binary path/name
 - `simulate_flag: "--send no"` -> set soroban simulate flag
 - `asset_allowlist: XLM,USDC:G...` -> set NC_ASSET_ALLOWLIST equivalent
-- `soroban_allowlist: C1:transfer,C2` -> set NC_SOROBAN_ALLOWLIST equivalent
+- `soroban_allowlist: C1:transfer,C2` -> set NC_SOROBAN_ALLOWLIST equivalent (`contract` or `contract:function`)
 - `contract_policy: <path>` -> set NC_CONTRACT_POLICY equivalent
 - `contract_policy_dir: <dir>` -> set NC_CONTRACT_POLICY_DIR equivalent
 
