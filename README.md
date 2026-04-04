@@ -6,7 +6,7 @@ NeuroChain is an **offline**, **deterministic** DSL that combines:
 - local CPU ONNX classifiers (`tract-onnx`)
 - and an intent-based macro system (`macro from AI: ...`) that turns clear English prompts into deterministic DSL templates
 
-> This repository is the production codebase behind https://stellarzerolab.art.  
+> This repository is the production codebase behind https://stellarzerolab.com.
 > It includes the NeuroChain engine + CLI **and** our website demos (WebUI + Stellar Demo) plus the REST API server they use.
 >
 > The key difference vs an “engine-only” repo is the split of responsibilities:

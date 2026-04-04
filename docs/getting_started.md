@@ -142,7 +142,7 @@ Optional auth:
 cargo run --release --bin neurochain-server
 ```
 
-2) Open `https://stellarzerolab.art/webui` in the browser.
+2) Open `https://stellarzerolab.com/webui` in the browser.
 
 3) In WebUI:
 
