@@ -1,11 +1,6 @@
 # Pretty URLs (hide .html) + protect /api/
 RewriteEngine On
 
-# 301 old .art domain -> new .com domain
-RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
-RewriteCond %{HTTP_HOST} ^(?:www\.)?stellarzerolab\.art$ [NC]
-RewriteRule ^ https://stellarzerolab.com%{REQUEST_URI} [R=301,L]
-
 # Hide legacy Snake demo endpoint (file remains in repo)
 RewriteRule ^snake(?:\.html)?/?$ - [G,L,NC]
 

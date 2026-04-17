@@ -29,8 +29,8 @@ Thumbs.db
 # ------------------------------------------------------------
 # Website (HTML) server-specific
 # ------------------------------------------------------------
-stellarzerolab.art/.user.ini
-stellarzerolab.art/.well-known/acme-challenge/
+stellarzerolab.com/.user.ini
+stellarzerolab.com/.well-known/acme-challenge/
 
 # ------------------------------------------------------------
 # Local/private example datasets and Stellar/Soroban test scripts

@@ -31,7 +31,7 @@ NeuroChain has two binaries:
 
 - `src/` — NeuroChain DSL engine + CLI
 - `src/bin/neurochain-server.rs` — Axum REST API used by the WebUI/Stellar demos
-- `stellarzerolab.art/` — website root (static pages + `webui.html` + `stellar-cli.html`)
+- `stellarzerolab.com/` — website root directory
 - `RUNBOOK.md` — aaPanel/Apache/systemd deployment notes for our host
 
 ## Highlights
