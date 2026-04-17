@@ -1,0 +1,21 @@
+{
+  "contract_id": "CDLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ",
+  "allowed_functions": ["hello", "transfer"],
+  "args_schema": {
+    "hello": {
+      "required": {
+        "to": "symbol"
+      },
+      "optional": {}
+    },
+    "transfer": {
+      "required": {
+        "to": "address",
+        "blob": "bytes",
+        "ticker": "symbol",
+        "amount": "u64"
+      },
+      "optional": {}
+    }
+  }
+}
