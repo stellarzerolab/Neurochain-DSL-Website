@@ -467,6 +467,9 @@
       color:#aebfd0;
       line-height:1.55;
     }
+    .timeline-list li span{
+      min-width:0;
+    }
     .timeline-list i{
       color:#22c55e;
       margin-top:.12rem;
@@ -474,8 +477,28 @@
     .timeline-item.next .timeline-list i{
       color:#38bdf8;
     }
+    .timeline-item.next .timeline-list i.bi-check2{
+      color:#22c55e;
+    }
     .timeline-item.later .timeline-list i{
       color:#f59e0b;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      margin-left:.45rem;
+      padding:.14rem .44rem;
+      border-radius:999px;
+      border:1px solid rgba(34,197,94,.34);
+      color:#ccf6da;
+      background:rgba(20,83,45,.22);
+      font-size:.68rem;
+      line-height:1.1;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      font-style:normal;
+      vertical-align:.08rem;
+      white-space:nowrap;
     }
     .section-shell{
       margin-top:2.2rem;
@@ -839,6 +862,8 @@
             <li><i class="bi bi-check2"></i><span>Guardrails already in place: allowlist, policy checks, and intent safety exit paths.</span></li>
             <li><i class="bi bi-check2"></i><span>Typed templates v2 support practical normalization for `address`, `bytes`, `symbol`, and `u64`.</span></li>
             <li><i class="bi bi-check2"></i><span>Runtime parity across REPL, `.nc` files, CLI, and API keeps behavior predictable.</span></li>
+            <li><i class="bi bi-check2"></i><span>x402-lite gateway now exposes a paid intent-plan flow with `payment_required`, `finalized`, `replay_blocked`, `expired`, and guardrail decision states.</span></li>
+            <li><i class="bi bi-check2"></i><span>Frontend and agent response contract now has fixtures, JSON Schema, TypeScript types, and a client adapter.</span></li>
             <li><i class="bi bi-check2"></i><span>Public web demos make the current surface reviewer-friendly and easy to understand.</span></li>
           </ul>
         </li>
@@ -848,11 +873,17 @@
             <span class="timeline-badge"><i class="bi bi-lightning-charge"></i> Next</span>
             <span class="timeline-note">Closest delivery wave</span>
           </div>
-          <h3>Contract-aware Soroban depth</h3>
+          <h3>Contract-aware Soroban depth + x402 agent access</h3>
           <ul class="timeline-list">
-            <li><i class="bi bi-arrow-right-circle"></i><span>Deeper Soroban integration through typed templates per contract function instead of generic intent routing alone.</span></li>
+            <li><i class="bi bi-check2"></i><span>Deeper Soroban integration through typed templates per contract function instead of generic intent routing alone.<em class="status-pill">Shipped</em></span></li>
             <li><i class="bi bi-arrow-right-circle"></i><span>Event and return-value decoding fed back into DSL flow so the script can react to on-chain responses deterministically.</span></li>
             <li><i class="bi bi-arrow-right-circle"></i><span>First real multi-step workflow executed inside one `.nc` run, not just isolated single-step actions.</span></li>
+            <li><i class="bi bi-check2"></i><span>x402-lite access layer lets agents pay for NeuroChain execution without installing the local DSL runtime.<em class="status-pill">Shipped</em></span></li>
+            <li><i class="bi bi-check2"></i><span>Paid requests still pass through the same typed ActionPlan and guardrail pipeline.<em class="status-pill">Shipped</em></span></li>
+            <li><i class="bi bi-check2"></i><span>The response contract is shaped for both frontend UIs and autonomous agent clients.<em class="status-pill">Shipped</em></span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>x402-paid intent-plan endpoint moves from mock/finalize mode toward a real facilitator boundary.</span></li>
+            <li><i class="bi bi-check2"></i><span>Stable response contract for agents and frontend clients: payment, decision, guardrails, logs, audit_id, and plan.<em class="status-pill">Shipped</em></span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Replay/idempotency and payment state handling become production-shaped before real mainnet payments.</span></li>
             <li><i class="bi bi-arrow-right-circle"></i><span>Sharper testnet demo and runbook flow for external reviewers and technical pilots.</span></li>
           </ul>
         </li>
@@ -866,6 +897,10 @@
           <ul class="timeline-list">
             <li><i class="bi bi-flag"></i><span>Contract-level resource and fee guardrails.</span></li>
             <li><i class="bi bi-flag"></i><span>Consistent audit trail and error taxonomy.</span></li>
+            <li><i class="bi bi-flag"></i><span>Real x402 facilitator integration.</span></li>
+            <li><i class="bi bi-flag"></i><span>Durable replay/idempotency storage.</span></li>
+            <li><i class="bi bi-flag"></i><span>Pricing, receiver account, and auth boundary decisions.</span></li>
+            <li><i class="bi bi-flag"></i><span>Audit-safe payment and decision logging.</span></li>
             <li><i class="bi bi-flag"></i><span>Release hardening with regression and parity gates.</span></li>
             <li><i class="bi bi-flag"></i><span>Pilot candidate flows evaluated on testnet.</span></li>
           </ul>
