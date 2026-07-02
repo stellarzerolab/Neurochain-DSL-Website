@@ -212,6 +212,23 @@
       background: linear-gradient(180deg, rgba(18,36,59,.86), rgba(11,25,40,.84));
       text-decoration: none;
     }
+    .toc-link.toc-link-zk {
+      color: #ecfeff;
+      border-color: rgba(34,211,238,.46);
+      background: linear-gradient(180deg, rgba(13,46,62,.9), rgba(8,30,45,.88));
+      box-shadow: inset 3px 0 0 #22d3ee, 0 0 18px rgba(34,211,238,.08);
+      font-weight: 600;
+    }
+    .toc-link.toc-link-zk:hover,
+    .toc-link.toc-link-zk.active {
+      color: #ffffff;
+      border-color: rgba(103,232,249,.72);
+      background: linear-gradient(180deg, rgba(17,57,76,.96), rgba(9,37,54,.94));
+    }
+    .toc-link-zk .toc-feature-icon {
+      color: #67e8f9;
+      margin-right: .38rem;
+    }
     .doc-card { padding: 1rem; min-width: 0; }
     .start-hint {
       margin-bottom: .82rem;
@@ -928,7 +945,7 @@ Note:
 - Section 7 = same Soroban path via intent classification.
 - With `contract_policy_enforce` ON, policy violation blocks execution (exit `4`); with OFF it remains a warning.
 
-## 8) Guardrails, enforce modes, and exit codes
+## 8) ZK Guardrails, enforce modes, and exit codes
 
 ### 8.1 Enable enforce
 
@@ -1295,6 +1312,13 @@ Unified toggle rule:
       a.textContent = /^\d+\)\s+/.test(headingText)
         ? headingText
         : `${i + 1}) ${headingText}`;
+      if (headingText.startsWith("8)")) {
+        a.classList.add("toc-link-zk");
+        const icon = document.createElement("i");
+        icon.className = "bi bi-shield-lock-fill toc-feature-icon";
+        icon.setAttribute("aria-hidden", "true");
+        a.prepend(icon);
+      }
       tocList.appendChild(a);
     });
 
