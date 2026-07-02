@@ -1118,10 +1118,11 @@ Important safety boundary:
 - `requires_approval` remains a no-submit result.
 - Browser users get read-only Soroban verification; they cannot consume the shared demo nullifier.
 
-Deployment note:
+Hosted deployment:
 
-- These commands require the ZK-enabled NeuroChain CLI and `NC_ZK_GUARDRAIL_CONTRACT` (or `zk_contract`) to be configured on the hosted demo.
-- Until the hosted ARM64 binary is upgraded, this section documents the next deployment state and the commands are not yet available on the public REPL.
+- The public REPL runs the ZK-enabled ARM64 NeuroChain CLI with `NC_ZK_GUARDRAIL_CONTRACT` configured for the testnet application contract above.
+- `approved`, `requires_approval`, and `blocked` have been verified through read-only `zk.stellar.verify` calls on the hosted demo.
+- Use `Clear` to start a fresh isolated REPL session after testing.
 
 ## 9) txrep in demo REPL
 
@@ -1221,7 +1222,7 @@ Unified toggle rule:
 - ZK verification reports wallet/source missing:
   - run `setup testnet` and `wallet_bootstrap: <alias>` before `zk.stellar.verify`
 - ZK command is not recognized:
-  - the hosted server is still running the older CLI binary; retry after the ZK-enabled ARM64 deployment
+  - select `Clear` to reconnect with a fresh session, then run `help all`; report the deployment if the ZK section is still missing
 - ZK binding mismatch:
   - fail closed; do not submit anything, and confirm the scenario, network and configured contract
   </script>
