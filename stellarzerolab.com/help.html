@@ -212,7 +212,7 @@
       background: linear-gradient(180deg, rgba(18,36,59,.86), rgba(11,25,40,.84));
       text-decoration: none;
     }
-    .doc-card { padding: 1rem; }
+    .doc-card { padding: 1rem; min-width: 0; }
     .start-hint {
       margin-bottom: .82rem;
       border: 1px solid rgba(34,197,94,.42);
@@ -274,6 +274,30 @@
       color: #d3e7fb;
     }
     .guide-render li { margin-bottom: .26rem; }
+    .guide-render { min-width: 0; }
+    .guide-render table {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      margin: .52rem 0 .72rem;
+      overflow-x: auto;
+      border-collapse: collapse;
+      scrollbar-width: thin;
+      scrollbar-color: #5f7d9b #050b12;
+    }
+    .guide-render th,
+    .guide-render td {
+      padding: .48rem .58rem;
+      border: 1px solid rgba(125,211,252,.18);
+      color: #d3e7fb;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+    .guide-render th {
+      color: #e6f4ff;
+      background: rgba(17,31,51,.72);
+    }
     .guide-render pre {
       margin: .52rem 0 .72rem;
       border: 1px solid rgba(157,216,255,.18);
@@ -1024,6 +1048,64 @@ contract_policy_enforce
 set stellar intent from AI: 'Invoke contract <DEPLOYED_CONTRACT_ID> function hello args={"to":"World"}'
 ```
 
+### 8.5 ZK Guardrail attestation on Stellar
+
+NeuroChain ZK Guardrail proves that the known deterministic evaluator checked a typed ActionPlan against a private policy. The policy rules stay private; the public result binds the evaluator image, ActionPlan hash, policy commitment/version, decision, exit/reason codes and audit nullifier.
+
+Testnet application contract:
+
+```text
+CAAHGPTAPNSUC67NIU2M23BB5RSMK6RMYAH7ISATOKYLRHTNC7QJUN5B
+```
+
+Ready browser-REPL flow:
+
+```text
+setup testnet
+wallet_bootstrap: zk-demo
+zk_contract: CAAHGPTAPNSUC67NIU2M23BB5RSMK6RMYAH7ISATOKYLRHTNC7QJUN5B
+zk.demo approved
+zk.stellar.verify approved
+zk status
+```
+
+Available bundled scenarios:
+
+| Scenario | Verified decision | Exit | Submit meaning |
+| --- | --- | ---: | --- |
+| `approved` | `approved` | `0` | eligible only for a later, separate approval/submit flow |
+| `requires_approval` | `requires_approval` | `0` | no submit |
+| `blocked` | `blocked` / allowlist | `3` | no submit |
+
+Run the other two scenarios:
+
+```text
+zk.demo requires_approval
+zk.stellar.verify requires_approval
+zk.demo blocked
+zk.stellar.verify blocked
+zk status
+```
+
+What each command does:
+
+- `zk.demo <scenario>` checks the bundled ActionPlan, journal and proof bindings locally. It never submits.
+- `zk.stellar.verify <scenario>` verifies the genuine proof through the deployed Soroban verifier chain using `--send no`. It is repeatable and does not consume the nullifier.
+- `zk status` shows the most recent ZK attestation inspected in this REPL session.
+- `zk.verify action_plan="..." proof="..."` reads local files and is therefore disabled in the browser REPL.
+- `zk.stellar.consume <scenario>` stores the nullifier, requires owner authentication and is deliberately disabled in the browser REPL.
+
+Important safety boundary:
+
+- A valid proof or payment never grants permission to submit the underlying ActionPlan.
+- `requires_approval` remains a no-submit result.
+- Browser users get read-only Soroban verification; they cannot consume the shared demo nullifier.
+
+Deployment note:
+
+- These commands require the ZK-enabled NeuroChain CLI and `NC_ZK_GUARDRAIL_CONTRACT` (or `zk_contract`) to be configured on the hosted demo.
+- Until the hosted ARM64 binary is upgraded, this section documents the next deployment state and the commands are not yet available on the public REPL.
+
 ## 9) txrep in demo REPL
 
 ### 9.1 txrep preview on/off
@@ -1057,6 +1139,8 @@ Note:
 - `soroban_allowlist: C1:transfer,C2` -> set NC_SOROBAN_ALLOWLIST equivalent (`contract` or `contract:function`)
 - `contract_policy: <path>` -> set NC_CONTRACT_POLICY equivalent
 - `contract_policy_dir: <dir>` -> set NC_CONTRACT_POLICY_DIR equivalent
+- `zk_contract: C...` -> set the deployed NeuroChain ZK Guardrail contract
+- `zk_instruction_leeway: 10000000` -> set the Soroban ZK verifier instruction leeway
 
 ### 10.2 Toggles (on/off)
 
@@ -1078,6 +1162,9 @@ Note:
 - `plain text prompt` -> classify prompt -> ActionPlan
 - `stellar.* / soroban.* lines` -> manual action-plan mode
 - `soroban.contract.deploy alias="..." wasm="..."` -> manual deploy action (`.nc` / REPL)
+- `zk.demo approved|requires_approval|blocked` -> inspect a bundled proof without submitting
+- `zk.stellar.verify approved|requires_approval|blocked|last` -> verify through Soroban read-only
+- `zk status` -> show the most recent ZK inspection
 
 ### 10.4 Utility
 
@@ -1112,6 +1199,14 @@ Unified toggle rule:
   - check whether `exit_code` is 3/4/5
 - expected txrep but not visible:
   - run `txrep` before action
+- ZK contract is not configured:
+  - set `zk_contract: CAAHGPTAPNSUC67NIU2M23BB5RSMK6RMYAH7ISATOKYLRHTNC7QJUN5B`
+- ZK verification reports wallet/source missing:
+  - run `setup testnet` and `wallet_bootstrap: <alias>` before `zk.stellar.verify`
+- ZK command is not recognized:
+  - the hosted server is still running the older CLI binary; retry after the ZK-enabled ARM64 deployment
+- ZK binding mismatch:
+  - fail closed; do not submit anything, and confirm the scenario, network and configured contract
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
