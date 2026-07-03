@@ -524,6 +524,8 @@ This guide is intended for the **browser-based CLI REPL demo**.
 - You do not need to run local binary commands.
 - The demo uses a server-side `neurochain-stellar` REPL.
 - You only type REPL commands into the demo input.
+- Press `Enter` to run the current input. Use `Shift+Enter` to add another line,
+  or select `Run` to send the complete multiline block.
 
 If you need local build/run instructions or deeper server/API references, see:
 
@@ -1087,6 +1089,13 @@ zk.stellar.attest approved
 zk status
 ```
 
+The `Run full ZK demo` button starts a fresh isolated session, creates and
+Friendbot-funds a testnet wallet, then runs local binding plus read-only Stellar
+verification for all three scenarios. It never submits an attestation. After
+the guided sequence succeeds, the separate `Submit testnet attestation` button
+is enabled and asks for confirmation before sending one approved proof-
+verification transaction.
+
 Available bundled scenarios:
 
 | Scenario | Verified decision | Exit | Submit meaning |
@@ -1110,7 +1119,9 @@ What each command does:
 - `zk.demo <scenario>` checks the bundled ActionPlan, journal and proof bindings locally. It never submits.
 - `zk.stellar.verify <scenario>` verifies the genuine proof through the deployed Soroban verifier chain using `--send no`. It is repeatable and does not consume the nullifier.
 - `zk.stellar.attest <scenario>` submits a testnet transaction that calls the same permissionless `verify` function. It prints the transaction hash and StellarExpert link, but does not consume the nullifier or submit the underlying ActionPlan.
-- `zk status` shows the most recent ZK attestation inspected in this REPL session.
+- `zk status` combines the latest local binding with the latest successful
+  Stellar verification mode, transaction hash, submission state, nullifier
+  state and the unchanged ActionPlan no-submit boundary.
 - `zk.verify action_plan="..." proof="..."` reads local files and is therefore disabled in the browser REPL.
 - `zk.stellar.consume <scenario>` stores the nullifier, requires owner authentication and is deliberately disabled in the browser REPL.
 

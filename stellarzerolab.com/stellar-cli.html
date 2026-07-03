@@ -353,6 +353,23 @@
       margin-right:.2rem;
       font-size:.95em;
     }
+    #commandInput{
+      min-height:2.7rem;
+      max-height:8.5rem;
+      resize:vertical;
+      line-height:1.35;
+    }
+    .demo-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.5rem;
+      align-items:center;
+    }
+    .demo-actions .btn{
+      min-height:2.45rem;
+      font-size:.9rem;
+      white-space:nowrap;
+    }
     .btn-outline-light{
       border-color:#3a5e84;
       color:#dff0ff;
@@ -392,7 +409,7 @@
     .prompt-line{
       display:flex;
       gap:.5rem;
-      align-items:center;
+      align-items:stretch;
       margin-top:.7rem;
     }
     .plan-card,.state-card,.help-card{
@@ -748,6 +765,12 @@
       .terminal{min-height:300px;max-height:300px}
       .plan-card pre{min-height:150px;max-height:150px}
     }
+    @media (max-width: 575.98px){
+      .prompt-line{flex-direction:column}
+      #runCmdBtn{width:100%}
+      .demo-actions{display:grid;grid-template-columns:1fr}
+      .demo-actions .btn{width:100%;white-space:normal}
+    }
   </style>
 </head>
 <body>
@@ -803,7 +826,7 @@
             <pre id="terminalOut" class="terminal mono">(type `help` and press Enter)</pre>
 
             <div class="prompt-line">
-              <input id="commandInput" class="form-control mono" placeholder="Type a REPL command (e.g. help, show setup)" aria-label="REPL command input" />
+              <textarea id="commandInput" class="form-control mono" rows="2" placeholder="Type commands; Shift+Enter adds a line" aria-label="REPL command input" title="Enter runs the command. Shift+Enter adds a new line."></textarea>
               <button id="runCmdBtn" class="btn btn-accent"><i class="bi bi-play-fill"></i> Run</button>
             </div>
             <div class="small muted mt-2">
@@ -817,6 +840,15 @@
               <span class="cmd-chip mono" data-cmd="show config">show config</span>
               <span class="cmd-chip mono" data-cmd="setup testnet">setup testnet</span>
               <span class="cmd-chip mono" data-cmd="network: testnet">network: testnet</span>
+            </div>
+
+            <div class="demo-actions mt-3">
+              <button id="runFullZkDemoBtn" class="btn btn-outline-light" type="button" title="Run local binding and read-only Stellar verification for all three scenarios">
+                <i class="bi bi-shield-check"></i> Run full ZK demo
+              </button>
+              <button id="submitZkAttestationBtn" class="btn btn-outline-warning" type="button" disabled title="Submit one explicit testnet proof-verification transaction">
+                <i class="bi bi-cloud-arrow-up"></i> Submit testnet attestation
+              </button>
             </div>
           </div>
         </section>
@@ -899,6 +931,8 @@
       terminalOut: $("#terminalOut"),
       commandInput: $("#commandInput"),
       runCmdBtn: $("#runCmdBtn"),
+      runFullZkDemoBtn: $("#runFullZkDemoBtn"),
+      submitZkAttestationBtn: $("#submitZkAttestationBtn"),
       clearAllBtn: $("#clearAll"),
       cmdChips: Array.from(document.querySelectorAll(".cmd-chip")),
       statusPill: $("#statusPill"),
@@ -925,6 +959,8 @@
       secretVisible: false,
       threshold: "0.55",
       allowlistAssets: "XLM",
+      zkAttestationReady: false,
+      zkAttestationSubmitted: false,
     };
 
     let replSocket = null;
@@ -938,10 +974,12 @@
     let busyDisconnectHint = false;
     let autoReconnectTimer = null;
     let autoReconnectAttempt = 0;
+    let guidedZkDemo = null;
     const aliasAccountCache = loadAliasAccountCache();
 
     const BUSY_SIGNAL_PREFIX = "BUSY:";
     const AUTO_RECONNECT_DELAYS_MS = [1000, 2000, 4000];
+    const REPL_PROMPT_MARKER = "Enter Stellar prompt/code";
     const ANSI_RESET = "\u001b[0m";
     const ANSI_CYAN = "\u001b[96m";
     const ANSI_GREEN = "\u001b[92m";
@@ -1355,8 +1393,28 @@
       setCompactCell(els.stContractId, "-");
       setCompactCell(els.stTxHash, "-");
       setCell(els.stTxStatus, "-");
+      app.zkAttestationReady = false;
+      app.zkAttestationSubmitted = false;
+      renderZkDemoControls();
       renderSecretCell();
       syncCopyButtons();
+    }
+
+    function renderZkDemoControls() {
+      if (els.commandInput) els.commandInput.disabled = !!guidedZkDemo;
+      if (els.runCmdBtn) els.runCmdBtn.disabled = !!guidedZkDemo;
+      if (els.runFullZkDemoBtn) {
+        els.runFullZkDemoBtn.disabled = !!guidedZkDemo;
+        if (!guidedZkDemo) {
+          els.runFullZkDemoBtn.innerHTML = '<i class="bi bi-shield-check"></i> Run full ZK demo';
+        }
+      }
+      if (els.submitZkAttestationBtn) {
+        els.submitZkAttestationBtn.disabled = !app.zkAttestationReady || !!guidedZkDemo;
+        els.submitZkAttestationBtn.innerHTML = app.zkAttestationSubmitted
+          ? '<i class="bi bi-check2-circle"></i> Attestation submitted'
+          : '<i class="bi bi-cloud-arrow-up"></i> Submit testnet attestation';
+      }
     }
 
     function updateAlias(aliasRaw) {
@@ -1473,6 +1531,27 @@
       if (balanceLine) {
         updateAccount(balanceLine[1]);
         setCell(els.stBalances, balanceLine[2]);
+      }
+
+      const zkContract = line.match(/^- contract:\s*(C[A-Z2-7]{55})$/i);
+      if (zkContract) {
+        setCompactCell(els.stContractId, zkContract[1].toUpperCase());
+      }
+
+      const zkTransactionHash = line.match(/^- transaction_hash:\s*([a-f0-9]{64})$/i);
+      if (zkTransactionHash) {
+        setCompactCell(els.stTxHash, zkTransactionHash[1].toLowerCase());
+        setCell(els.stTxStatus, "successful");
+        app.zkAttestationReady = false;
+        app.zkAttestationSubmitted = true;
+        renderZkDemoControls();
+      }
+
+      const zkTransactionSubmitted = line.match(
+        /^- (?:attestation_submitted|verification_transaction_submitted):\s*(true|false)$/i
+      );
+      if (zkTransactionSubmitted && zkTransactionSubmitted[1].toLowerCase() === "true") {
+        setCell(els.stTxStatus, "submitted");
       }
 
       const txHash = line.match(/\btx_hash=([A-Za-z0-9-]{8,})\b/i);
@@ -1599,6 +1678,105 @@
       }, delayMs);
     }
 
+    function failGuidedZkDemo(message) {
+      guidedZkDemo = null;
+      app.zkAttestationReady = false;
+      renderZkDemoControls();
+      appendSystemLine(`guided ZK demo stopped: ${message}`);
+      showStatus("Guided ZK demo failed", "err");
+    }
+
+    function finishGuidedZkDemo() {
+      guidedZkDemo = null;
+      app.zkAttestationReady = true;
+      app.zkAttestationSubmitted = false;
+      renderZkDemoControls();
+      appendSystemLine("guided ZK demo complete: testnet attestation is ready for explicit submit");
+      showStatus("ZK demo ready", "ok");
+    }
+
+    function sendNextGuidedZkCommand() {
+      if (!guidedZkDemo) return;
+      if (guidedZkDemo.index >= guidedZkDemo.commands.length) {
+        finishGuidedZkDemo();
+        return;
+      }
+      if (!replSocket || replSocket.readyState !== WebSocket.OPEN) {
+        failGuidedZkDemo("live REPL disconnected");
+        return;
+      }
+
+      const command = guidedZkDemo.commands[guidedZkDemo.index];
+      guidedZkDemo.phase = "waiting_command_prompt";
+      guidedZkDemo.promptBuffer = "";
+      if (els.runFullZkDemoBtn) {
+        els.runFullZkDemoBtn.innerHTML = `<i class="bi bi-hourglass-split"></i> Running ${guidedZkDemo.index + 1}/${guidedZkDemo.commands.length}`;
+      }
+      echoUserCommand(command);
+      applyOptimisticWorkspaceUpdate(command);
+      try {
+        sendLiveReplCommand(command);
+      } catch (err) {
+        failGuidedZkDemo(String(err?.message || err));
+      }
+    }
+
+    function processGuidedZkOutput(plainText) {
+      if (!guidedZkDemo || !plainText) return;
+      guidedZkDemo.promptBuffer += plainText;
+      if (guidedZkDemo.promptBuffer.length > 50000) {
+        guidedZkDemo.promptBuffer = guidedZkDemo.promptBuffer.slice(-30000);
+      }
+      if (!guidedZkDemo.promptBuffer.includes(REPL_PROMPT_MARKER)) return;
+
+      const completedOutput = guidedZkDemo.promptBuffer;
+      guidedZkDemo.promptBuffer = "";
+      if (guidedZkDemo.phase === "awaiting_initial_prompt") {
+        sendNextGuidedZkCommand();
+        return;
+      }
+
+      const failure = completedOutput.match(
+        /(?:zk\.[a-z.]+ failed:|friendbot unavailable|unknown ZK command|repl step returned code|contract not found)/i
+      );
+      if (failure) {
+        failGuidedZkDemo(failure[0]);
+        return;
+      }
+
+      guidedZkDemo.index += 1;
+      sendNextGuidedZkCommand();
+    }
+
+    function startGuidedZkDemo() {
+      if (guidedZkDemo) return;
+      const alias = `zk-demo-${Date.now().toString(36).slice(-6)}`;
+      guidedZkDemo = {
+        commands: [
+          "setup testnet",
+          `wallet_bootstrap: ${alias}`,
+          "zk.demo approved",
+          "zk.stellar.verify approved",
+          "zk.demo requires_approval",
+          "zk.stellar.verify requires_approval",
+          "zk.demo blocked",
+          "zk.stellar.verify blocked",
+          "zk.demo approved",
+          "zk.stellar.verify approved",
+          "zk status",
+        ],
+        index: 0,
+        phase: "awaiting_initial_prompt",
+        promptBuffer: "",
+      };
+      app.zkAttestationReady = false;
+      app.zkAttestationSubmitted = false;
+      renderZkDemoControls();
+      appendSystemLine("guided ZK demo: starting a fresh isolated testnet session");
+      showStatus("Starting guided ZK demo...", "muted");
+      resetLiveReplSession({ reconnect: true, clearTerminal: true });
+    }
+
     function queueCommandAndEnsureConnection(line) {
       const next = String(line || "").trim();
       if (!next) return;
@@ -1649,7 +1827,12 @@
         resetTerminal();
         resetWorkspaceState();
         showStatus("Live REPL connected", "ok");
-        flushPendingCommand();
+        if (guidedZkDemo) {
+          guidedZkDemo.phase = "awaiting_initial_prompt";
+          guidedZkDemo.promptBuffer = "";
+        } else {
+          flushPendingCommand();
+        }
       });
 
       replSocket.addEventListener("message", (event) => {
@@ -1659,6 +1842,7 @@
           busyDisconnectHint = true;
           showStatus("Server busy, retrying shortly...", "warn");
         }
+        processGuidedZkOutput(plain);
         const processed = processIncomingChunk(text);
         appendRawTerm(processed);
       });
@@ -1677,6 +1861,11 @@
           }
           return;
         }
+        if (guidedZkDemo) {
+          failGuidedZkDemo("live REPL disconnected before completion");
+        }
+        app.zkAttestationReady = false;
+        renderZkDemoControls();
         if (busyDisconnectHint) {
           scheduleBusyReconnect();
           return;
@@ -1745,22 +1934,42 @@
       }
     }
 
+    function submitCommandInput() {
+      const line = els.commandInput?.value || "";
+      if (!line.trim()) return;
+      els.commandInput.value = "";
+      runLiveOrError(line);
+    }
+
     function wire() {
       els.runCmdBtn?.addEventListener("click", () => {
-        const line = els.commandInput.value;
-        els.commandInput.value = "";
-        runLiveOrError(line);
+        submitCommandInput();
       });
 
       els.commandInput?.addEventListener("keydown", (ev) => {
-        if (ev.key !== "Enter") return;
+        if (ev.key !== "Enter" || ev.shiftKey || ev.isComposing) return;
         ev.preventDefault();
-        const line = els.commandInput.value;
-        els.commandInput.value = "";
-        runLiveOrError(line);
+        submitCommandInput();
+      });
+
+      els.runFullZkDemoBtn?.addEventListener("click", () => {
+        startGuidedZkDemo();
+      });
+
+      els.submitZkAttestationBtn?.addEventListener("click", () => {
+        if (!app.zkAttestationReady || guidedZkDemo) return;
+        const confirmed = window.confirm(
+          "Submit one testnet proof-verification transaction? This does not execute the ActionPlan or consume the nullifier."
+        );
+        if (!confirmed) return;
+        app.zkAttestationReady = false;
+        app.zkAttestationSubmitted = false;
+        renderZkDemoControls();
+        runLiveOrError("zk.stellar.attest approved");
       });
 
       els.clearAllBtn?.addEventListener("click", () => {
+        guidedZkDemo = null;
         if (els.planOut) els.planOut.textContent = "(no plan yet)";
         resetWorkspaceState();
         showStatus("Resetting session...", "muted");
