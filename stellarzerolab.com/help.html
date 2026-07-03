@@ -1083,6 +1083,7 @@ wallet_bootstrap: zk-demo
 zk_contract: CAAHGPTAPNSUC67NIU2M23BB5RSMK6RMYAH7ISATOKYLRHTNC7QJUN5B
 zk.demo approved
 zk.stellar.verify approved
+zk.stellar.attest approved
 zk status
 ```
 
@@ -1108,6 +1109,7 @@ What each command does:
 
 - `zk.demo <scenario>` checks the bundled ActionPlan, journal and proof bindings locally. It never submits.
 - `zk.stellar.verify <scenario>` verifies the genuine proof through the deployed Soroban verifier chain using `--send no`. It is repeatable and does not consume the nullifier.
+- `zk.stellar.attest <scenario>` submits a testnet transaction that calls the same permissionless `verify` function. It prints the transaction hash and StellarExpert link, but does not consume the nullifier or submit the underlying ActionPlan.
 - `zk status` shows the most recent ZK attestation inspected in this REPL session.
 - `zk.verify action_plan="..." proof="..."` reads local files and is therefore disabled in the browser REPL.
 - `zk.stellar.consume <scenario>` stores the nullifier, requires owner authentication and is deliberately disabled in the browser REPL.
@@ -1116,12 +1118,13 @@ Important safety boundary:
 
 - A valid proof or payment never grants permission to submit the underlying ActionPlan.
 - `requires_approval` remains a no-submit result.
-- Browser users get read-only Soroban verification; they cannot consume the shared demo nullifier.
+- Browser users can run read-only verification or explicitly submit the testnet verification attestation. They cannot consume the shared demo nullifier.
 
 Hosted deployment:
 
 - The public REPL runs the ZK-enabled ARM64 NeuroChain CLI with `NC_ZK_GUARDRAIL_CONTRACT` configured for the testnet application contract above.
 - `approved`, `requires_approval`, and `blocked` have been verified through read-only `zk.stellar.verify` calls on the hosted demo.
+- The hosted `zk.stellar.attest approved` flow produced a successful testnet `verify` transaction: [d2eaea...915a4](https://stellar.expert/explorer/testnet/tx/d2eaea9743cc48a59c91bf3680f17a63babdd18d3dbe49d0b4361172f98915a4).
 - Use `Clear` to start a fresh isolated REPL session after testing.
 
 ## 9) txrep in demo REPL
@@ -1182,6 +1185,7 @@ Note:
 - `soroban.contract.deploy alias="..." wasm="..."` -> manual deploy action (`.nc` / REPL)
 - `zk.demo approved|requires_approval|blocked` -> inspect a bundled proof without submitting
 - `zk.stellar.verify approved|requires_approval|blocked|last` -> verify through Soroban read-only
+- `zk.stellar.attest approved|requires_approval|blocked|last` -> submit a testnet verification transaction and print its explorer link
 - `zk status` -> show the most recent ZK inspection
 
 ### 10.4 Utility
@@ -1220,7 +1224,9 @@ Unified toggle rule:
 - ZK contract is not configured:
   - set `zk_contract: CAAHGPTAPNSUC67NIU2M23BB5RSMK6RMYAH7ISATOKYLRHTNC7QJUN5B`
 - ZK verification reports wallet/source missing:
-  - run `setup testnet` and `wallet_bootstrap: <alias>` before `zk.stellar.verify`
+  - run `setup testnet` and `wallet_bootstrap: <alias>` before `zk.stellar.verify` or `zk.stellar.attest`
+- ZK attestation does not print a transaction hash:
+  - confirm the active network is exactly `testnet`, the funded wallet alias is still active and Horizon is reachable
 - ZK command is not recognized:
   - select `Clear` to reconnect with a fresh session, then run `help all`; report the deployment if the ZK section is still missing
 - ZK binding mismatch:
