@@ -1096,6 +1096,18 @@ the guided sequence succeeds, the separate `Submit testnet attestation` button
 is enabled and asks for confirmation before sending one approved proof-
 verification transaction.
 
+Guided browser flow:
+
+1. Select `Run full ZK demo` and wait for the guided sequence to complete.
+2. Review the `approved`, `requires_approval`, and `blocked` decisions plus
+   their read-only Stellar verification results in the terminal.
+3. Select the newly enabled `Submit testnet attestation` button and confirm the
+   explicit testnet transaction.
+4. The button changes to `Attestation submitted`. Workspace shows the contract
+   ID, transaction hash, and `successful` transaction status.
+5. Run `zk status` to see the retained Stellar verification mode, attestation
+   state, transaction hash, nullifier state, and ActionPlan no-submit boundary.
+
 Available bundled scenarios:
 
 | Scenario | Verified decision | Exit | Submit meaning |
@@ -1135,7 +1147,8 @@ Hosted deployment:
 
 - The public REPL runs the ZK-enabled ARM64 NeuroChain CLI with `NC_ZK_GUARDRAIL_CONTRACT` configured for the testnet application contract above.
 - `approved`, `requires_approval`, and `blocked` have been verified through read-only `zk.stellar.verify` calls on the hosted demo.
-- The hosted `zk.stellar.attest approved` flow produced a successful testnet `verify` transaction: [d2eaea...915a4](https://stellar.expert/explorer/testnet/tx/d2eaea9743cc48a59c91bf3680f17a63babdd18d3dbe49d0b4361172f98915a4).
+- The guided hosted flow produced a successful testnet `verify` transaction: [07821d...23e2](https://stellar.expert/explorer/testnet/tx/07821d7e44b9e3b5e19c3cd407bea77709facd74ba6b9e84db162b8051b723e2).
+- After submission, both Workspace and `zk status` retain the same transaction hash. The nullifier remains unconsumed and the underlying ActionPlan remains blocked from automatic submission.
 - Use `Clear` to start a fresh isolated REPL session after testing.
 
 ## 9) txrep in demo REPL
@@ -1197,7 +1210,7 @@ Note:
 - `zk.demo approved|requires_approval|blocked` -> inspect a bundled proof without submitting
 - `zk.stellar.verify approved|requires_approval|blocked|last` -> verify through Soroban read-only
 - `zk.stellar.attest approved|requires_approval|blocked|last` -> submit a testnet verification transaction and print its explorer link
-- `zk status` -> show the most recent ZK inspection
+- `zk status` -> show the latest local binding, Stellar verification, attestation state and transaction hash
 
 ### 10.4 Utility
 
@@ -1227,6 +1240,9 @@ Unified toggle rule:
 - session expires while idle:
   - if no command is sent for 30 minutes, session closes and wallet key-material is cleared
   - reconnect and set wallet/source again (`wallet: <alias>`)
+- `Submit testnet attestation` is disabled:
+  - select `Run full ZK demo` first and wait until all three scenarios finish
+  - the button is enabled only after the guided read-only verification succeeds
 - transaction does not go through:
   - check allowlist/policy/enforce settings
   - check whether `exit_code` is 3/4/5
