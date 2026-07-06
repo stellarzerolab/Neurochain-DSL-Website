@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>StellarZeroLab · Roadmap</title>
-  <meta name="description" content="NeuroChain DSL roadmap: shipped milestones, near-term delivery, and the path toward Stellar/Soroban pilot readiness." />
+  <meta name="description" content="NeuroChain DSL roadmap: shipped deterministic foundations, live private-policy ZK attestation on Stellar testnet, and the path toward integrations, pilots, and production hardening." />
   <link rel="canonical" href="https://stellarzerolab.com/roadmap">
 
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -15,13 +15,13 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <meta property="og:title" content="StellarZeroLab · Roadmap">
-  <meta property="og:description" content="What is shipped now, what lands next, and what follows for NeuroChain DSL plus Stellar/Soroban integration.">
+  <meta property="og:description" content="Shipped foundations, live RISC Zero Groth16 attestation on Stellar testnet, and the next steps toward integrations, pilots, and production hardening.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://stellarzerolab.com/roadmap">
   <meta property="og:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="StellarZeroLab · Roadmap">
-  <meta name="twitter:description" content="NeuroChain DSL roadmap: shipped milestones, near-term delivery, and pilot readiness.">
+  <meta name="twitter:description" content="NeuroChain DSL roadmap: live private-policy ZK attestation, upcoming integrations, and production-readiness milestones.">
   <meta name="twitter:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="theme-color" content="#0b0f14">
 
@@ -408,6 +408,10 @@
     .timeline-item.now::before{
       background:linear-gradient(135deg,#22c55e,#86efac);
     }
+    .timeline-item.live::before{
+      background:linear-gradient(135deg,#a78bfa,#7dd3fc);
+      box-shadow:0 0 0 5px rgba(167,139,250,.1), 0 0 22px rgba(125,211,252,.34);
+    }
     .timeline-item.next::before{
       background:linear-gradient(135deg,#38bdf8,#7dd3fc);
     }
@@ -438,6 +442,11 @@
     .timeline-item.now .timeline-badge{
       border-color:rgba(34,197,94,.34);
       color:#ccf6da;
+    }
+    .timeline-item.live .timeline-badge{
+      border-color:rgba(167,139,250,.42);
+      color:#eee7ff;
+      background:rgba(76,29,149,.16);
     }
     .timeline-item.next .timeline-badge{
       border-color:rgba(56,189,248,.34);
@@ -473,6 +482,12 @@
     .timeline-list i{
       color:#22c55e;
       margin-top:.12rem;
+    }
+    .timeline-item.live .timeline-list i{
+      color:#a78bfa;
+    }
+    .timeline-item.live .timeline-list i.bi-check2{
+      color:#22c55e;
     }
     .timeline-item.next .timeline-list i{
       color:#38bdf8;
@@ -541,8 +556,17 @@
       line-height:1.55;
     }
     .focus-card.shipped .icon{color:#22c55e}
+    .focus-card.live .icon{color:#a78bfa}
     .focus-card.next .icon{color:#38bdf8}
     .focus-card.later .icon{color:#f59e0b}
+    code{
+      color:#bfe8ff;
+      background:rgba(56,189,248,.08);
+      border:1px solid rgba(125,211,252,.12);
+      border-radius:.36rem;
+      padding:.08rem .3rem;
+      font-size:.92em;
+    }
     .cta-card{
       margin-top:1.4rem;
       padding:1.4rem;
@@ -764,7 +788,7 @@
           <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Home</a></li>
           <li class="nav-item"><a class="nav-link" href="/about"><i class="bi bi-stars"></i> About</a></li>
           <li class="nav-item"><a class="nav-link is-active" href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a></li>
-          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
+          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
           <li class="nav-item dropdown">
             <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-terminal"></i> Open Demo
@@ -786,27 +810,29 @@
       <div class="row align-items-center g-4">
         <div class="col-xl-7">
           <div class="hero-copy reveal">
-            <h1><span class="accent">Roadmap</span> for what is <span class="muted-strong">already live</span> and what lands next.</h1>
+            <h1><span class="accent">Roadmap</span> for what is <span class="muted-strong">live now</span> and what comes next.</h1>
             <p class="lead">
-              NeuroChain DSL is already stable at the core layer. This page makes the path explicit:
-              what is shipped now, what the next delivery wave looks like, and how Stellar/Soroban moves from guarded demos to reviewer-ready pilot workflows.
+              NeuroChain DSL now includes a live private-policy zero-knowledge attestation path on Stellar testnet.
+              This roadmap separates the shipped deterministic foundation, the current RISC Zero and Soroban milestone,
+              and the next steps toward external integrations, technical pilots, and production hardening.
             </p>
             <div class="hero-metrics">
               <div class="metric-card glass interactive-card">
                 <strong>3</strong>
-                <span>Clear delivery phases</span>
+                <span>Private-policy decision paths</span>
               </div>
               <div class="metric-card glass interactive-card">
-                <strong>Now</strong>
-                <span>Guardrails and typed plan baseline shipped</span>
+                <strong>Live</strong>
+                <span>Groth16 verification on Stellar testnet</span>
               </div>
               <div class="metric-card glass interactive-card">
                 <strong>Next</strong>
-                <span>Contract-aware Soroban workflow depth</span>
+                <span>Integrations and pilot readiness</span>
               </div>
             </div>
           </div>
         </div>
+
         <div class="col-xl-5">
           <div class="roadmap-panel glass soft interactive-card reveal">
             <div class="roadmap-panel-head">
@@ -815,24 +841,34 @@
             <ol class="timeline">
               <li class="timeline-item now interactive-card">
                 <div class="timeline-meta">
-                  <span class="timeline-badge"><i class="bi bi-check2-circle"></i> Current base</span>
+                  <span class="timeline-badge"><i class="bi bi-check2-circle"></i> Foundation shipped</span>
                 </div>
-                <h3>Deterministic core is in place</h3>
-                <div class="timeline-note">Typed plans, guardrails, parity across REPL, CLI, `.nc`, and API.</div>
+                <h3>Deterministic action layer</h3>
+                <div class="timeline-note">Typed ActionPlans, local intent models, stable guardrails, and runtime parity.</div>
               </li>
+
+              <li class="timeline-item live interactive-card">
+                <div class="timeline-meta">
+                  <span class="timeline-badge"><i class="bi bi-shield-check"></i> Live milestone</span>
+                </div>
+                <h3>Private-policy ZK attestation</h3>
+                <div class="timeline-note">Genuine RISC Zero Groth16 receipts verified through Soroban on Stellar testnet.</div>
+              </li>
+
               <li class="timeline-item next interactive-card">
                 <div class="timeline-meta">
                   <span class="timeline-badge"><i class="bi bi-lightning-charge"></i> Next delivery</span>
                 </div>
-                <h3>Deeper contract integration</h3>
-                <div class="timeline-note">Function-aware templates, decoded outputs, and richer Soroban flows.</div>
+                <h3>Integration and pilot readiness</h3>
+                <div class="timeline-note">External caller flows, richer automation, observability, and focused testnet pilots.</div>
               </li>
+
               <li class="timeline-item later interactive-card">
                 <div class="timeline-meta">
-                  <span class="timeline-badge"><i class="bi bi-flag"></i> Pilot path</span>
+                  <span class="timeline-badge"><i class="bi bi-flag"></i> Later</span>
                 </div>
-                <h3>Operational readiness</h3>
-                <div class="timeline-note">Review-friendly audit trail, policy limits, and a safer pilot ramp.</div>
+                <h3>Production hardening</h3>
+                <div class="timeline-note">Security review, durable operations, key management, and mainnet readiness criteria.</div>
               </li>
             </ol>
           </div>
@@ -844,8 +880,11 @@
   <main class="pb-5">
     <section id="timeline" class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
-        <h2>Vertical roadmap, straight and readable</h2>
-        <p class="lead">The goal is simple: anyone landing here should understand the maturity of the project immediately, without digging through commits or scattered notes.</p>
+        <h2>From deterministic plans to verifiable private-policy decisions</h2>
+        <p class="lead">
+          The roadmap reflects the implementation that exists today. The ZK and Soroban path is no longer a future concept:
+          it is a working testnet milestone with a hosted demo, genuine proofs, three decision outcomes, and explicit transaction evidence.
+        </p>
       </div>
     </section>
 
@@ -853,56 +892,76 @@
       <ol class="timeline">
         <li class="timeline-item now glass soft interactive-card reveal">
           <div class="timeline-meta">
-            <span class="timeline-badge"><i class="bi bi-check2-circle"></i> Now</span>
-            <span class="timeline-note">Shipped and usable today</span>
+            <span class="timeline-badge"><i class="bi bi-check2-circle"></i> Foundation shipped</span>
+            <span class="timeline-note">Stable and usable today</span>
           </div>
-          <h3>Stable base layer</h3>
+          <h3>Deterministic Stellar action layer</h3>
           <ul class="timeline-list">
-            <li><i class="bi bi-check2"></i><span>Locked baseline model for Stellar intent planning with strong eval and golden coverage.</span></li>
-            <li><i class="bi bi-check2"></i><span>Guardrails already in place: allowlist, policy checks, and intent safety exit paths.</span></li>
-            <li><i class="bi bi-check2"></i><span>Typed templates v2 support practical normalization for `address`, `bytes`, `symbol`, and `u64`.</span></li>
-            <li><i class="bi bi-check2"></i><span>Runtime parity across REPL, `.nc` files, CLI, and API keeps behavior predictable.</span></li>
-            <li><i class="bi bi-check2"></i><span>x402-lite gateway now exposes a paid intent-plan flow with `payment_required`, `finalized`, `replay_blocked`, `expired`, and guardrail decision states.</span></li>
-            <li><i class="bi bi-check2"></i><span>Frontend and agent response contract now has fixtures, JSON Schema, TypeScript types, and a client adapter.</span></li>
-            <li><i class="bi bi-check2"></i><span>Public web demos make the current surface reviewer-friendly and easy to understand.</span></li>
+            <li><i class="bi bi-check2"></i><span>Local ONNX intent classification maps natural-language requests into deterministic typed ActionPlans without requiring an external AI API.</span></li>
+            <li><i class="bi bi-check2"></i><span>Canonical ActionPlans provide an explicit structure before any Stellar Classic or Soroban action can progress.</span></li>
+            <li><i class="bi bi-check2"></i><span>Stable guardrail exits cover allowlist protection, contract-policy failures, and intent-safety failures through exit codes <code>3</code>, <code>4</code>, and <code>5</code>.</span></li>
+            <li><i class="bi bi-check2"></i><span>Typed Soroban templates normalize practical inputs including <code>address</code>, <code>bytes</code>, <code>symbol</code>, and <code>u64</code>.</span></li>
+            <li><i class="bi bi-check2"></i><span>Runtime behavior is shared across the REPL, CLI, <code>.nc</code> files, and the server API.</span></li>
+            <li><i class="bi bi-check2"></i><span>The standard execution boundary remains <code>simulate → preview → confirm → submit</code>.</span></li>
+            <li><i class="bi bi-check2"></i><span>x402-lite provides a guarded payment-required and finalize flow with replay-aware state handling.</span></li>
+            <li><i class="bi bi-check2"></i><span>Public WebUI and Stellar CLI demos expose the current system without requiring local installation.</span></li>
+          </ul>
+        </li>
+
+        <li class="timeline-item live glass soft interactive-card reveal">
+          <div class="timeline-meta">
+            <span class="timeline-badge"><i class="bi bi-shield-check"></i> Live ZK milestone</span>
+            <span class="timeline-note">Deployed and verified on Stellar testnet</span>
+          </div>
+          <h3>NeuroChain ZK Guardrail Attestation</h3>
+          <ul class="timeline-list">
+            <li><i class="bi bi-check2"></i><span>A known deterministic NeuroChain evaluator runs inside a RISC Zero guest against a private owner policy and private audit nonce.</span></li>
+            <li><i class="bi bi-check2"></i><span>Genuine RISC Zero Groth16 receipts prove evaluator execution while the policy rules, commitment salt, and audit nonce remain private.</span></li>
+            <li><i class="bi bi-check2"></i><span>The canonical public journal binds the evaluator image ID, ActionPlan hash, policy commitment and version, decision, exit and reason codes, approval state, and audit nullifier.</span></li>
+            <li><i class="bi bi-check2"></i><span>A Soroban guardrail application routes the receipt through a pinned verifier router to the Groth16 verifier.</span></li>
+            <li><i class="bi bi-check2"></i><span>The contract accepts only owner-authorized policy commitment and version pairs.</span></li>
+            <li><i class="bi bi-check2"></i><span>The bundled scenarios return <code>approved</code>, <code>requires_approval</code>, and <code>blocked</code> with stable decision semantics.</span></li>
+            <li><i class="bi bi-check2"></i><span>Permissionless <code>verify</code> is repeatable and read-only, so it does not consume the audit nullifier.</span></li>
+            <li><i class="bi bi-check2"></i><span><code>zk.stellar.attest</code> submits a separate explicit proof-verification transaction on testnet and returns a transaction hash and explorer link.</span></li>
+            <li><i class="bi bi-check2"></i><span><code>zk status</code> preserves the validated local binding together with the latest Stellar verification mode, transaction hash, and nullifier state for the active session.</span></li>
+            <li><i class="bi bi-check2"></i><span>Owner-authenticated <code>verify_and_consume</code> is available in the local operator flow to record the audit nullifier and reject replay.</span></li>
+            <li><i class="bi bi-check2"></i><span>A valid proof never automatically signs or submits the underlying ActionPlan.</span></li>
           </ul>
         </li>
 
         <li class="timeline-item next glass soft interactive-card reveal">
           <div class="timeline-meta">
             <span class="timeline-badge"><i class="bi bi-lightning-charge"></i> Next</span>
-            <span class="timeline-note">Closest delivery wave</span>
+            <span class="timeline-note">Integration and pilot readiness</span>
           </div>
-          <h3>Contract-aware Soroban depth + x402 agent access</h3>
+          <h3>Make the guardrail easier to integrate and operate</h3>
           <ul class="timeline-list">
-            <li><i class="bi bi-check2"></i><span>Deeper Soroban integration through typed templates per contract function instead of generic intent routing alone.<em class="status-pill">Shipped</em></span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Event and return-value decoding fed back into DSL flow so the script can react to on-chain responses deterministically.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>First real multi-step workflow executed inside one `.nc` run, not just isolated single-step actions.</span></li>
-            <li><i class="bi bi-check2"></i><span>x402-lite access layer lets agents pay for NeuroChain execution without installing the local DSL runtime.<em class="status-pill">Shipped</em></span></li>
-            <li><i class="bi bi-check2"></i><span>Paid requests still pass through the same typed ActionPlan and guardrail pipeline.<em class="status-pill">Shipped</em></span></li>
-            <li><i class="bi bi-check2"></i><span>The response contract is shaped for both frontend UIs and autonomous agent clients.<em class="status-pill">Shipped</em></span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>x402-paid intent-plan endpoint moves from mock/finalize mode toward a real facilitator boundary.</span></li>
-            <li><i class="bi bi-check2"></i><span>Stable response contract for agents and frontend clients: payment, decision, guardrails, logs, audit_id, and plan.<em class="status-pill">Shipped</em></span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Replay/idempotency and payment state handling become production-shaped before real mainnet payments.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Sharper testnet demo and runbook flow for external reviewers and technical pilots.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Provide a cleaner SDK and API path for external Stellar applications to supply typed ActionPlans and request private-policy verification.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Improve the operator experience for policy commitment authorization, versioning, rotation, and revocation.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Feed decoded Soroban events and return values back into deterministic DSL workflows.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Execute practical multi-step workflows inside a single <code>.nc</code> run instead of only isolated actions.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Add clearer audit, observability, and proof-status views for operators and external reviewers.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Evaluate focused testnet pilot flows for automated treasury, controlled payments, or tokenized-asset operations.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Define durable operational handling for replay state and Stellar network TTL maintenance.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Design a separate approved ActionPlan execution integration without weakening the proof-versus-submit boundary.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Move x402-lite toward a real facilitator boundary with production-shaped authentication and idempotency.</span></li>
           </ul>
         </li>
 
         <li class="timeline-item later glass soft interactive-card reveal">
           <div class="timeline-meta">
             <span class="timeline-badge"><i class="bi bi-flag"></i> Later</span>
-            <span class="timeline-note">Pilot and operational readiness</span>
+            <span class="timeline-note">Production hardening</span>
           </div>
-          <h3>Toward pilot readiness</h3>
+          <h3>Security, operations, and mainnet-readiness criteria</h3>
           <ul class="timeline-list">
-            <li><i class="bi bi-flag"></i><span>Contract-level resource and fee guardrails.</span></li>
-            <li><i class="bi bi-flag"></i><span>Consistent audit trail and error taxonomy.</span></li>
-            <li><i class="bi bi-flag"></i><span>Real x402 facilitator integration.</span></li>
-            <li><i class="bi bi-flag"></i><span>Durable replay/idempotency storage.</span></li>
-            <li><i class="bi bi-flag"></i><span>Pricing, receiver account, and auth boundary decisions.</span></li>
-            <li><i class="bi bi-flag"></i><span>Audit-safe payment and decision logging.</span></li>
-            <li><i class="bi bi-flag"></i><span>Release hardening with regression and parity gates.</span></li>
-            <li><i class="bi bi-flag"></i><span>Pilot candidate flows evaluated on testnet.</span></li>
+            <li><i class="bi bi-flag"></i><span>Independent security review of the ZK, Soroban, policy, replay, and execution boundaries.</span></li>
+            <li><i class="bi bi-flag"></i><span>Dependency, build, artifact, and software-supply-chain hardening.</span></li>
+            <li><i class="bi bi-flag"></i><span>Long-lived state maintenance and restoration procedures beyond normal network TTL windows.</span></li>
+            <li><i class="bi bi-flag"></i><span>Production-grade owner, key, policy-rotation, and recovery design.</span></li>
+            <li><i class="bi bi-flag"></i><span>Monitoring, rate limits, abuse controls, and operational incident handling.</span></li>
+            <li><i class="bi bi-flag"></i><span>Release hardening with regression, parity, reproducibility, and deployment gates.</span></li>
+            <li><i class="bi bi-flag"></i><span>Mainnet consideration only after successful pilots, security review, and explicit deployment approval.</span></li>
           </ul>
         </li>
       </ol>
@@ -911,22 +970,27 @@
     <section class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
         <h2>What the roadmap is optimizing for</h2>
-        <p class="lead">This is not roadmap theater. The throughline is deterministic execution, reviewer clarity, and practical integration depth.</p>
+        <p class="lead">
+          The direction remains conservative: explicit typed actions, independently verifiable private-policy decisions,
+          and a clear separation between proof verification and transaction execution.
+        </p>
         <div class="focus-grid" data-stagger>
           <div class="focus-card shipped interactive-card reveal">
-            <div class="icon"><i class="bi bi-shield-lock"></i></div>
-            <h4>Determinism first</h4>
-            <p>Every phase keeps the “explicit plan before action” model intact instead of hiding behavior behind opaque automation.</p>
+            <div class="icon"><i class="bi bi-braces-asterisk"></i></div>
+            <h4>Deterministic inputs</h4>
+            <p>Natural-language or application input is converted into a typed ActionPlan before guardrails or chain interaction.</p>
           </div>
+
+          <div class="focus-card live interactive-card reveal">
+            <div class="icon"><i class="bi bi-fingerprint"></i></div>
+            <h4>Verifiable private decisions</h4>
+            <p>RISC Zero and Soroban make the private-policy result independently verifiable without publishing the policy rules.</p>
+          </div>
+
           <div class="focus-card next interactive-card reveal">
-            <div class="icon"><i class="bi bi-diagram-3"></i></div>
-            <h4>Better integration depth</h4>
-            <p>The next leap is not cosmetic. It is stronger contract-level structure and richer DSL-to-chain feedback loops.</p>
-          </div>
-          <div class="focus-card later interactive-card reveal">
-            <div class="icon"><i class="bi bi-clipboard-data"></i></div>
-            <h4>Reviewer confidence</h4>
-            <p>The final shape targets traceability, safer pilot execution, and a clean explanation surface for external evaluators.</p>
+            <div class="icon"><i class="bi bi-shield-lock"></i></div>
+            <h4>No automatic execution</h4>
+            <p>Proof verification remains an authorization input. Signing and submitting the underlying ActionPlan stay separate.</p>
           </div>
         </div>
       </div>
@@ -934,12 +998,15 @@
 
     <section class="container">
       <div class="cta-card glass soft interactive-card reveal">
-        <h3 class="fw-bold mb-2">Try the live surfaces while the roadmap advances</h3>
-        <p>What is already visible publicly is meant to show the philosophy now, not just promise it later.</p>
+        <h3 class="fw-bold mb-2">Run the live Stellar testnet milestone</h3>
+        <p>
+          The hosted CLI demonstrates local binding, all three private-policy outcomes,
+          Soroban verification, and one separate explicit testnet attestation.
+        </p>
         <div class="d-flex justify-content-center flex-wrap gap-2 cta-actions">
-          <a href="/webui" class="btn btn-primary"><i class="bi bi-terminal cta-icon-webui"></i> Open WebUI</a>
-          <a href="/stellar-cli" class="btn btn-outline-light"><i class="bi bi-rocket-takeoff cta-icon-stellar"></i> Open Stellar Demo</a>
-          <a href="/" class="btn btn-outline-light"><i class="bi bi-house cta-icon-home"></i> Back to home</a>
+          <a href="/stellar-cli" class="btn btn-primary"><i class="bi bi-shield-check"></i> Open ZK Stellar Demo</a>
+          <a href="/webui" class="btn btn-outline-light"><i class="bi bi-terminal"></i> Open WebUI</a>
+          <a href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar/tree/main/hackathons/stellar-real-world-zk" class="btn btn-outline-light" target="_blank" rel="noopener"><i class="bi bi-github"></i> View ZK Package</a>
         </div>
       </div>
     </section>
@@ -953,7 +1020,7 @@
         <a href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</a>
         <a href="/about"><i class="bi bi-stars"></i> About</a>
         <a href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a>
-        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
+        <a href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
         <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
       </div>
     </div>
