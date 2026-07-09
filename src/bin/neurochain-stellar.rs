@@ -3,10 +3,12 @@ use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::process::Command;
+use std::thread;
+use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
 use neurochain::actions::{
-    parse_action_plan_from_nc, validate_plan, Action, ActionPlan, Allowlist,
+    parse_action_plan_from_nc, validate_enforced_plan, validate_plan, Action, ActionPlan, Allowlist,
 };
 use neurochain::ai::model::AIModel;
 use neurochain::banner;
@@ -16,8 +18,11 @@ use neurochain::intent_stellar::{
     has_intent_blocking_issue, resolve_model_path as resolve_intent_model_path,
     threshold_from_env as intent_threshold_from_env, DEFAULT_INTENT_STELLAR_THRESHOLD,
 };
+use neurochain::soroban_deep::{self, ContractPolicy};
+use neurochain::zk_attestation::{
+    inspect_zk_attestation, ZkAttestationViewRequest, ZkAttestationViewResponse, ZkProofArtifact,
+};
 use reqwest::blocking::Client;
-use serde::Deserialize;
 use serde_json::Value;
 
 fn print_usage() {
@@ -43,6 +48,7 @@ fn print_usage() {
     eprintln!(
         "--debug enables intent pipeline trace (classify -> slot-parse -> guardrails -> flow)."
     );
+    eprintln!("REPL ZK Guardrail supports local binding and Soroban verification; run `help all`.");
     eprintln!("Flow in intent mode is blocked when plan has Unknown/intent_error (exit code 5).");
     eprintln!("Env: NC_STELLAR_NETWORK / NC_SOROBAN_NETWORK (default: testnet)");
     eprintln!("Env: NC_STELLAR_HORIZON_URL (default: testnet Horizon)");
@@ -50,6 +56,9 @@ fn print_usage() {
     eprintln!("Env: NC_SOROBAN_SOURCE or NC_STELLAR_SOURCE (for soroban invoke)");
     eprintln!("Env: NC_STELLAR_CLI (default: stellar)");
     eprintln!("Env: NC_SOROBAN_SIMULATE_FLAG (default: \"--send no\")");
+    eprintln!("Env: NC_ZK_GUARDRAIL_CONTRACT (deployed NeuroChain ZK contract ID)");
+    eprintln!("Env: NC_ZK_INSTRUCTION_LEEWAY (default: 10000000)");
+    eprintln!("Env: NC_STELLAR_SCRIPT_UNSAFE_EXEC=1 (allow .nc stellar_cli/wallet_generate/bootstrap build-time execution)");
     eprintln!("Env: NC_TXREP_PREVIEW=1 (include txrep in preview output)");
     eprintln!("Env: NC_INTENT_STELLAR_MODEL (default: models/intent_stellar/model.onnx)");
     eprintln!("Env: NC_INTENT_STELLAR_THRESHOLD (default: 0.55)");
@@ -206,25 +215,13 @@ fn x402_enabled(override_value: Option<bool>) -> bool {
     parse_bool_value(&std::env::var("NC_X402").unwrap_or_default()).unwrap_or(false)
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct ArgSchema {
-    #[serde(default)]
-    required: HashMap<String, String>,
-    #[serde(default)]
-    optional: HashMap<String, String>,
+fn script_unsafe_exec_enabled() -> bool {
+    parse_bool_value(&env::var("NC_STELLAR_SCRIPT_UNSAFE_EXEC").unwrap_or_default())
+        .unwrap_or(false)
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct ContractPolicy {
-    contract_id: String,
-    #[serde(default)]
-    allowed_functions: Vec<String>,
-    #[serde(default)]
-    args_schema: HashMap<String, ArgSchema>,
-    #[serde(default)]
-    max_fee_stroops: Option<u64>,
-    #[serde(default)]
-    resource_limits: Option<Value>,
+fn remote_repl_mode() -> bool {
+    parse_bool_value(&env::var("NC_STELLAR_REMOTE_REPL").unwrap_or_default()).unwrap_or(false)
 }
 
 #[derive(Debug)]
@@ -242,6 +239,8 @@ struct NetworkConfig {
     soroban_source: Option<String>,
     soroban_cli: String,
     soroban_simulate_args: Vec<String>,
+    zk_guardrail_contract: Option<String>,
+    zk_instruction_leeway: u32,
     txrep_preview: bool,
 }
 
@@ -307,6 +306,10 @@ fn parse_simulate_args(raw: &str) -> Vec<String> {
     parts
 }
 
+fn preview_soroban_simulate_args() -> [&'static str; 2] {
+    ["--send", "no"]
+}
+
 fn default_horizon_url(network: &str) -> String {
     match network {
         "public" | "pubnet" | "mainnet" => "https://horizon.stellar.org".to_string(),
@@ -341,6 +344,13 @@ fn load_network_config() -> NetworkConfig {
     let soroban_simulate_raw =
         env::var("NC_SOROBAN_SIMULATE_FLAG").unwrap_or_else(|_| "--send no".to_string());
     let soroban_simulate_args = parse_simulate_args(&soroban_simulate_raw);
+    let zk_guardrail_contract = env::var("NC_ZK_GUARDRAIL_CONTRACT")
+        .ok()
+        .filter(|value| !value.trim().is_empty());
+    let zk_instruction_leeway = env::var("NC_ZK_INSTRUCTION_LEEWAY")
+        .ok()
+        .and_then(|value| value.parse::<u32>().ok())
+        .unwrap_or(10_000_000);
     let txrep_preview = matches!(
         env::var("NC_TXREP_PREVIEW")
             .unwrap_or_default()
@@ -356,12 +366,22 @@ fn load_network_config() -> NetworkConfig {
         soroban_source,
         soroban_cli,
         soroban_simulate_args,
+        zk_guardrail_contract,
+        zk_instruction_leeway,
         txrep_preview,
     }
 }
 
-fn load_contract_policies(runtime: Option<&RuntimeSettings>) -> Vec<ContractPolicy> {
+#[derive(Debug, Default)]
+struct ContractPolicyLoad {
+    policies: Vec<ContractPolicy>,
+    errors: Vec<String>,
+}
+
+fn load_contract_policies(runtime: Option<&RuntimeSettings>) -> ContractPolicyLoad {
+    let mut load = ContractPolicyLoad::default();
     let mut policies = Vec::new();
+    let mut errors = Vec::new();
 
     let direct_policy_path = runtime
         .and_then(|r| r.contract_policy.as_deref())
@@ -369,40 +389,91 @@ fn load_contract_policies(runtime: Option<&RuntimeSettings>) -> Vec<ContractPoli
         .or_else(|| env::var("NC_CONTRACT_POLICY").ok())
         .filter(|v| !v.trim().is_empty());
     if let Some(path) = direct_policy_path {
-        if let Ok(data) = fs::read_to_string(&path) {
-            match serde_json::from_str::<ContractPolicy>(&data) {
+        match fs::read_to_string(&path) {
+            Ok(data) => match serde_json::from_str::<ContractPolicy>(&data) {
                 Ok(policy) => policies.push(policy),
-                Err(err) => eprintln!("Policy parse failed for {path}: {err}"),
+                Err(err) => {
+                    let msg = format!("policy_load_failed: policy parse failed for {path}: {err}");
+                    eprintln!("{msg}");
+                    errors.push(msg);
+                }
+            },
+            Err(err) => {
+                let msg = format!(
+                    "policy_load_failed: policy file not found or unreadable: {path}: {err}"
+                );
+                eprintln!("{msg}");
+                errors.push(msg);
             }
-        } else {
-            eprintln!("Policy file not found: {path}");
         }
     }
 
+    let explicit_policy_dir = runtime
+        .and_then(|r| r.contract_policy_dir.as_deref())
+        .map(str::to_string)
+        .or_else(|| env::var("NC_CONTRACT_POLICY_DIR").ok())
+        .filter(|v| !v.trim().is_empty());
     let policy_dir = runtime
         .and_then(|r| r.contract_policy_dir.as_deref())
         .map(str::to_string)
         .or_else(|| env::var("NC_CONTRACT_POLICY_DIR").ok())
         .filter(|v| !v.trim().is_empty())
         .unwrap_or_else(|| "contracts".to_string());
-    if let Ok(entries) = fs::read_dir(&policy_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let policy_path = path.join("policy.json");
-                if let Ok(data) = fs::read_to_string(&policy_path) {
-                    match serde_json::from_str::<ContractPolicy>(&data) {
-                        Ok(policy) => policies.push(policy),
-                        Err(err) => {
-                            eprintln!("Policy parse failed for {}: {err}", policy_path.display())
+    match fs::read_dir(&policy_dir) {
+        Ok(entries) => {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let policy_path = path.join("policy.json");
+                    if policy_path.exists() {
+                        match fs::read_to_string(&policy_path) {
+                            Ok(data) => match serde_json::from_str::<ContractPolicy>(&data) {
+                                Ok(policy) => policies.push(policy),
+                                Err(err) => {
+                                    let msg = format!(
+                                        "policy_load_failed: policy parse failed for {}: {err}",
+                                        policy_path.display()
+                                    );
+                                    eprintln!("{msg}");
+                                    errors.push(msg);
+                                }
+                            },
+                            Err(err) => {
+                                let msg = format!(
+                                    "policy_load_failed: policy file not readable: {}: {err}",
+                                    policy_path.display()
+                                );
+                                eprintln!("{msg}");
+                                errors.push(msg);
+                            }
                         }
                     }
                 }
             }
         }
+        Err(err) => {
+            if explicit_policy_dir.is_some() {
+                let msg = format!(
+                    "policy_load_failed: policy dir not found or unreadable: {policy_dir}: {err}"
+                );
+                eprintln!("{msg}");
+                errors.push(msg);
+            }
+        }
     }
 
-    policies
+    load.policies = policies;
+    load.errors = errors;
+    load
+}
+
+fn plan_needs_contract_policy(plan: &ActionPlan) -> bool {
+    plan.actions.iter().any(|action| {
+        matches!(
+            action,
+            Action::SorobanContractInvoke { .. } | Action::SorobanContractDeploy { .. }
+        )
+    })
 }
 
 fn is_base32_char(c: char) -> bool {
@@ -446,434 +517,6 @@ fn extract_strkey_with_prefixes(text: &str, prefixes: &[char]) -> Option<String>
         return Some(candidate);
     }
     None
-}
-
-fn is_symbol(value: &str) -> bool {
-    let len = value.len();
-    if len == 0 || len > 32 {
-        return false;
-    }
-    value
-        .chars()
-        .all(|c| c.is_ascii() && !c.is_control() && !c.is_whitespace())
-}
-
-fn is_hex_bytes(value: &str) -> bool {
-    if !value.starts_with("0x") {
-        return false;
-    }
-    let hex = &value[2..];
-    if hex.is_empty() || !hex.len().is_multiple_of(2) {
-        return false;
-    }
-    hex.chars().all(|c| c.is_ascii_hexdigit())
-}
-
-fn is_u64_value(value: &Value) -> bool {
-    if value.as_u64().is_some() {
-        return true;
-    }
-    value
-        .as_str()
-        .map(|s| s.trim().parse::<u64>().is_ok())
-        .unwrap_or(false)
-}
-
-fn typed_value_kind(value: &Value) -> &'static str {
-    match value {
-        Value::Null => "null",
-        Value::Bool(_) => "bool",
-        Value::Number(n) => {
-            if n.is_i64() {
-                "i64"
-            } else if n.is_u64() {
-                "u64"
-            } else {
-                "number"
-            }
-        }
-        Value::String(_) => "string",
-        Value::Array(_) => "array",
-        Value::Object(_) => "object",
-    }
-}
-
-fn typed_value_preview(value: &Value) -> String {
-    let mut rendered = value.to_string();
-    if rendered.len() > 96 {
-        rendered.truncate(93);
-        rendered.push_str("...");
-    }
-    rendered
-}
-
-fn validate_arg_type(value: &Value, ty: &str) -> bool {
-    match ty {
-        "string" => value.is_string(),
-        "number" => value.is_number(),
-        "bool" => value.is_boolean(),
-        "address" => value.as_str().map(is_strkey).unwrap_or(false),
-        "symbol" => value.as_str().map(is_symbol).unwrap_or(false),
-        "bytes" => value.as_str().map(is_hex_bytes).unwrap_or(false),
-        "u64" => is_u64_value(value),
-        _ => false,
-    }
-}
-
-fn is_typed_template_v2_type(ty: &str) -> bool {
-    matches!(ty, "address" | "bytes" | "symbol" | "u64")
-}
-
-fn normalize_typed_slot_value(value: &mut Value, ty: &str) -> Result<bool, String> {
-    match ty {
-        "address" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected address got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let normalized = raw.trim().to_ascii_uppercase();
-            if !is_strkey(&normalized) {
-                return Err(format!(
-                    "expected address got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "bytes" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected bytes got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let trimmed = raw.trim();
-            let (had_prefix, body) = if let Some(rest) = trimmed.strip_prefix("0x") {
-                (true, rest)
-            } else if let Some(rest) = trimmed.strip_prefix("0X") {
-                (true, rest)
-            } else {
-                (false, trimmed)
-            };
-            let compact: String = body
-                .chars()
-                .filter(|c| !(c.is_ascii_whitespace() || matches!(c, '_' | '-')))
-                .collect();
-            let mut normalized = if had_prefix {
-                format!("0x{compact}")
-            } else {
-                compact.clone()
-            };
-            if !had_prefix
-                && !compact.is_empty()
-                && compact.len().is_multiple_of(2)
-                && compact.chars().all(|c| c.is_ascii_hexdigit())
-            {
-                normalized = format!("0x{compact}");
-            }
-            if normalized.starts_with("0x") {
-                let lower_hex = normalized[2..].to_ascii_lowercase();
-                normalized = format!("0x{lower_hex}");
-            }
-            if !is_hex_bytes(&normalized) {
-                return Err(format!(
-                    "expected bytes got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "symbol" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected symbol got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let normalized = raw.trim().to_string();
-            if !is_symbol(&normalized) {
-                return Err(format!(
-                    "expected symbol got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "u64" => {
-            if value.as_u64().is_some() {
-                return Ok(false);
-            }
-            if let Some(raw) = value.as_str() {
-                let trimmed = raw.trim();
-                let compact: String = trimmed
-                    .chars()
-                    .filter(|c| !matches!(c, '_' | ','))
-                    .collect();
-                let parsed = compact.parse::<u64>().map_err(|_| {
-                    format!(
-                        "expected u64 got string value={}",
-                        typed_value_preview(&Value::String(raw.to_string()))
-                    )
-                })?;
-                let new_value = Value::Number(parsed.into());
-                let changed = *value != new_value;
-                *value = new_value;
-                return Ok(changed);
-            }
-            Err(format!(
-                "expected u64 got {} value={}",
-                typed_value_kind(value),
-                typed_value_preview(value)
-            ))
-        }
-        _ => Ok(false),
-    }
-}
-
-#[derive(Default)]
-struct PolicyTypedV2Outcome {
-    errors: Vec<String>,
-    normalized_args: usize,
-}
-
-fn apply_policy_typed_schema_to_args(
-    contract_id: &str,
-    function: &str,
-    args: &mut Value,
-    schema: &ArgSchema,
-) -> PolicyTypedV2Outcome {
-    let Some(args_obj) = args.as_object() else {
-        return PolicyTypedV2Outcome::default();
-    };
-    let mut outcome = PolicyTypedV2Outcome::default();
-    let mut updates: Vec<(String, Value)> = Vec::new();
-
-    for (key, ty_raw) in &schema.required {
-        let ty = ty_raw.trim().to_ascii_lowercase();
-        if !is_typed_template_v2_type(ty.as_str()) {
-            continue;
-        }
-        if let Some(value) = args_obj.get(key) {
-            let mut normalized = value.clone();
-            match normalize_typed_slot_value(&mut normalized, ty.as_str()) {
-                Ok(changed) => {
-                    if !validate_arg_type(&normalized, ty.as_str()) {
-                        outcome.errors.push(format!(
-                            "slot_type_error: ContractInvoke {key} expected {ty} (policy {contract_id}:{function})"
-                        ));
-                        continue;
-                    }
-                    if changed && &normalized != value {
-                        updates.push((key.clone(), normalized));
-                    }
-                }
-                Err(detail) => outcome.errors.push(format!(
-                    "slot_type_error: ContractInvoke {key} {detail} (policy {contract_id}:{function})"
-                )),
-            }
-        }
-    }
-
-    for (key, ty_raw) in &schema.optional {
-        let ty = ty_raw.trim().to_ascii_lowercase();
-        if !is_typed_template_v2_type(ty.as_str()) {
-            continue;
-        }
-        if let Some(value) = args_obj.get(key) {
-            let mut normalized = value.clone();
-            match normalize_typed_slot_value(&mut normalized, ty.as_str()) {
-                Ok(changed) => {
-                    if !validate_arg_type(&normalized, ty.as_str()) {
-                        outcome.errors.push(format!(
-                            "slot_type_error: ContractInvoke {key} expected {ty} (policy {contract_id}:{function})"
-                        ));
-                        continue;
-                    }
-                    if changed && &normalized != value {
-                        updates.push((key.clone(), normalized));
-                    }
-                }
-                Err(detail) => outcome.errors.push(format!(
-                    "slot_type_error: ContractInvoke {key} {detail} (policy {contract_id}:{function})"
-                )),
-            }
-        }
-    }
-
-    if let Some(args_obj_mut) = args.as_object_mut() {
-        for (key, value) in updates {
-            args_obj_mut.insert(key, value);
-            outcome.normalized_args += 1;
-        }
-    }
-
-    outcome
-}
-
-fn apply_policy_typed_templates_v2(
-    plan: &mut ActionPlan,
-    policies: &[ContractPolicy],
-) -> (usize, usize) {
-    if policies.is_empty() {
-        return (0, 0);
-    }
-
-    let mut policy_map: HashMap<&str, &ContractPolicy> = HashMap::new();
-    for policy in policies {
-        policy_map.insert(policy.contract_id.as_str(), policy);
-    }
-
-    let mut converted = 0usize;
-    let mut normalized_args = 0usize;
-    for action in &mut plan.actions {
-        let outcome = match action {
-            neurochain::actions::Action::SorobanContractInvoke {
-                contract_id,
-                function,
-                args,
-            } => {
-                let Some(policy) = policy_map.get(contract_id.as_str()) else {
-                    continue;
-                };
-                let Some(schema) = policy.args_schema.get(function) else {
-                    continue;
-                };
-
-                apply_policy_typed_schema_to_args(contract_id, function, args, schema)
-            }
-            _ => PolicyTypedV2Outcome::default(),
-        };
-        normalized_args += outcome.normalized_args;
-
-        if let Some(reason) = outcome.errors.first().cloned() {
-            *action = neurochain::actions::Action::Unknown {
-                reason: reason.clone(),
-            };
-            for err in outcome.errors {
-                plan.warnings.push(format!("intent_error: {err}"));
-            }
-            converted += 1;
-        }
-    }
-
-    (converted, normalized_args)
-}
-
-fn validate_contract_policies(
-    plan: &ActionPlan,
-    policies: &[ContractPolicy],
-) -> (Vec<String>, Vec<String>) {
-    let mut warnings = Vec::new();
-    let mut errors = Vec::new();
-    if policies.is_empty() {
-        return (warnings, errors);
-    }
-
-    let mut map: HashMap<String, ContractPolicy> = HashMap::new();
-    for policy in policies {
-        map.insert(policy.contract_id.clone(), policy.clone());
-    }
-
-    for action in &plan.actions {
-        if let neurochain::actions::Action::SorobanContractInvoke {
-            contract_id,
-            function,
-            args,
-        } = action
-        {
-            let Some(policy) = map.get(contract_id) else {
-                errors.push(format!(
-                    "policy_missing: no policy for contract_id {contract_id}"
-                ));
-                continue;
-            };
-            if !policy.allowed_functions.is_empty()
-                && !policy.allowed_functions.iter().any(|f| f == function)
-            {
-                errors.push(format!(
-                    "policy_function_denied: {contract_id}:{function} not allowed"
-                ));
-                continue;
-            }
-
-            if let Some(schema) = policy.args_schema.get(function) {
-                let args_obj = args.as_object();
-                if args_obj.is_none() {
-                    errors.push(format!(
-                        "policy_args_invalid: {contract_id}:{function} args must be object"
-                    ));
-                    continue;
-                }
-                let args_obj = args_obj.unwrap();
-
-                for (key, ty) in &schema.required {
-                    match args_obj.get(key) {
-                        Some(val) => {
-                            if !validate_arg_type(val, ty) {
-                                errors.push(format!(
-                                    "policy_args_type: {contract_id}:{function} {key} expected {ty}"
-                                ));
-                            }
-                        }
-                        None => errors.push(format!(
-                            "policy_args_missing: {contract_id}:{function} missing {key}"
-                        )),
-                    }
-                }
-
-                for (key, ty) in &schema.optional {
-                    if let Some(val) = args_obj.get(key) {
-                        if !validate_arg_type(val, ty) {
-                            errors.push(format!(
-                                "policy_args_type: {contract_id}:{function} {key} expected {ty}"
-                            ));
-                        }
-                    }
-                }
-
-                for key in args_obj.keys() {
-                    if !schema.required.contains_key(key) && !schema.optional.contains_key(key) {
-                        warnings.push(format!(
-                            "policy_args_unknown: {contract_id}:{function} unexpected arg {key}"
-                        ));
-                    }
-                }
-            }
-
-            if let Some(limits) = &policy.resource_limits {
-                if !limits.is_object() {
-                    warnings.push(format!(
-                        "policy_resource_limits_invalid: {contract_id} resource_limits must be object"
-                    ));
-                }
-            }
-
-            if let Some(max_fee) = policy.max_fee_stroops {
-                warnings.push(format!(
-                    "policy_hint: {contract_id}:{function} max_fee_stroops={max_fee}"
-                ));
-            }
-        }
-    }
-
-    (warnings, errors)
 }
 
 fn estimate_op_count(plan: &ActionPlan) -> usize {
@@ -1383,7 +1026,7 @@ fn soroban_cli_invoke(
         &cfg.soroban_network,
     ]);
     if simulate {
-        cmd.args(&cfg.soroban_simulate_args);
+        cmd.args(preview_soroban_simulate_args());
     }
     cmd.arg("--");
     cmd.arg(function);
@@ -1425,7 +1068,7 @@ fn soroban_cli_deploy(
         wasm,
     ]);
     if simulate {
-        cmd.args(&cfg.soroban_simulate_args);
+        cmd.args(preview_soroban_simulate_args());
     }
     let output = cmd.output().context("failed to run stellar CLI")?;
     if !output.status.success() {
@@ -2124,6 +1767,37 @@ fn parse_simulate_flag_line(line: &str) -> Option<String> {
     parse_named_value(line, &["simulate_flag", "soroban_simulate_flag"])
 }
 
+fn confirm_zk_consume(auto_yes: bool) -> bool {
+    if auto_yes {
+        return true;
+    }
+    eprint!(
+        "Confirm ZK verification transaction and nullifier consume (never submits the ActionPlan)? [y/N]: "
+    );
+    let mut input = String::new();
+    if std::io::stdin().read_line(&mut input).is_err() {
+        return false;
+    }
+    matches!(input.trim().to_ascii_lowercase().as_str(), "y" | "yes")
+}
+
+fn parse_zk_contract_line(line: &str) -> Option<String> {
+    parse_named_value(line, &["zk_contract", "zk_guardrail_contract"])
+}
+
+fn parse_zk_instruction_leeway_line(line: &str) -> Result<Option<u32>> {
+    let Some(value) = parse_named_value(line, &["zk_instruction_leeway"]) else {
+        return Ok(None);
+    };
+    let parsed = value
+        .parse::<u32>()
+        .map_err(|_| anyhow!("zk_instruction_leeway must be an unsigned integer"))?;
+    if parsed == 0 {
+        return Err(anyhow!("zk_instruction_leeway must be greater than zero"));
+    }
+    Ok(Some(parsed))
+}
+
 fn parse_txrep_line(line: &str) -> Result<Option<bool>> {
     let trimmed = line.trim();
     if trimmed.eq_ignore_ascii_case("txrep") {
@@ -2231,7 +1905,7 @@ fn parse_x402_line(line: &str) -> Result<Option<bool>> {
         .ok_or_else(|| anyhow!("invalid x402 value `{value}` (use x402, x402 on, x402 off)"))
 }
 
-fn parse_key_value_tokens(raw: &str) -> Result<HashMap<String, String>> {
+fn parse_key_value_tokens(raw: &str, command: &str) -> Result<HashMap<String, String>> {
     let mut tokens: Vec<String> = Vec::new();
     let mut current = String::new();
     let mut quote: Option<char> = None;
@@ -2259,7 +1933,7 @@ fn parse_key_value_tokens(raw: &str) -> Result<HashMap<String, String>> {
         current.push(ch);
     }
     if quote.is_some() {
-        return Err(anyhow!("unterminated quoted value in x402 command"));
+        return Err(anyhow!("unterminated quoted value in {command} command"));
     }
     if !current.is_empty() {
         tokens.push(current);
@@ -2269,16 +1943,16 @@ fn parse_key_value_tokens(raw: &str) -> Result<HashMap<String, String>> {
     for token in tokens {
         let Some((name, value_raw)) = token.split_once('=') else {
             return Err(anyhow!(
-                "invalid x402 argument `{token}` (use key=\"value\")"
+                "invalid {command} argument `{token}` (use key=\"value\")"
             ));
         };
         let name = name.trim().to_ascii_lowercase();
         if name.is_empty() {
-            return Err(anyhow!("invalid x402 argument key in `{token}`"));
+            return Err(anyhow!("invalid {command} argument key in `{token}`"));
         }
         let value = strip_wrapping_quotes(value_raw);
         if value.is_empty() {
-            return Err(anyhow!("invalid x402 argument `{name}`: empty value"));
+            return Err(anyhow!("invalid {command} argument `{name}`: empty value"));
         }
         out.insert(name, value);
     }
@@ -2303,7 +1977,7 @@ fn parse_x402_request_line(line: &str) -> Result<Option<Action>> {
             "x402.request requires payment fields (example: x402.request to=\"G...\" amount=\"1\" asset_code=\"XLM\")"
         ));
     }
-    let args = parse_key_value_tokens(rest)?;
+    let args = parse_key_value_tokens(rest, "x402")?;
     let to = args
         .get("to")
         .cloned()
@@ -2363,7 +2037,7 @@ fn parse_x402_finalize_line(line: &str) -> Result<Option<String>> {
     if rest.eq_ignore_ascii_case("last") {
         return Ok(Some("last".to_string()));
     }
-    let args = parse_key_value_tokens(rest)?;
+    let args = parse_key_value_tokens(rest, "x402")?;
     if let Some(challenge_id) = args
         .get("challenge_id")
         .cloned()
@@ -2374,6 +2048,724 @@ fn parse_x402_finalize_line(line: &str) -> Result<Option<String>> {
     Err(anyhow!(
         "invalid x402.finalize syntax (use x402.finalize challenge_id=\"last\" or challenge_id=\"x402c0001\")"
     ))
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ZkDemoScenario {
+    Approved,
+    RequiresApproval,
+    Blocked,
+}
+
+impl ZkDemoScenario {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Approved => "approved",
+            Self::RequiresApproval => "requires_approval",
+            Self::Blocked => "blocked",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum ZkReplCommand {
+    Demo(ZkDemoScenario),
+    Verify {
+        action_plan_path: String,
+        proof_path: String,
+    },
+    StellarVerify(ZkInspectionTarget),
+    StellarAttest(ZkInspectionTarget),
+    StellarConsume(ZkInspectionTarget),
+    Status,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ZkStellarCommandKind {
+    Verify,
+    Attest,
+    Consume,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ZkInspectionTarget {
+    Scenario(ZkDemoScenario),
+    Last,
+}
+
+#[derive(Debug, Clone)]
+struct ZkReplInspection {
+    source: String,
+    request: ZkAttestationViewRequest,
+    response: ZkAttestationViewResponse,
+}
+
+fn parse_zk_inspection_target(value: &str) -> Result<ZkInspectionTarget> {
+    let target = match value.trim().to_ascii_lowercase().as_str() {
+        "approved" => ZkInspectionTarget::Scenario(ZkDemoScenario::Approved),
+        "requires_approval" | "requires-approval" => {
+            ZkInspectionTarget::Scenario(ZkDemoScenario::RequiresApproval)
+        }
+        "blocked" | "blocked_allowlist" | "blocked-allowlist" => {
+            ZkInspectionTarget::Scenario(ZkDemoScenario::Blocked)
+        }
+        "last" => ZkInspectionTarget::Last,
+        other => {
+            return Err(anyhow!(
+                "unknown ZK target `{other}` (use approved, requires_approval, blocked, or last)"
+            ));
+        }
+    };
+    Ok(target)
+}
+
+fn parse_zk_repl_command(line: &str) -> Result<Option<ZkReplCommand>> {
+    let trimmed = line.trim();
+    let lower = trimmed.to_ascii_lowercase();
+
+    if lower == "zk status" || lower == "zk.status" {
+        return Ok(Some(ZkReplCommand::Status));
+    }
+
+    for (prefix, kind) in [
+        ("zk stellar verify", ZkStellarCommandKind::Verify),
+        ("zk.stellar.verify", ZkStellarCommandKind::Verify),
+        ("zk stellar attest", ZkStellarCommandKind::Attest),
+        ("zk.stellar.attest", ZkStellarCommandKind::Attest),
+        ("zk stellar consume", ZkStellarCommandKind::Consume),
+        ("zk.stellar.consume", ZkStellarCommandKind::Consume),
+    ] {
+        if lower == prefix {
+            return Err(anyhow!(
+                "{prefix} requires approved, requires_approval, blocked, or last"
+            ));
+        }
+        let Some(rest) = lower.strip_prefix(prefix) else {
+            continue;
+        };
+        if !rest.chars().next().is_some_and(char::is_whitespace) {
+            continue;
+        }
+        let target = parse_zk_inspection_target(rest)?;
+        return Ok(Some(match kind {
+            ZkStellarCommandKind::Verify => ZkReplCommand::StellarVerify(target),
+            ZkStellarCommandKind::Attest => ZkReplCommand::StellarAttest(target),
+            ZkStellarCommandKind::Consume => ZkReplCommand::StellarConsume(target),
+        }));
+    }
+
+    for prefix in ["zk demo", "zk.demo"] {
+        if lower == prefix {
+            return Err(anyhow!(
+                "{prefix} requires a scenario: approved, requires_approval, or blocked"
+            ));
+        }
+        let Some(rest) = lower.strip_prefix(prefix) else {
+            continue;
+        };
+        if !rest.chars().next().is_some_and(char::is_whitespace) {
+            continue;
+        }
+        let scenario = match rest.trim() {
+            "approved" => ZkDemoScenario::Approved,
+            "requires_approval" | "requires-approval" => ZkDemoScenario::RequiresApproval,
+            "blocked" | "blocked_allowlist" | "blocked-allowlist" => ZkDemoScenario::Blocked,
+            value => {
+                return Err(anyhow!(
+                    "unknown ZK demo scenario `{value}` (use approved, requires_approval, or blocked)"
+                ));
+            }
+        };
+        return Ok(Some(ZkReplCommand::Demo(scenario)));
+    }
+
+    for prefix in ["zk verify", "zk.verify"] {
+        if lower == prefix {
+            return Err(anyhow!(
+                "{prefix} requires action_plan=\"...\" and proof=\"...\""
+            ));
+        }
+        let Some(rest_lower) = lower.strip_prefix(prefix) else {
+            continue;
+        };
+        if !rest_lower.chars().next().is_some_and(char::is_whitespace) {
+            continue;
+        }
+        let rest = &trimmed[prefix.len()..];
+        let args = parse_key_value_tokens(rest.trim(), "zk.verify")?;
+        if let Some(name) = args
+            .keys()
+            .find(|name| name.as_str() != "action_plan" && name.as_str() != "proof")
+        {
+            return Err(anyhow!("unknown zk.verify argument `{name}`"));
+        }
+        let action_plan_path = args
+            .get("action_plan")
+            .cloned()
+            .ok_or_else(|| anyhow!("zk.verify missing required field: action_plan"))?;
+        let proof_path = args
+            .get("proof")
+            .cloned()
+            .ok_or_else(|| anyhow!("zk.verify missing required field: proof"))?;
+        return Ok(Some(ZkReplCommand::Verify {
+            action_plan_path,
+            proof_path,
+        }));
+    }
+
+    if lower == "zk" || lower.starts_with("zk ") || lower.starts_with("zk.") {
+        return Err(anyhow!(
+            "unknown ZK command (use zk.demo, zk.verify, zk.stellar.verify, zk.stellar.attest, zk.stellar.consume, or zk status)"
+        ));
+    }
+
+    Ok(None)
+}
+
+const MAX_ZK_ARTIFACT_BYTES: u64 = 2 * 1024 * 1024;
+
+fn read_zk_json_file(path: &str, label: &str) -> Result<String> {
+    let metadata = fs::metadata(path).with_context(|| format!("read {label} metadata: {path}"))?;
+    if !metadata.is_file() {
+        return Err(anyhow!("{label} is not a regular file: {path}"));
+    }
+    if metadata.len() > MAX_ZK_ARTIFACT_BYTES {
+        return Err(anyhow!(
+            "{label} exceeds the {} byte limit: {path}",
+            MAX_ZK_ARTIFACT_BYTES
+        ));
+    }
+    fs::read_to_string(path).with_context(|| format!("read {label}: {path}"))
+}
+
+fn inspect_zk_request(
+    source: String,
+    request: ZkAttestationViewRequest,
+) -> Result<ZkReplInspection> {
+    let response = inspect_zk_attestation(request.clone())
+        .map_err(|err| anyhow!("ZK attestation rejected: {}", err.code()))?;
+    Ok(ZkReplInspection {
+        source,
+        request,
+        response,
+    })
+}
+
+fn inspect_zk_demo(scenario: ZkDemoScenario) -> Result<ZkReplInspection> {
+    let action_plan = serde_json::from_str(include_str!(
+        "../../hackathons/stellar-real-world-zk/fixtures/typed_action_plan.json"
+    ))
+    .context("decode bundled ZK ActionPlan")?;
+    let proof_json = match scenario {
+        ZkDemoScenario::Approved => {
+            include_str!("../../hackathons/stellar-real-world-zk/fixtures/groth16_approved.json")
+        }
+        ZkDemoScenario::RequiresApproval => include_str!(
+            "../../hackathons/stellar-real-world-zk/fixtures/groth16_requires_approval.json"
+        ),
+        ZkDemoScenario::Blocked => include_str!(
+            "../../hackathons/stellar-real-world-zk/fixtures/groth16_blocked_exit_3.json"
+        ),
+    };
+    let proof = serde_json::from_str(proof_json).context("decode bundled ZK proof")?;
+    inspect_zk_request(
+        format!("bundled demo: {}", scenario.name()),
+        ZkAttestationViewRequest { action_plan, proof },
+    )
+}
+
+fn inspect_zk_files(action_plan_path: &str, proof_path: &str) -> Result<ZkReplInspection> {
+    if remote_repl_mode() {
+        return Err(anyhow!(
+            "zk.verify file access is disabled in remote REPL; use a bundled zk.demo scenario"
+        ));
+    }
+    let action_plan_json = read_zk_json_file(action_plan_path, "ZK ActionPlan")?;
+    let proof_json = read_zk_json_file(proof_path, "ZK proof")?;
+    let action_plan = serde_json::from_str(&action_plan_json)
+        .with_context(|| format!("decode ZK ActionPlan: {action_plan_path}"))?;
+    let proof = serde_json::from_str(&proof_json)
+        .with_context(|| format!("decode ZK proof: {proof_path}"))?;
+    inspect_zk_request(
+        format!("local files: {action_plan_path} + {proof_path}"),
+        ZkAttestationViewRequest { action_plan, proof },
+    )
+}
+
+fn print_zk_inspection(inspection: &ZkReplInspection) {
+    let response = &inspection.response;
+    let Some(attestation) = response.zk_attestation.as_ref() else {
+        println!("ZK Guardrail: no attestation view available");
+        return;
+    };
+    println!("ZK Guardrail (local binding):");
+    println!("- source: {}", inspection.source);
+    println!("- binding: {}", attestation.verification_state);
+    println!("- proof_kind: {}", attestation.proof_kind);
+    println!(
+        "- cryptographic_verification: {}",
+        if attestation.cryptographically_verified {
+            "verified"
+        } else {
+            "required_on_stellar"
+        }
+    );
+    println!(
+        "- private_policy_revealed: {}",
+        attestation.private_policy_revealed
+    );
+    println!("- policy_commitment: {}", attestation.policy_commitment);
+    println!("- policy_version: {}", attestation.policy_version);
+    println!("- action_plan_hash: {}", attestation.action_plan_hash);
+    println!("- decision: {}", attestation.attested_decision.status);
+    println!("- exit_code: {}", attestation.attested_decision.exit_code);
+    println!("- reason: {}", attestation.attested_decision.reason);
+    println!(
+        "- requires_approval: {}",
+        attestation.attested_decision.requires_approval
+    );
+    println!("- audit_nullifier: {}", attestation.audit_nullifier);
+    println!("- submit_allowed: {}", response.execution.submit_allowed);
+    println!("- execution_state: {}", response.execution.state);
+    if let Some(next_step) = response.execution.next_step.as_deref() {
+        println!("- next_step: {next_step}");
+    }
+}
+
+#[derive(Debug)]
+struct ZkStellarAccepted {
+    action_plan_hash: String,
+    policy_commitment: String,
+    policy_version: u32,
+    decision_status: u32,
+    exit_code: u32,
+    reason_code: u32,
+    requires_approval: bool,
+    audit_nullifier: String,
+    next_step: String,
+}
+
+fn json_string_field(value: &Value, field: &str) -> Result<String> {
+    value
+        .get(field)
+        .and_then(Value::as_str)
+        .map(str::to_string)
+        .ok_or_else(|| anyhow!("Stellar ZK response is missing string field `{field}`"))
+}
+
+fn json_u32_field(value: &Value, field: &str) -> Result<u32> {
+    let number = value
+        .get(field)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| anyhow!("Stellar ZK response is missing integer field `{field}`"))?;
+    u32::try_from(number).map_err(|_| anyhow!("Stellar ZK field `{field}` exceeds u32"))
+}
+
+fn parse_zk_stellar_accepted(output: &str) -> Result<ZkStellarAccepted> {
+    let value = serde_json::from_str::<Value>(output.trim()).or_else(|_| {
+        output
+            .lines()
+            .rev()
+            .find_map(|line| serde_json::from_str::<Value>(line.trim()).ok())
+            .ok_or_else(|| anyhow!("Stellar ZK response did not contain a JSON contract result"))
+    })?;
+    Ok(ZkStellarAccepted {
+        action_plan_hash: json_string_field(&value, "action_plan_hash")?,
+        policy_commitment: json_string_field(&value, "policy_commitment")?,
+        policy_version: json_u32_field(&value, "policy_version")?,
+        decision_status: json_u32_field(&value, "decision_status")?,
+        exit_code: json_u32_field(&value, "exit_code")?,
+        reason_code: json_u32_field(&value, "reason_code")?,
+        requires_approval: value
+            .get("requires_approval")
+            .and_then(Value::as_bool)
+            .ok_or_else(|| {
+                anyhow!("Stellar ZK response is missing boolean field `requires_approval`")
+            })?,
+        audit_nullifier: json_string_field(&value, "audit_nullifier")?,
+        next_step: json_string_field(&value, "next_step")?,
+    })
+}
+
+fn zk_stellar_contract(cfg: &NetworkConfig) -> Result<&str> {
+    cfg.zk_guardrail_contract
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| {
+            anyhow!(
+                "ZK Guardrail contract is not set; run `zk_contract: C...` or set NC_ZK_GUARDRAIL_CONTRACT"
+            )
+        })
+}
+
+fn invoke_zk_guardrail_contract(
+    cfg: &NetworkConfig,
+    function: &str,
+    proof: &ZkProofArtifact,
+    send: bool,
+) -> Result<ZkStellarAccepted> {
+    let contract_id = zk_stellar_contract(cfg)?;
+    let source = cfg.soroban_source.as_deref().ok_or_else(|| {
+        anyhow!("wallet/source is not set; run `wallet: <stellar-key-alias>` first")
+    })?;
+    let send_value = if send { "yes" } else { "no" };
+    let instruction_leeway = cfg.zk_instruction_leeway.to_string();
+    let output = Command::new(&cfg.soroban_cli)
+        .args([
+            "contract",
+            "invoke",
+            "--id",
+            contract_id,
+            "--source",
+            source,
+            "--network",
+            &cfg.soroban_network,
+            "--send",
+            send_value,
+            "--instruction-leeway",
+            &instruction_leeway,
+            "--",
+            function,
+            "--seal",
+            &proof.seal_hex,
+            "--journal_bytes",
+            &proof.journal_hex,
+        ])
+        .output()
+        .context("failed to run Stellar CLI for ZK Guardrail verification")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let boundary = if stderr.contains("Error(Contract, #3)") {
+            "replay (exit 4)"
+        } else if stderr.contains("Error(Contract, #2)") {
+            "invalid or unauthorized attestation (exit 4)"
+        } else {
+            "contract invocation failed"
+        };
+        return Err(anyhow!("{boundary}: {}", stderr.trim()));
+    }
+    parse_zk_stellar_accepted(&normalize_cli_output(&output))
+}
+
+fn ensure_zk_attest_testnet(cfg: &NetworkConfig) -> Result<()> {
+    if cfg.soroban_network.trim().eq_ignore_ascii_case("testnet") {
+        return Ok(());
+    }
+    Err(anyhow!(
+        "zk.stellar.attest is testnet-only; active network is `{}`",
+        cfg.soroban_network
+    ))
+}
+
+fn source_account_for_zk_transaction(cfg: &NetworkConfig) -> Result<String> {
+    let source = cfg.soroban_source.as_deref().ok_or_else(|| {
+        anyhow!("wallet/source is not set; run `wallet: <stellar-key-alias>` first")
+    })?;
+    resolve_horizon_account_from_source(cfg, source).ok_or_else(|| {
+        anyhow!("could not resolve the wallet/source account for transaction evidence")
+    })
+}
+
+fn wait_for_new_zk_transaction_hash(
+    cfg: &NetworkConfig,
+    account: &str,
+    previous_hash: &str,
+) -> Option<String> {
+    let client = Client::new();
+    for attempt in 0..8 {
+        if let Ok(hash) = fetch_latest_tx_hash(&client, &cfg.horizon_url, account) {
+            if !hash.eq_ignore_ascii_case(previous_hash) {
+                return Some(hash);
+            }
+        }
+        if attempt < 7 {
+            thread::sleep(Duration::from_millis(250));
+        }
+    }
+    None
+}
+
+fn submit_zk_stellar_attestation(
+    cfg: &NetworkConfig,
+    proof: &ZkProofArtifact,
+) -> Result<(ZkStellarAccepted, Option<String>)> {
+    ensure_zk_attest_testnet(cfg)?;
+    let account = source_account_for_zk_transaction(cfg)?;
+    let previous_hash = fetch_latest_tx_hash(&Client::new(), &cfg.horizon_url, &account)
+        .context("read the source account transaction baseline before ZK attestation")?;
+    let accepted = invoke_zk_guardrail_contract(cfg, "verify", proof, true)?;
+    let transaction_hash = wait_for_new_zk_transaction_hash(cfg, &account, &previous_hash);
+    Ok((accepted, transaction_hash))
+}
+
+fn expected_zk_decision_status(status: &str) -> Result<u32> {
+    match status {
+        "approved" => Ok(0),
+        "blocked" => Ok(1),
+        "requires_approval" => Ok(2),
+        _ => Err(anyhow!("unknown local ZK decision status `{status}`")),
+    }
+}
+
+fn expected_zk_reason_code(reason: &str) -> Result<u32> {
+    match reason {
+        "passed" => Ok(0),
+        "allowlist" => Ok(1),
+        "contract_policy" => Ok(2),
+        "intent_safety" => Ok(3),
+        "approval_threshold" => Ok(4),
+        "invalid_attestation" => Ok(5),
+        "replay" => Ok(6),
+        _ => Err(anyhow!("unknown local ZK reason code `{reason}`")),
+    }
+}
+
+fn normalized_zk_next_step(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+fn validate_zk_stellar_result(
+    inspection: &ZkReplInspection,
+    accepted: &ZkStellarAccepted,
+) -> Result<()> {
+    let local = inspection
+        .response
+        .zk_attestation
+        .as_ref()
+        .ok_or_else(|| anyhow!("local ZK attestation is unavailable"))?;
+    let expected_next_step = match local.attested_decision.status.as_str() {
+        "approved" => "eligible_for_separate_approval_flow",
+        "requires_approval" => "requires_approval",
+        "blocked" => "blocked",
+        status => return Err(anyhow!("unknown local ZK decision status `{status}`")),
+    };
+    let bindings_match = accepted
+        .action_plan_hash
+        .eq_ignore_ascii_case(&local.action_plan_hash)
+        && accepted
+            .policy_commitment
+            .eq_ignore_ascii_case(&local.policy_commitment)
+        && accepted.policy_version == local.policy_version
+        && accepted
+            .audit_nullifier
+            .eq_ignore_ascii_case(&local.audit_nullifier);
+    let decision_matches = accepted.decision_status
+        == expected_zk_decision_status(&local.attested_decision.status)?
+        && accepted.exit_code == u32::from(local.attested_decision.exit_code)
+        && accepted.reason_code == expected_zk_reason_code(&local.attested_decision.reason)?
+        && accepted.requires_approval == local.attested_decision.requires_approval
+        && normalized_zk_next_step(&accepted.next_step)
+            == normalized_zk_next_step(expected_next_step);
+    if !bindings_match || !decision_matches {
+        return Err(anyhow!(
+            "Stellar ZK result does not match the locally bound ActionPlan and journal (exit 4)"
+        ));
+    }
+    Ok(())
+}
+
+fn query_zk_nullifier_consumed(cfg: &NetworkConfig, audit_nullifier: &str) -> Result<bool> {
+    let contract_id = zk_stellar_contract(cfg)?;
+    let source = cfg.soroban_source.as_deref().ok_or_else(|| {
+        anyhow!("wallet/source is not set; run `wallet: <stellar-key-alias>` first")
+    })?;
+    let output = Command::new(&cfg.soroban_cli)
+        .args([
+            "contract",
+            "invoke",
+            "--id",
+            contract_id,
+            "--source",
+            source,
+            "--network",
+            &cfg.soroban_network,
+            "--send",
+            "no",
+            "--",
+            "is_consumed",
+            "--audit_nullifier",
+            audit_nullifier,
+        ])
+        .output()
+        .context("failed to query the ZK Guardrail nullifier")?;
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Stellar CLI nullifier query failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+    normalize_cli_output(&output)
+        .trim()
+        .parse::<bool>()
+        .map_err(|_| anyhow!("Stellar ZK nullifier query did not return true or false"))
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ZkStellarResultMode {
+    ReadOnlyVerification,
+    SubmittedTestnetAttestation,
+    StatefulConsume,
+}
+
+impl ZkStellarResultMode {
+    fn label(self) -> &'static str {
+        match self {
+            Self::ReadOnlyVerification => "read_only_verification",
+            Self::SubmittedTestnetAttestation => "submitted_testnet_attestation",
+            Self::StatefulConsume => "stateful_consume",
+        }
+    }
+
+    fn transaction_submitted(self) -> bool {
+        !matches!(self, Self::ReadOnlyVerification)
+    }
+
+    fn nullifier_consumed(self) -> bool {
+        matches!(self, Self::StatefulConsume)
+    }
+
+    fn attestation_submitted(self) -> bool {
+        matches!(self, Self::SubmittedTestnetAttestation)
+    }
+}
+
+#[derive(Debug)]
+struct ZkStellarSessionResult {
+    contract: String,
+    network: String,
+    mode: ZkStellarResultMode,
+    accepted: ZkStellarAccepted,
+    transaction_hash: Option<String>,
+}
+
+impl ZkStellarSessionResult {
+    fn capture(
+        cfg: &NetworkConfig,
+        mode: ZkStellarResultMode,
+        accepted: ZkStellarAccepted,
+        transaction_hash: Option<String>,
+    ) -> Self {
+        Self {
+            contract: cfg
+                .zk_guardrail_contract
+                .clone()
+                .unwrap_or_else(|| "(not set)".to_string()),
+            network: cfg.soroban_network.clone(),
+            mode,
+            accepted,
+            transaction_hash,
+        }
+    }
+}
+
+fn print_zk_stellar_result(
+    cfg: &NetworkConfig,
+    inspection: &ZkReplInspection,
+    accepted: &ZkStellarAccepted,
+    mode: ZkStellarResultMode,
+    transaction_hash: Option<&str>,
+) {
+    let attestation = inspection
+        .response
+        .zk_attestation
+        .as_ref()
+        .expect("validated inspection has an attestation");
+    println!("ZK Guardrail on Stellar:");
+    println!(
+        "- contract: {}",
+        cfg.zk_guardrail_contract.as_deref().unwrap_or("(not set)")
+    );
+    println!("- network: {}", cfg.soroban_network);
+    println!("- mode: {}", mode.label());
+    println!("- cryptographic_verification: verified_on_stellar");
+    println!("- authorized_private_policy: verified_on_stellar");
+    println!("- action_plan_hash: {}", accepted.action_plan_hash);
+    println!("- policy_commitment: {}", accepted.policy_commitment);
+    println!("- policy_version: {}", accepted.policy_version);
+    println!("- decision: {}", attestation.attested_decision.status);
+    println!("- exit_code: {}", accepted.exit_code);
+    println!("- reason: {}", attestation.attested_decision.reason);
+    println!("- requires_approval: {}", accepted.requires_approval);
+    println!("- audit_nullifier: {}", accepted.audit_nullifier);
+    println!("- nullifier_consumed: {}", mode.nullifier_consumed());
+    println!(
+        "- verification_transaction_submitted: {}",
+        mode.transaction_submitted()
+    );
+    if matches!(mode, ZkStellarResultMode::SubmittedTestnetAttestation) {
+        println!(
+            "- transaction_hash: {}",
+            transaction_hash.unwrap_or("unavailable")
+        );
+        println!(
+            "- stellar_expert_url: {}",
+            transaction_hash
+                .map(|hash| format!("https://stellar.expert/explorer/testnet/tx/{hash}"))
+                .unwrap_or_else(|| "unavailable".to_string())
+        );
+    }
+    println!("- underlying_action_submit_allowed: false");
+    println!("- next_step: {}", accepted.next_step);
+}
+
+fn print_zk_status(inspection: &ZkReplInspection, stellar_result: Option<&ZkStellarSessionResult>) {
+    let Some(attestation) = inspection.response.zk_attestation.as_ref() else {
+        println!("ZK Guardrail: no attestation view available");
+        return;
+    };
+
+    println!("ZK Guardrail status:");
+    println!("- source: {}", inspection.source);
+    println!("- local_binding: {}", attestation.verification_state);
+    println!("- decision: {}", attestation.attested_decision.status);
+    println!("- exit_code: {}", attestation.attested_decision.exit_code);
+    println!("- reason: {}", attestation.attested_decision.reason);
+
+    if let Some(result) = stellar_result {
+        println!("- contract: {}", result.contract);
+        println!("- network: {}", result.network);
+        println!("- verification_mode: {}", result.mode.label());
+        println!("- stellar_verification: verified_on_stellar");
+        println!(
+            "- attestation_submitted: {}",
+            result.mode.attestation_submitted()
+        );
+        println!(
+            "- verification_transaction_submitted: {}",
+            result.mode.transaction_submitted()
+        );
+        println!(
+            "- transaction_hash: {}",
+            result.transaction_hash.as_deref().unwrap_or("unavailable")
+        );
+        println!("- nullifier_consumed: {}", result.mode.nullifier_consumed());
+        println!("- action_plan_hash: {}", result.accepted.action_plan_hash);
+        println!("- policy_commitment: {}", result.accepted.policy_commitment);
+        println!("- policy_version: {}", result.accepted.policy_version);
+    } else {
+        println!("- stellar_verification: not_run");
+        println!("- attestation_submitted: false");
+        println!("- verification_transaction_submitted: false");
+        println!("- transaction_hash: unavailable");
+        println!("- nullifier_consumed: false");
+    }
+    println!("- underlying_action_submit_allowed: false");
+}
+
+fn resolve_zk_inspection(
+    target: ZkInspectionTarget,
+    last: Option<&ZkReplInspection>,
+) -> Result<ZkReplInspection> {
+    match target {
+        ZkInspectionTarget::Scenario(scenario) => inspect_zk_demo(scenario),
+        ZkInspectionTarget::Last => last
+            .cloned()
+            .ok_or_else(|| anyhow!("no previous ZK inspection; run zk.demo or zk.verify first")),
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -2725,6 +3117,7 @@ struct ScriptBuildContext {
     intent_mode: bool,
     debug: bool,
     x402_state: X402State,
+    unsafe_exec: bool,
 }
 
 impl ScriptBuildContext {
@@ -2749,6 +3142,7 @@ impl ScriptBuildContext {
             intent_mode: false,
             debug,
             x402_state: X402State::default(),
+            unsafe_exec: script_unsafe_exec_enabled(),
         }
     }
 
@@ -2782,8 +3176,14 @@ impl ScriptBuildContext {
 
     fn append_intent_prompt(&mut self, prompt: &str) -> Result<()> {
         self.intent_mode = true;
-        let prompt_plan =
-            build_plan_from_intent_prompt(prompt, &self.model_path, self.threshold, self.debug)?;
+        let policy_load = load_contract_policies(Some(&self.runtime_settings));
+        let prompt_plan = build_plan_from_intent_prompt(
+            prompt,
+            &self.model_path,
+            self.threshold,
+            &policy_load.policies,
+            self.debug,
+        )?;
         merge_action_plans(&mut self.plan, prompt_plan);
         Ok(())
     }
@@ -2805,12 +3205,14 @@ impl ScriptBuildContext {
         }
 
         if let Some(alias) = parse_wallet_generate_line(line) {
+            self.require_unsafe_exec("wallet_generate")?;
             generate_wallet_alias(&self.flow_cfg, &alias)?;
             self.flow_cfg.soroban_source = Some(alias);
             return Ok(());
         }
 
         if let Some(alias) = parse_wallet_bootstrap_line(line) {
+            self.require_unsafe_exec("wallet_bootstrap")?;
             let (_public_key, _fund_msg) = bootstrap_wallet_alias(&self.flow_cfg, &alias)?;
             self.flow_cfg.soroban_source = Some(alias);
             return Ok(());
@@ -2829,6 +3231,7 @@ impl ScriptBuildContext {
         }
 
         if let Some(cli_bin) = parse_stellar_cli_line(line) {
+            self.require_unsafe_exec("stellar_cli")?;
             self.flow_cfg.soroban_cli = cli_bin;
             return Ok(());
         }
@@ -2970,6 +3373,15 @@ impl ScriptBuildContext {
         }
         Ok(())
     }
+
+    fn require_unsafe_exec(&self, directive: &str) -> Result<()> {
+        if self.unsafe_exec {
+            return Ok(());
+        }
+        Err(anyhow!(
+            "{directive} in .nc is blocked by default because it can execute local processes during script build; set NC_STELLAR_SCRIPT_UNSAFE_EXEC=1 only for trusted scripts"
+        ))
+    }
 }
 
 fn execute_script_block(
@@ -3081,6 +3493,7 @@ fn build_plan_from_intent_prompt(
     prompt: &str,
     model_path: &str,
     threshold: f32,
+    policies: &[ContractPolicy],
     debug: bool,
 ) -> Result<ActionPlan> {
     let decision = classify_intent_stellar(prompt, model_path, threshold)?;
@@ -3101,6 +3514,38 @@ fn build_plan_from_intent_prompt(
     let mut plan = build_intent_action_plan(prompt, &decision);
     plan.warnings
         .push(format!("intent_model: path={model_path}"));
+    let (template_warnings, template_errors) =
+        soroban_deep::validate_contract_policy_templates(policies);
+    intent_debug_log(
+        debug,
+        "policy-template",
+        format!(
+            "warnings={} errors={}",
+            template_warnings.len(),
+            template_errors.len()
+        ),
+    );
+    for warning in template_warnings {
+        plan.warnings
+            .push(format!("policy_template warning: {warning}"));
+    }
+    for err in template_errors {
+        plan.warnings.push(format!("policy_template error: {err}"));
+    }
+    let template_report =
+        soroban_deep::apply_contract_intent_templates(prompt, &mut plan, policies);
+    intent_debug_log(
+        debug,
+        "soroban-deep-template",
+        format!(
+            "expanded={} template={} contract_id={} function={} reason={}",
+            template_report.expanded,
+            template_report.template_name.as_deref().unwrap_or("(none)"),
+            template_report.contract_id.as_deref().unwrap_or("(none)"),
+            template_report.function.as_deref().unwrap_or("(none)"),
+            template_report.reason.as_deref().unwrap_or("(none)")
+        ),
+    );
 
     let action_kinds = if plan.actions.is_empty() {
         "(none)".to_string()
@@ -3220,21 +3665,26 @@ fn execute_plan(
     debug: bool,
 ) -> i32 {
     let runtime_settings = runtime_settings.cloned().unwrap_or_default();
-    let policies = load_contract_policies(Some(&runtime_settings));
+    let policy_load = load_contract_policies(Some(&runtime_settings));
+    let policies = &policy_load.policies;
     if intent_mode {
-        let (typed_v2_converted, typed_v2_normalized_args) =
-            apply_policy_typed_templates_v2(&mut plan, &policies);
+        let typed_v2_report = soroban_deep::apply_policy_typed_templates_v2(&mut plan, policies);
         intent_debug_log(
             debug,
             "typed-template-v2",
             format!(
-                "policy_slot_type_converted={typed_v2_converted} normalized_args={typed_v2_normalized_args}"
+                "policy_slot_type_converted={} normalized_args={}",
+                typed_v2_report.converted, typed_v2_report.normalized_args
             ),
         );
     }
     let allowlist = runtime_settings.allowlist();
-    let violations = validate_plan(&plan, &allowlist);
     let allowlist_is_enforced = allowlist_enforced(runtime_settings.allowlist_enforce);
+    let violations = if allowlist_is_enforced {
+        validate_enforced_plan(&plan, &allowlist)
+    } else {
+        validate_plan(&plan, &allowlist)
+    };
     intent_debug_log(
         debug,
         "guardrails",
@@ -3274,8 +3724,18 @@ fn execute_plan(
         }
     }
 
-    let (policy_warnings, policy_errors) = validate_contract_policies(&plan, &policies);
+    let (policy_warnings, mut policy_errors) =
+        soroban_deep::validate_contract_policies(&plan, policies);
     let policy_is_enforced = policy_enforced(runtime_settings.contract_policy_enforce);
+    if policy_is_enforced && plan_needs_contract_policy(&plan) {
+        policy_errors.extend(policy_load.errors.iter().cloned());
+        if policies.is_empty() {
+            policy_errors.push(
+                "policy_unconfigured: contract_policy_enforce enabled but no contract policies loaded"
+                    .to_string(),
+            );
+        }
+    }
     intent_debug_log(
         debug,
         "guardrails",
@@ -3288,6 +3748,9 @@ fn execute_plan(
     );
     for warning in &policy_warnings {
         plan.warnings.push(format!("policy warning: {warning}"));
+    }
+    for err in &policy_load.errors {
+        plan.warnings.push(format!("policy error: {err}"));
     }
     if !policy_errors.is_empty() {
         if policy_is_enforced {
@@ -3429,6 +3892,11 @@ fn print_repl_config(
         }
     );
     println!(
+        "- zk_guardrail_contract: {}",
+        cfg.zk_guardrail_contract.as_deref().unwrap_or("(not set)")
+    );
+    println!("- zk_instruction_leeway: {}", cfg.zk_instruction_leeway);
+    println!(
         "- txrep_preview: {}",
         if cfg.txrep_preview { "on" } else { "off" }
     );
@@ -3438,6 +3906,14 @@ fn print_repl_config(
             "on"
         } else {
             "off"
+        }
+    );
+    println!(
+        "- zk_guardrail: {}",
+        if cfg.zk_guardrail_contract.is_some() {
+            "local binding + Stellar verification ready"
+        } else {
+            "local binding only"
         }
     );
     println!(
@@ -3533,6 +4009,18 @@ fn print_repl_setup(
     );
     println!("- flow_mode: {}", if flow { "on" } else { "off" });
     println!(
+        "- zk_guardrail: {}",
+        if cfg.zk_guardrail_contract.is_some() {
+            "Stellar verification ready"
+        } else {
+            "local binding only"
+        }
+    );
+    println!(
+        "- zk_guardrail_contract: {}",
+        cfg.zk_guardrail_contract.as_deref().unwrap_or("(not set)")
+    );
+    println!(
         "- asset_allowlist: {}",
         runtime
             .allowlist_assets
@@ -3573,6 +4061,10 @@ fn print_repl_active_settings(
     }
     if cfg.txrep_preview {
         println!("- txrep");
+        any = true;
+    }
+    if let Some(contract_id) = cfg.zk_guardrail_contract.as_deref() {
+        println!("- zk_guardrail_contract: {contract_id}");
         any = true;
     }
     if allowlist_enforced(runtime.allowlist_enforce) {
@@ -3654,6 +4146,16 @@ fn print_repl_help_quick(_cfg: &NetworkConfig, _runtime: &RuntimeSettings, _debu
             "x402.finalize challenge_id=\"last\"",
             "(finalize latest challenge -> typed payment plan)",
         ),
+        ("zk.demo approved", "(inspect bundled proof; never submits)"),
+        (
+            "zk.stellar.verify approved",
+            "(verify on Soroban; read-only and repeatable)",
+        ),
+        (
+            "zk.stellar.attest approved",
+            "(submit testnet verification tx + explorer link)",
+        ),
+        ("zk status", "(show local binding + last Stellar result)"),
         ("debug", "(optional intent trace on)"),
         (
             "set <var> from AI: \"...\"",
@@ -3686,6 +4188,7 @@ fn print_repl_help_quick(_cfg: &NetworkConfig, _runtime: &RuntimeSettings, _debu
         "- REPL startup default asset_allowlist is XLM; change it with `asset_allowlist: ...`."
     );
     println!("- restart with --no-flow if you want plan-only REPL");
+    println!("- ZK Guardrail never grants permission to submit the underlying ActionPlan.");
 }
 
 fn print_repl_help_section(title: &str, rows: &[(&str, &str)]) {
@@ -3742,6 +4245,14 @@ fn print_script_setup(
     );
     eprintln!("- flow_mode: {}", if flow { "on" } else { "off" });
     eprintln!("- intent_debug: {}", if debug { "on" } else { "off" });
+    eprintln!(
+        "- script_unsafe_exec: {}",
+        if script_unsafe_exec_enabled() {
+            "on"
+        } else {
+            "off"
+        }
+    );
     eprintln!(
         "- txrep_preview: {}",
         if cfg.txrep_preview { "on" } else { "off" }
@@ -3833,19 +4344,33 @@ fn print_repl_help_all() {
         ),
         (
             "wallet_generate: <alias>",
-            "generate a local stellar key alias",
+            "generate local key alias (REPL; .nc needs unsafe opt-in)",
         ),
         (
             "wallet_bootstrap: <alias>",
-            "generate key alias and friendbot-fund it",
+            "generate and fund alias (REPL; .nc needs unsafe opt-in)",
         ),
         ("horizon: https://...", "set Horizon URL override"),
         (
             "friendbot: https://...|off",
             "set Friendbot URL or disable it",
         ),
-        ("stellar_cli: <bin>", "set stellar CLI binary path/name"),
-        ("simulate_flag: \"--send no\"", "set soroban simulate flag"),
+        (
+            "stellar_cli: <bin>",
+            "set CLI binary (REPL; .nc needs unsafe opt-in)",
+        ),
+        (
+            "simulate_flag: \"--send no\"",
+            "set flag; preview still forces --send no",
+        ),
+        (
+            "zk_contract: C...",
+            "set deployed NeuroChain ZK Guardrail contract",
+        ),
+        (
+            "zk_instruction_leeway: 10000000",
+            "set ZK verifier instruction leeway",
+        ),
         (
             "asset_allowlist: XLM,USDC:G...",
             "set NC_ASSET_ALLOWLIST equivalent",
@@ -3916,6 +4441,65 @@ fn print_repl_help_all() {
     ];
     print_repl_help_section("Prompt/Action commands", &prompt_actions);
 
+    let zk_guardrail = [
+        (
+            "zk.demo approved",
+            "inspect bundled approved proof (no submit)",
+        ),
+        (
+            "zk.demo requires_approval",
+            "inspect bundled approval-required proof",
+        ),
+        ("zk.demo blocked", "inspect bundled allowlist-block proof"),
+        (
+            "zk.verify action_plan=\"...\" proof=\"...\"",
+            "inspect local JSON files (local CLI only)",
+        ),
+        (
+            "zk.stellar.verify approved|requires_approval|blocked|last",
+            "verify proof on Soroban without state changes",
+        ),
+        (
+            "zk.stellar.attest approved|requires_approval|blocked|last",
+            "submit testnet proof-verification transaction",
+        ),
+        (
+            "zk.stellar.consume approved|requires_approval|blocked|last",
+            "owner-only replay consume; local flow only",
+        ),
+        ("zk status", "show local binding + last Stellar result"),
+    ];
+    print_repl_help_section("ZK Guardrail", &zk_guardrail);
+    println!("Verify is read-only. Attest submits only a testnet proof-verification call.");
+    println!("Consume stores only the nullifier and remains disabled in remote REPL mode.");
+    println!("No ZK command grants permission to submit the underlying ActionPlan.");
+    println!();
+
+    let soroban_templates = [
+        (
+            "template registry",
+            "policy-backed intent_templates in contract policy",
+        ),
+        ("hello", "prompt example: Please say hello to World"),
+        (
+            "claim_rewards",
+            "prompt example: Invoke contract rewards function claim_rewards",
+        ),
+        (
+            "deposit",
+            "prompt example: Invoke contract deposit amount 100 asset USDC",
+        ),
+        (
+            "swap",
+            "prompt example: Invoke contract swap amount/from/to/min_out",
+        ),
+        (
+            "parity",
+            "same template core in REPL, .nc, and /api/stellar/intent-plan",
+        ),
+    ];
+    print_repl_help_section("Soroban v2 templates", &soroban_templates);
+
     let utility = [
         ("help", "show quick start"),
         ("help all", "show every command"),
@@ -3962,6 +4546,8 @@ fn run_repl(
         runtime_settings.allowlist_assets = Some("XLM".to_string());
     }
     let mut x402_state = X402State::default();
+    let mut zk_last_inspection: Option<ZkReplInspection> = None;
+    let mut zk_last_stellar_result: Option<ZkStellarSessionResult> = None;
 
     println!("NeuroChain Stellar REPL (intent -> action).");
     print_repl_divider();
@@ -4192,6 +4778,25 @@ fn run_repl(
                 continue;
             }
 
+            if let Some(contract_id) = parse_zk_contract_line(&line) {
+                flow_cfg.zk_guardrail_contract = Some(contract_id.clone());
+                println!("ZK Guardrail contract set to: {contract_id}");
+                continue;
+            }
+
+            match parse_zk_instruction_leeway_line(&line) {
+                Ok(Some(value)) => {
+                    flow_cfg.zk_instruction_leeway = value;
+                    println!("ZK instruction leeway set to: {value}");
+                    continue;
+                }
+                Ok(None) => {}
+                Err(err) => {
+                    eprintln!("{err}");
+                    continue;
+                }
+            }
+
             match parse_txrep_line(&line) {
                 Ok(Some(enabled)) => {
                     flow_cfg.txrep_preview = enabled;
@@ -4386,9 +4991,187 @@ fn run_repl(
                 }
             }
 
+            match parse_zk_repl_command(&line) {
+                Ok(Some(ZkReplCommand::Demo(scenario))) => {
+                    match inspect_zk_demo(scenario) {
+                        Ok(inspection) => {
+                            print_zk_inspection(&inspection);
+                            zk_last_inspection = Some(inspection);
+                            zk_last_stellar_result = None;
+                        }
+                        Err(err) => eprintln!("zk.demo failed: {err}"),
+                    }
+                    continue;
+                }
+                Ok(Some(ZkReplCommand::Verify {
+                    action_plan_path,
+                    proof_path,
+                })) => {
+                    match inspect_zk_files(&action_plan_path, &proof_path) {
+                        Ok(inspection) => {
+                            print_zk_inspection(&inspection);
+                            zk_last_inspection = Some(inspection);
+                            zk_last_stellar_result = None;
+                        }
+                        Err(err) => eprintln!("zk.verify failed: {err}"),
+                    }
+                    continue;
+                }
+                Ok(Some(ZkReplCommand::StellarVerify(target))) => {
+                    match resolve_zk_inspection(target, zk_last_inspection.as_ref()).and_then(
+                        |inspection| {
+                            let accepted = invoke_zk_guardrail_contract(
+                                &flow_cfg,
+                                "verify",
+                                &inspection.request.proof,
+                                false,
+                            )?;
+                            validate_zk_stellar_result(&inspection, &accepted)?;
+                            print_zk_stellar_result(
+                                &flow_cfg,
+                                &inspection,
+                                &accepted,
+                                ZkStellarResultMode::ReadOnlyVerification,
+                                None,
+                            );
+                            let result = ZkStellarSessionResult::capture(
+                                &flow_cfg,
+                                ZkStellarResultMode::ReadOnlyVerification,
+                                accepted,
+                                None,
+                            );
+                            Ok((inspection, result))
+                        },
+                    ) {
+                        Ok((inspection, result)) => {
+                            zk_last_inspection = Some(inspection);
+                            zk_last_stellar_result = Some(result);
+                        }
+                        Err(err) => eprintln!("zk.stellar.verify failed: {err}"),
+                    }
+                    continue;
+                }
+                Ok(Some(ZkReplCommand::StellarAttest(target))) => {
+                    if !flow {
+                        eprintln!(
+                            "zk.stellar.attest requires flow mode because it submits a testnet proof-verification transaction; restart with --flow"
+                        );
+                        continue;
+                    }
+                    match resolve_zk_inspection(target, zk_last_inspection.as_ref()).and_then(
+                        |inspection| {
+                            let (accepted, transaction_hash) = submit_zk_stellar_attestation(
+                                &flow_cfg,
+                                &inspection.request.proof,
+                            )?;
+                            validate_zk_stellar_result(&inspection, &accepted)?;
+                            print_zk_stellar_result(
+                                &flow_cfg,
+                                &inspection,
+                                &accepted,
+                                ZkStellarResultMode::SubmittedTestnetAttestation,
+                                transaction_hash.as_deref(),
+                            );
+                            let result = ZkStellarSessionResult::capture(
+                                &flow_cfg,
+                                ZkStellarResultMode::SubmittedTestnetAttestation,
+                                accepted,
+                                transaction_hash,
+                            );
+                            Ok((inspection, result))
+                        },
+                    ) {
+                        Ok((inspection, result)) => {
+                            zk_last_inspection = Some(inspection);
+                            zk_last_stellar_result = Some(result);
+                        }
+                        Err(err) => eprintln!("zk.stellar.attest failed: {err}"),
+                    }
+                    continue;
+                }
+                Ok(Some(ZkReplCommand::StellarConsume(target))) => {
+                    if remote_repl_mode() {
+                        eprintln!(
+                            "zk.stellar.consume is disabled in remote REPL; use read-only zk.stellar.verify"
+                        );
+                        continue;
+                    }
+                    if !flow {
+                        eprintln!(
+                            "zk.stellar.consume requires flow mode because it stores the nullifier; restart with --flow"
+                        );
+                        continue;
+                    }
+                    if !confirm_zk_consume(auto_yes) {
+                        eprintln!("ZK nullifier consume aborted by user.");
+                        continue;
+                    }
+                    match resolve_zk_inspection(target, zk_last_inspection.as_ref()).and_then(
+                        |inspection| {
+                            let accepted = invoke_zk_guardrail_contract(
+                                &flow_cfg,
+                                "verify_and_consume",
+                                &inspection.request.proof,
+                                true,
+                            )?;
+                            validate_zk_stellar_result(&inspection, &accepted)?;
+                            if !query_zk_nullifier_consumed(
+                                &flow_cfg,
+                                &accepted.audit_nullifier,
+                            )? {
+                                return Err(anyhow!(
+                                    "Stellar accepted the transaction but the nullifier was not persisted"
+                                ));
+                            }
+                            print_zk_stellar_result(
+                                &flow_cfg,
+                                &inspection,
+                                &accepted,
+                                ZkStellarResultMode::StatefulConsume,
+                                None,
+                            );
+                            let result = ZkStellarSessionResult::capture(
+                                &flow_cfg,
+                                ZkStellarResultMode::StatefulConsume,
+                                accepted,
+                                None,
+                            );
+                            Ok((inspection, result))
+                        },
+                    ) {
+                        Ok((inspection, result)) => {
+                            zk_last_inspection = Some(inspection);
+                            zk_last_stellar_result = Some(result);
+                        }
+                        Err(err) => eprintln!("zk.stellar.consume failed: {err}"),
+                    }
+                    continue;
+                }
+                Ok(Some(ZkReplCommand::Status)) => {
+                    if let Some(inspection) = zk_last_inspection.as_ref() {
+                        print_zk_status(inspection, zk_last_stellar_result.as_ref());
+                    } else {
+                        println!("ZK Guardrail: no attestation inspected in this session");
+                    }
+                    continue;
+                }
+                Ok(None) => {}
+                Err(err) => {
+                    eprintln!("{err}");
+                    continue;
+                }
+            }
+
             if let Some((name, prompt)) = parse_set_from_ai_assignment(&line) {
                 if is_intent_assignment_name(&name) {
-                    match build_plan_from_intent_prompt(&prompt, &model_path, threshold, debug) {
+                    let policy_load = load_contract_policies(Some(&runtime_settings));
+                    match build_plan_from_intent_prompt(
+                        &prompt,
+                        &model_path,
+                        threshold,
+                        &policy_load.policies,
+                        debug,
+                    ) {
                         Ok(plan) => {
                             let code = execute_plan(
                                 plan,
@@ -4432,7 +5215,14 @@ fn run_repl(
             }
 
             let prompt = strip_wrapping_quotes(&line);
-            match build_plan_from_intent_prompt(&prompt, &model_path, threshold, debug) {
+            let policy_load = load_contract_policies(Some(&runtime_settings));
+            match build_plan_from_intent_prompt(
+                &prompt,
+                &model_path,
+                threshold,
+                &policy_load.policies,
+                debug,
+            ) {
                 Ok(plan) => {
                     let code = execute_plan(
                         plan,
@@ -4495,7 +5285,15 @@ fn main() {
             }
         };
         let model_path = cli.intent_model.unwrap_or_else(resolve_intent_model_path);
-        match build_plan_from_intent_prompt(&prompt, &model_path, threshold, debug) {
+        let runtime_settings = RuntimeSettings::default();
+        let policy_load = load_contract_policies(Some(&runtime_settings));
+        match build_plan_from_intent_prompt(
+            &prompt,
+            &model_path,
+            threshold,
+            &policy_load.policies,
+            debug,
+        ) {
             Ok(plan) => plan,
             Err(err) => {
                 eprintln!("Error: {err}");

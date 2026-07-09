@@ -1,30 +1,36 @@
 use std::{
-    collections::HashMap,
     env, fs,
     net::SocketAddr,
     panic::{catch_unwind, AssertUnwindSafe},
-    sync::{Arc, OnceLock},
+    sync::{Arc, Mutex, OnceLock},
 };
 
 use axum::{
     extract::State,
     http::{HeaderMap, StatusCode},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::post,
     Json, Router,
 };
 use neurochain::{
-    actions::{validate_plan, Action, ActionPlan, Allowlist},
+    actions::{validate_enforced_plan, validate_plan, Action, ActionPlan, Allowlist},
     banner, engine,
     intent_stellar::{
         build_action_plan as build_intent_action_plan, classify as classify_intent_stellar,
         has_intent_blocking_issue, resolve_model_path as resolve_intent_model_path,
         threshold_from_env as intent_threshold_from_env, DEFAULT_INTENT_STELLAR_THRESHOLD,
     },
-    interpreter,
+    interpreter, soroban_deep,
+    soroban_deep::ContractPolicy,
+    x402_facilitator::{build_x402_payment_verifier, X402PaymentVerification, X402PaymentVerifier},
+    x402_stellar::{
+        x402_error_response, x402_payment_required_response, x402_payment_signature,
+        x402_stellar_decision_response, X402PaymentContext, X402StellarIntentPlanOutcome,
+    },
+    x402_store::{build_x402_challenge_store, now_unix_secs, X402ChallengeStore},
+    zk_attestation::{inspect_zk_attestation, ZkAttestationViewRequest, ZkAttestationViewResponse},
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use tokio::{
     sync::Semaphore,
     task,
@@ -35,6 +41,8 @@ use tower_http::cors::{Any, CorsLayer};
 #[derive(Clone)]
 struct AppState {
     inference_sem: Arc<Semaphore>,
+    x402_stellar: Arc<Mutex<Box<dyn X402ChallengeStore + Send>>>,
+    x402_payment_verifier: Arc<dyn X402PaymentVerifier + Send + Sync>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -71,6 +79,8 @@ struct StellarIntentPlanReq {
     allowlist_enforce: Option<bool>,
     #[serde(default)]
     contract_policy_enforce: Option<bool>,
+    #[serde(default)]
+    requires_approval: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -81,29 +91,10 @@ struct StellarIntentPlanResp {
     exit_code: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
+    #[serde(skip_serializing_if = "is_false")]
+    requires_approval: bool,
     plan: ActionPlan,
     logs: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct ArgSchema {
-    #[serde(default)]
-    required: HashMap<String, String>,
-    #[serde(default)]
-    optional: HashMap<String, String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct ContractPolicy {
-    contract_id: String,
-    #[serde(default)]
-    allowed_functions: Vec<String>,
-    #[serde(default)]
-    args_schema: HashMap<String, ArgSchema>,
-    #[serde(default)]
-    max_fee_stroops: Option<u64>,
-    #[serde(default)]
-    resource_limits: Option<Value>,
 }
 
 static REQUIRED_API_KEY: OnceLock<Option<String>> = OnceLock::new();
@@ -154,6 +145,10 @@ fn secure_eq(a: &str, b: &str) -> bool {
     diff == 0
 }
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 fn models_base() -> String {
     env::var("NC_MODELS_DIR").unwrap_or_else(|_| "/opt/neurochain/models".to_string())
 }
@@ -172,6 +167,31 @@ fn resolve_model_path(id: &str) -> Option<String> {
         _ => return None,
     };
     Some(path)
+}
+
+fn resolve_stellar_intent_model_path(
+    req: &StellarIntentPlanReq,
+    logs: &mut Vec<String>,
+) -> Result<String, String> {
+    if req
+        .model_path
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|v| !v.is_empty())
+    {
+        logs.push("warn: client model_path rejected".to_string());
+        return Err("model_path is not accepted by the server API; use model id".to_string());
+    }
+
+    let model_path = req
+        .model
+        .as_deref()
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+        .and_then(resolve_model_path)
+        .unwrap_or_else(resolve_intent_model_path);
+
+    Ok(model_path)
 }
 
 fn parse_bool_value(raw: &str) -> Option<bool> {
@@ -202,482 +222,98 @@ fn policy_enforced(override_value: Option<bool>) -> bool {
     )
 }
 
-fn load_contract_policies() -> Vec<ContractPolicy> {
+#[derive(Debug, Default)]
+struct ContractPolicyLoad {
+    policies: Vec<ContractPolicy>,
+    errors: Vec<String>,
+}
+
+fn load_contract_policies() -> ContractPolicyLoad {
     let mut policies = Vec::new();
+    let mut errors = Vec::new();
 
     if let Ok(path) = env::var("NC_CONTRACT_POLICY") {
-        if let Ok(data) = fs::read_to_string(&path) {
-            match serde_json::from_str::<ContractPolicy>(&data) {
-                Ok(policy) => policies.push(policy),
-                Err(err) => eprintln!("Policy parse failed for {path}: {err}"),
-            }
-        } else {
-            eprintln!("Policy file not found: {path}");
-        }
-    }
-
-    let policy_dir = env::var("NC_CONTRACT_POLICY_DIR").unwrap_or_else(|_| "contracts".to_string());
-    if let Ok(entries) = fs::read_dir(&policy_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let policy_path = path.join("policy.json");
-                if let Ok(data) = fs::read_to_string(&policy_path) {
-                    match serde_json::from_str::<ContractPolicy>(&data) {
-                        Ok(policy) => policies.push(policy),
-                        Err(err) => {
-                            eprintln!("Policy parse failed for {}: {err}", policy_path.display())
-                        }
+        if !path.trim().is_empty() {
+            match fs::read_to_string(&path) {
+                Ok(data) => match serde_json::from_str::<ContractPolicy>(&data) {
+                    Ok(policy) => policies.push(policy),
+                    Err(err) => {
+                        let msg =
+                            format!("policy_load_failed: policy parse failed for {path}: {err}");
+                        eprintln!("{msg}");
+                        errors.push(msg);
                     }
+                },
+                Err(err) => {
+                    let msg = format!(
+                        "policy_load_failed: policy file not found or unreadable: {path}: {err}"
+                    );
+                    eprintln!("{msg}");
+                    errors.push(msg);
                 }
             }
         }
     }
 
-    policies
-}
-
-fn is_base32_char(c: char) -> bool {
-    matches!(c, 'A'..='Z' | '2'..='7')
-}
-
-fn is_strkey(value: &str) -> bool {
-    if value.len() != 56 {
-        return false;
-    }
-    let first = value.chars().next().unwrap_or('\0');
-    if first != 'G' && first != 'C' {
-        return false;
-    }
-    value.chars().all(is_base32_char)
-}
-
-fn is_symbol(value: &str) -> bool {
-    let len = value.len();
-    if len == 0 || len > 32 {
-        return false;
-    }
-    value
-        .chars()
-        .all(|c| c.is_ascii() && !c.is_control() && !c.is_whitespace())
-}
-
-fn is_hex_bytes(value: &str) -> bool {
-    if !value.starts_with("0x") {
-        return false;
-    }
-    let hex = &value[2..];
-    if hex.is_empty() || !hex.len().is_multiple_of(2) {
-        return false;
-    }
-    hex.chars().all(|c| c.is_ascii_hexdigit())
-}
-
-fn is_u64_value(value: &Value) -> bool {
-    if value.as_u64().is_some() {
-        return true;
-    }
-    value
-        .as_str()
-        .map(|s| s.trim().parse::<u64>().is_ok())
-        .unwrap_or(false)
-}
-
-fn typed_value_kind(value: &Value) -> &'static str {
-    match value {
-        Value::Null => "null",
-        Value::Bool(_) => "bool",
-        Value::Number(n) => {
-            if n.is_i64() {
-                "i64"
-            } else if n.is_u64() {
-                "u64"
-            } else {
-                "number"
-            }
-        }
-        Value::String(_) => "string",
-        Value::Array(_) => "array",
-        Value::Object(_) => "object",
-    }
-}
-
-fn typed_value_preview(value: &Value) -> String {
-    let mut rendered = value.to_string();
-    if rendered.len() > 96 {
-        rendered.truncate(93);
-        rendered.push_str("...");
-    }
-    rendered
-}
-
-fn validate_arg_type(value: &Value, ty: &str) -> bool {
-    match ty {
-        "string" => value.is_string(),
-        "number" => value.is_number(),
-        "bool" => value.is_boolean(),
-        "address" => value.as_str().map(is_strkey).unwrap_or(false),
-        "symbol" => value.as_str().map(is_symbol).unwrap_or(false),
-        "bytes" => value.as_str().map(is_hex_bytes).unwrap_or(false),
-        "u64" => is_u64_value(value),
-        _ => false,
-    }
-}
-
-fn is_typed_template_v2_type(ty: &str) -> bool {
-    matches!(ty, "address" | "bytes" | "symbol" | "u64")
-}
-
-fn normalize_typed_slot_value(value: &mut Value, ty: &str) -> Result<bool, String> {
-    match ty {
-        "address" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected address got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let normalized = raw.trim().to_ascii_uppercase();
-            if !is_strkey(&normalized) {
-                return Err(format!(
-                    "expected address got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "bytes" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected bytes got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let trimmed = raw.trim();
-            let (had_prefix, body) = if let Some(rest) = trimmed.strip_prefix("0x") {
-                (true, rest)
-            } else if let Some(rest) = trimmed.strip_prefix("0X") {
-                (true, rest)
-            } else {
-                (false, trimmed)
-            };
-            let compact: String = body
-                .chars()
-                .filter(|c| !(c.is_ascii_whitespace() || matches!(c, '_' | '-')))
-                .collect();
-            let mut normalized = if had_prefix {
-                format!("0x{compact}")
-            } else {
-                compact.clone()
-            };
-            if !had_prefix
-                && !compact.is_empty()
-                && compact.len().is_multiple_of(2)
-                && compact.chars().all(|c| c.is_ascii_hexdigit())
-            {
-                normalized = format!("0x{compact}");
-            }
-            if normalized.starts_with("0x") {
-                let lower_hex = normalized[2..].to_ascii_lowercase();
-                normalized = format!("0x{lower_hex}");
-            }
-            if !is_hex_bytes(&normalized) {
-                return Err(format!(
-                    "expected bytes got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "symbol" => {
-            let Some(raw) = value.as_str() else {
-                return Err(format!(
-                    "expected symbol got {} value={}",
-                    typed_value_kind(value),
-                    typed_value_preview(value)
-                ));
-            };
-            let normalized = raw.trim().to_string();
-            if !is_symbol(&normalized) {
-                return Err(format!(
-                    "expected symbol got string value={}",
-                    typed_value_preview(&Value::String(raw.to_string()))
-                ));
-            }
-            let changed = normalized != raw;
-            if changed {
-                *value = Value::String(normalized);
-            }
-            Ok(changed)
-        }
-        "u64" => {
-            if value.as_u64().is_some() {
-                return Ok(false);
-            }
-            if let Some(raw) = value.as_str() {
-                let trimmed = raw.trim();
-                let compact: String = trimmed
-                    .chars()
-                    .filter(|c| !matches!(c, '_' | ','))
-                    .collect();
-                let parsed = compact.parse::<u64>().map_err(|_| {
-                    format!(
-                        "expected u64 got string value={}",
-                        typed_value_preview(&Value::String(raw.to_string()))
-                    )
-                })?;
-                let new_value = Value::Number(parsed.into());
-                let changed = *value != new_value;
-                *value = new_value;
-                return Ok(changed);
-            }
-            Err(format!(
-                "expected u64 got {} value={}",
-                typed_value_kind(value),
-                typed_value_preview(value)
-            ))
-        }
-        _ => Ok(false),
-    }
-}
-
-#[derive(Default)]
-struct PolicyTypedV2Outcome {
-    errors: Vec<String>,
-    normalized_args: usize,
-}
-
-fn apply_policy_typed_schema_to_args(
-    contract_id: &str,
-    function: &str,
-    args: &mut Value,
-    schema: &ArgSchema,
-) -> PolicyTypedV2Outcome {
-    let Some(args_obj) = args.as_object() else {
-        return PolicyTypedV2Outcome::default();
-    };
-    let mut outcome = PolicyTypedV2Outcome::default();
-    let mut updates: Vec<(String, Value)> = Vec::new();
-
-    for (key, ty_raw) in &schema.required {
-        let ty = ty_raw.trim().to_ascii_lowercase();
-        if !is_typed_template_v2_type(ty.as_str()) {
-            continue;
-        }
-        if let Some(value) = args_obj.get(key) {
-            let mut normalized = value.clone();
-            match normalize_typed_slot_value(&mut normalized, ty.as_str()) {
-                Ok(changed) => {
-                    if !validate_arg_type(&normalized, ty.as_str()) {
-                        outcome.errors.push(format!(
-                            "slot_type_error: ContractInvoke {key} expected {ty} (policy {contract_id}:{function})"
-                        ));
-                        continue;
-                    }
-                    if changed && &normalized != value {
-                        updates.push((key.clone(), normalized));
-                    }
-                }
-                Err(detail) => outcome.errors.push(format!(
-                    "slot_type_error: ContractInvoke {key} {detail} (policy {contract_id}:{function})"
-                )),
-            }
-        }
-    }
-
-    for (key, ty_raw) in &schema.optional {
-        let ty = ty_raw.trim().to_ascii_lowercase();
-        if !is_typed_template_v2_type(ty.as_str()) {
-            continue;
-        }
-        if let Some(value) = args_obj.get(key) {
-            let mut normalized = value.clone();
-            match normalize_typed_slot_value(&mut normalized, ty.as_str()) {
-                Ok(changed) => {
-                    if !validate_arg_type(&normalized, ty.as_str()) {
-                        outcome.errors.push(format!(
-                            "slot_type_error: ContractInvoke {key} expected {ty} (policy {contract_id}:{function})"
-                        ));
-                        continue;
-                    }
-                    if changed && &normalized != value {
-                        updates.push((key.clone(), normalized));
-                    }
-                }
-                Err(detail) => outcome.errors.push(format!(
-                    "slot_type_error: ContractInvoke {key} {detail} (policy {contract_id}:{function})"
-                )),
-            }
-        }
-    }
-
-    if let Some(args_obj_mut) = args.as_object_mut() {
-        for (key, value) in updates {
-            args_obj_mut.insert(key, value);
-            outcome.normalized_args += 1;
-        }
-    }
-
-    outcome
-}
-
-fn apply_policy_typed_templates_v2(
-    plan: &mut ActionPlan,
-    policies: &[ContractPolicy],
-) -> (usize, usize) {
-    if policies.is_empty() {
-        return (0, 0);
-    }
-
-    let mut policy_map: HashMap<&str, &ContractPolicy> = HashMap::new();
-    for policy in policies {
-        policy_map.insert(policy.contract_id.as_str(), policy);
-    }
-
-    let mut converted = 0usize;
-    let mut normalized_args = 0usize;
-    for action in &mut plan.actions {
-        let outcome = match action {
-            Action::SorobanContractInvoke {
-                contract_id,
-                function,
-                args,
-            } => {
-                let Some(policy) = policy_map.get(contract_id.as_str()) else {
-                    continue;
-                };
-                let Some(schema) = policy.args_schema.get(function) else {
-                    continue;
-                };
-
-                apply_policy_typed_schema_to_args(contract_id, function, args, schema)
-            }
-            _ => PolicyTypedV2Outcome::default(),
-        };
-        normalized_args += outcome.normalized_args;
-
-        if let Some(reason) = outcome.errors.first().cloned() {
-            *action = Action::Unknown {
-                reason: reason.clone(),
-            };
-            for err in outcome.errors {
-                plan.warnings.push(format!("intent_error: {err}"));
-            }
-            converted += 1;
-        }
-    }
-
-    (converted, normalized_args)
-}
-
-fn validate_contract_policies(
-    plan: &ActionPlan,
-    policies: &[ContractPolicy],
-) -> (Vec<String>, Vec<String>) {
-    let mut warnings = Vec::new();
-    let mut errors = Vec::new();
-    if policies.is_empty() {
-        return (warnings, errors);
-    }
-
-    let mut map: HashMap<String, ContractPolicy> = HashMap::new();
-    for policy in policies {
-        map.insert(policy.contract_id.clone(), policy.clone());
-    }
-
-    for action in &plan.actions {
-        if let Action::SorobanContractInvoke {
-            contract_id,
-            function,
-            args,
-        } = action
-        {
-            let Some(policy) = map.get(contract_id) else {
-                errors.push(format!(
-                    "policy_missing: no policy for contract_id {contract_id}"
-                ));
-                continue;
-            };
-            if !policy.allowed_functions.is_empty()
-                && !policy.allowed_functions.iter().any(|f| f == function)
-            {
-                errors.push(format!(
-                    "policy_function_denied: {contract_id}:{function} not allowed"
-                ));
-                continue;
-            }
-
-            if let Some(schema) = policy.args_schema.get(function) {
-                let args_obj = args.as_object();
-                if args_obj.is_none() {
-                    errors.push(format!(
-                        "policy_args_invalid: {contract_id}:{function} args must be object"
-                    ));
-                    continue;
-                }
-                let args_obj = args_obj.expect("checked is_some above");
-
-                for (key, ty) in &schema.required {
-                    match args_obj.get(key) {
-                        Some(val) => {
-                            if !validate_arg_type(val, ty) {
-                                errors.push(format!(
-                                    "policy_args_type: {contract_id}:{function} {key} expected {ty}"
-                                ));
+    let explicit_policy_dir = env::var("NC_CONTRACT_POLICY_DIR")
+        .ok()
+        .filter(|value| !value.trim().is_empty());
+    let policy_dir = explicit_policy_dir
+        .clone()
+        .unwrap_or_else(|| "contracts".to_string());
+    match fs::read_dir(&policy_dir) {
+        Ok(entries) => {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let policy_path = path.join("policy.json");
+                    if policy_path.exists() {
+                        match fs::read_to_string(&policy_path) {
+                            Ok(data) => match serde_json::from_str::<ContractPolicy>(&data) {
+                                Ok(policy) => policies.push(policy),
+                                Err(err) => {
+                                    let msg = format!(
+                                        "policy_load_failed: policy parse failed for {}: {err}",
+                                        policy_path.display()
+                                    );
+                                    eprintln!("{msg}");
+                                    errors.push(msg);
+                                }
+                            },
+                            Err(err) => {
+                                let msg = format!(
+                                    "policy_load_failed: policy file not readable: {}: {err}",
+                                    policy_path.display()
+                                );
+                                eprintln!("{msg}");
+                                errors.push(msg);
                             }
                         }
-                        None => errors.push(format!(
-                            "policy_args_missing: {contract_id}:{function} missing {key}"
-                        )),
-                    }
-                }
-
-                for (key, ty) in &schema.optional {
-                    if let Some(val) = args_obj.get(key) {
-                        if !validate_arg_type(val, ty) {
-                            errors.push(format!(
-                                "policy_args_type: {contract_id}:{function} {key} expected {ty}"
-                            ));
-                        }
-                    }
-                }
-
-                for key in args_obj.keys() {
-                    if !schema.required.contains_key(key) && !schema.optional.contains_key(key) {
-                        warnings.push(format!(
-                            "policy_args_unknown: {contract_id}:{function} unexpected arg {key}"
-                        ));
                     }
                 }
             }
-
-            if let Some(limits) = &policy.resource_limits {
-                if !limits.is_object() {
-                    warnings.push(format!(
-                        "policy_resource_limits_invalid: {contract_id} resource_limits must be object"
-                    ));
-                }
-            }
-
-            if let Some(max_fee) = policy.max_fee_stroops {
-                warnings.push(format!(
-                    "policy_hint: {contract_id}:{function} max_fee_stroops={max_fee}"
-                ));
+        }
+        Err(err) => {
+            if explicit_policy_dir.is_some() {
+                let msg = format!(
+                    "policy_load_failed: policy dir not found or unreadable: {policy_dir}: {err}"
+                );
+                eprintln!("{msg}");
+                errors.push(msg);
             }
         }
     }
 
-    (warnings, errors)
+    ContractPolicyLoad { policies, errors }
+}
+
+fn plan_needs_contract_policy(plan: &ActionPlan) -> bool {
+    plan.actions.iter().any(|action| {
+        matches!(
+            action,
+            Action::SorobanContractInvoke { .. } | Action::SorobanContractDeploy { .. }
+        )
+    })
 }
 
 fn normalize(s: &str) -> String {
@@ -708,11 +344,21 @@ async fn main() {
 
     let state = Arc::new(AppState {
         inference_sem: Arc::new(Semaphore::new(max_infer)),
+        x402_stellar: Arc::new(Mutex::new(build_x402_challenge_store())),
+        x402_payment_verifier: Arc::from(build_x402_payment_verifier()),
     });
 
     let api = Router::new()
         .route("/analyze", post(api_analyze))
         .route("/stellar/intent-plan", post(api_stellar_intent_plan))
+        .route(
+            "/stellar/zk-attestation/view",
+            post(api_stellar_zk_attestation_view),
+        )
+        .route(
+            "/x402/stellar/intent-plan",
+            post(api_x402_stellar_intent_plan),
+        )
         .with_state(state);
 
     let app = Router::new().nest("/api", api).layer(
@@ -906,6 +552,7 @@ async fn api_stellar_intent_plan(
                     blocked: true,
                     exit_code: Some(1),
                     error: Some("unauthorized".to_string()),
+                    requires_approval: false,
                     plan: ActionPlan::default(),
                     logs,
                 }),
@@ -913,6 +560,231 @@ async fn api_stellar_intent_plan(
         }
     }
 
+    build_stellar_intent_plan_response(req, logs)
+}
+
+async fn api_stellar_zk_attestation_view(
+    headers: HeaderMap,
+    Json(req): Json<ZkAttestationViewRequest>,
+) -> Response {
+    let mut logs = vec!["zk_attestation: read-only public artifact view".to_string()];
+    if let Some(required) = required_api_key() {
+        let ok = provided_api_key(&headers)
+            .map(|got| secure_eq(got, required))
+            .unwrap_or(false);
+        if !ok {
+            logs.push("auth: missing or invalid api key".to_string());
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(ZkAttestationViewResponse::failure("unauthorized", logs)),
+            )
+                .into_response();
+        }
+    }
+
+    match inspect_zk_attestation(req) {
+        Ok(mut response) => {
+            response.logs.splice(0..0, logs);
+            (StatusCode::OK, Json(response)).into_response()
+        }
+        Err(error) => {
+            logs.push(format!("zk_attestation: rejected code={}", error.code()));
+            (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(ZkAttestationViewResponse::failure(error.code(), logs)),
+            )
+                .into_response()
+        }
+    }
+}
+
+async fn api_x402_stellar_intent_plan(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(req): Json<StellarIntentPlanReq>,
+) -> Response {
+    let mut logs: Vec<String> = vec!["x402: stellar intent-plan gateway".to_string()];
+    logs.push(format!(
+        "x402_verifier: {}",
+        state.x402_payment_verifier.verifier_kind()
+    ));
+    logs.push(format!(
+        "x402_facilitator_boundary: {}",
+        state.x402_payment_verifier.boundary_kind()
+    ));
+
+    if let Some(required) = required_api_key() {
+        let ok = provided_api_key(&headers)
+            .map(|got| secure_eq(got, required))
+            .unwrap_or(false);
+        if !ok {
+            logs.push("auth: missing or invalid api key".to_string());
+            return x402_error_response(
+                StatusCode::UNAUTHORIZED,
+                "unauthorized",
+                "unauthorized",
+                X402PaymentContext::default(),
+                logs,
+            );
+        }
+    }
+
+    let Some(signature) = x402_payment_signature(&headers) else {
+        let record = match state.x402_stellar.lock() {
+            Ok(mut store) => {
+                let store_kind = store.store_kind();
+                match state.x402_payment_verifier.create_challenge(store.as_mut()) {
+                    Ok(record) => {
+                        logs.push(format!("x402_store: {store_kind}"));
+                        record
+                    }
+                    Err(err) => {
+                        logs.push(format!("x402: challenge store create failed: {err}"));
+                        return x402_error_response(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "x402_state_unavailable",
+                            "state_unavailable",
+                            X402PaymentContext::default(),
+                            logs,
+                        );
+                    }
+                }
+            }
+            Err(_) => {
+                logs.push("x402: state lock poisoned".to_string());
+                return x402_error_response(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "x402_state_unavailable",
+                    "state_unavailable",
+                    X402PaymentContext::default(),
+                    logs,
+                );
+            }
+        };
+        logs.push("x402: payment required".to_string());
+        logs.push("x402: retry with PAYMENT-SIGNATURE=paid:<challenge_id>".to_string());
+        return x402_payment_required_response(
+            record.challenge_id,
+            record.challenge.created_at,
+            record.challenge.expires_at,
+            logs,
+        );
+    };
+
+    let (challenge_id, created_at, expires_at, finalized_at, payment_state) =
+        match state.x402_stellar.lock() {
+            Ok(mut store) => {
+                let store_kind = store.store_kind();
+                logs.push(format!("x402_store: {store_kind}"));
+                match state
+                    .x402_payment_verifier
+                    .verify_and_finalize(&signature, store.as_mut())
+                {
+                    Ok(X402PaymentVerification::InvalidPayment) => {
+                        logs.push("x402: invalid payment proof".to_string());
+                        return x402_error_response(
+                            StatusCode::PAYMENT_REQUIRED,
+                            "invalid_payment",
+                            "invalid",
+                            X402PaymentContext::default(),
+                            logs,
+                        );
+                    }
+                    Ok(X402PaymentVerification::ReplayBlocked {
+                        challenge_id,
+                        challenge,
+                    }) => {
+                        logs.push(format!("x402: replay blocked for challenge={challenge_id}"));
+                        return x402_error_response(
+                            StatusCode::CONFLICT,
+                            "payment_replay_blocked",
+                            &challenge.payment_state,
+                            X402PaymentContext {
+                                challenge_id: Some(&challenge_id),
+                                created_at: Some(challenge.created_at),
+                                expires_at: Some(challenge.expires_at),
+                                finalized_at: challenge.finalized_at,
+                            },
+                            logs,
+                        );
+                    }
+                    Ok(X402PaymentVerification::Expired {
+                        challenge_id,
+                        challenge,
+                    }) => {
+                        logs.push(format!("x402: expired challenge={challenge_id}"));
+                        return x402_error_response(
+                            StatusCode::PAYMENT_REQUIRED,
+                            "payment_expired",
+                            &challenge.payment_state,
+                            X402PaymentContext {
+                                challenge_id: Some(&challenge_id),
+                                created_at: Some(challenge.created_at),
+                                expires_at: Some(challenge.expires_at),
+                                finalized_at: challenge.finalized_at,
+                            },
+                            logs,
+                        );
+                    }
+                    Ok(X402PaymentVerification::Finalized {
+                        challenge_id,
+                        challenge,
+                    }) => (
+                        challenge_id,
+                        challenge.created_at,
+                        challenge.expires_at,
+                        challenge.finalized_at.unwrap_or_else(now_unix_secs),
+                        challenge.payment_state,
+                    ),
+                    Err(err) => {
+                        logs.push(format!("x402: challenge store finalize failed: {err}"));
+                        return x402_error_response(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "x402_state_unavailable",
+                            "state_unavailable",
+                            X402PaymentContext::default(),
+                            logs,
+                        );
+                    }
+                }
+            }
+            Err(_) => {
+                logs.push("x402: state lock poisoned".to_string());
+                return x402_error_response(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "x402_state_unavailable",
+                    "state_unavailable",
+                    X402PaymentContext::default(),
+                    logs,
+                );
+            }
+        };
+
+    logs.push(format!("x402: finalized challenge={challenge_id}"));
+    let (_status, Json(resp)) = build_stellar_intent_plan_response(req, logs);
+    let outcome = X402StellarIntentPlanOutcome {
+        ok: resp.ok,
+        blocked: resp.blocked,
+        requires_approval: resp.requires_approval,
+        exit_code: resp.exit_code,
+        error: resp.error,
+        plan: resp.plan,
+        logs: resp.logs,
+    };
+    x402_stellar_decision_response(
+        &challenge_id,
+        created_at,
+        expires_at,
+        finalized_at,
+        &payment_state,
+        outcome,
+    )
+}
+
+fn build_stellar_intent_plan_response(
+    req: StellarIntentPlanReq,
+    mut logs: Vec<String>,
+) -> (StatusCode, Json<StellarIntentPlanResp>) {
     let prompt = req.prompt.trim().to_string();
     if prompt.is_empty() {
         logs.push("warn: empty prompt".into());
@@ -923,26 +795,30 @@ async fn api_stellar_intent_plan(
                 blocked: true,
                 exit_code: Some(2),
                 error: Some("empty prompt".to_string()),
+                requires_approval: false,
                 plan: ActionPlan::default(),
                 logs,
             }),
         );
     }
 
-    let model_path = req
-        .model_path
-        .as_deref()
-        .map(str::trim)
-        .filter(|v| !v.is_empty())
-        .map(str::to_string)
-        .or_else(|| {
-            req.model
-                .as_deref()
-                .map(str::trim)
-                .filter(|v| !v.is_empty())
-                .and_then(resolve_model_path)
-        })
-        .unwrap_or_else(resolve_intent_model_path);
+    let model_path = match resolve_stellar_intent_model_path(&req, &mut logs) {
+        Ok(path) => path,
+        Err(err) => {
+            return (
+                StatusCode::OK,
+                Json(StellarIntentPlanResp {
+                    ok: false,
+                    blocked: true,
+                    exit_code: Some(2),
+                    error: Some(err),
+                    requires_approval: false,
+                    plan: ActionPlan::default(),
+                    logs,
+                }),
+            );
+        }
+    };
     logs.push(format!("model_path={model_path}"));
 
     let threshold = match req.threshold {
@@ -958,6 +834,7 @@ async fn api_stellar_intent_plan(
                         blocked: true,
                         exit_code: Some(2),
                         error: Some(format!("invalid intent threshold env: {err}")),
+                        requires_approval: false,
                         plan: ActionPlan::default(),
                         logs,
                     }),
@@ -977,6 +854,7 @@ async fn api_stellar_intent_plan(
                     blocked: true,
                     exit_code: Some(1),
                     error: Some(format!("{err:#}")),
+                    requires_approval: false,
                     plan: ActionPlan::default(),
                     logs,
                 }),
@@ -984,15 +862,47 @@ async fn api_stellar_intent_plan(
         }
     };
 
+    let policy_load = load_contract_policies();
+    let policies = &policy_load.policies;
     let mut plan = build_intent_action_plan(&prompt, &decision);
     plan.warnings
         .push(format!("intent_model: path={model_path}"));
-
-    let policies = load_contract_policies();
-    let (typed_v2_converted, typed_v2_normalized_args) =
-        apply_policy_typed_templates_v2(&mut plan, &policies);
+    let (template_warnings, template_errors) =
+        soroban_deep::validate_contract_policy_templates(policies);
     logs.push(format!(
-        "typed_template_v2: policy_slot_type_converted={typed_v2_converted} normalized_args={typed_v2_normalized_args}"
+        "policy_load: policies={} errors={}",
+        policies.len(),
+        policy_load.errors.len()
+    ));
+    for err in &policy_load.errors {
+        plan.warnings.push(format!("policy error: {err}"));
+    }
+    logs.push(format!(
+        "policy_template: warnings={} errors={}",
+        template_warnings.len(),
+        template_errors.len()
+    ));
+    for warning in &template_warnings {
+        plan.warnings
+            .push(format!("policy_template warning: {warning}"));
+    }
+    for err in &template_errors {
+        plan.warnings.push(format!("policy_template error: {err}"));
+    }
+    let template_report =
+        soroban_deep::apply_contract_intent_templates(&prompt, &mut plan, policies);
+    logs.push(format!(
+        "soroban_deep_template: expanded={} template={} contract_id={} function={} reason={}",
+        template_report.expanded,
+        template_report.template_name.as_deref().unwrap_or("(none)"),
+        template_report.contract_id.as_deref().unwrap_or("(none)"),
+        template_report.function.as_deref().unwrap_or("(none)"),
+        template_report.reason.as_deref().unwrap_or("(none)")
+    ));
+    let typed_v2_report = soroban_deep::apply_policy_typed_templates_v2(&mut plan, policies);
+    logs.push(format!(
+        "typed_template_v2: policy_slot_type_converted={} normalized_args={}",
+        typed_v2_report.converted, typed_v2_report.normalized_args
     ));
 
     let assets_raw = req
@@ -1004,8 +914,12 @@ async fn api_stellar_intent_plan(
         .clone()
         .unwrap_or_else(|| env::var("NC_SOROBAN_ALLOWLIST").unwrap_or_default());
     let allowlist = Allowlist::from_raw(&assets_raw, &contracts_raw);
-    let allowlist_violations = validate_plan(&plan, &allowlist);
     let allowlist_is_enforced = allowlist_enforced(req.allowlist_enforce);
+    let allowlist_violations = if allowlist_is_enforced {
+        validate_enforced_plan(&plan, &allowlist)
+    } else {
+        validate_plan(&plan, &allowlist)
+    };
     logs.push(format!(
         "allowlist: violations={} enforced={allowlist_is_enforced}",
         allowlist_violations.len()
@@ -1018,8 +932,18 @@ async fn api_stellar_intent_plan(
         ));
     }
 
-    let (policy_warnings, policy_errors) = validate_contract_policies(&plan, &policies);
+    let (policy_warnings, mut policy_errors) =
+        soroban_deep::validate_contract_policies(&plan, policies);
     let policy_is_enforced = policy_enforced(req.contract_policy_enforce);
+    if policy_is_enforced && plan_needs_contract_policy(&plan) {
+        policy_errors.extend(policy_load.errors.iter().cloned());
+        if policies.is_empty() {
+            policy_errors.push(
+                "policy_unconfigured: contract_policy_enforce enabled but no contract policies loaded"
+                    .to_string(),
+            );
+        }
+    }
     logs.push(format!(
         "policy: warnings={} errors={} enforced={policy_is_enforced}",
         policy_warnings.len(),
@@ -1053,6 +977,12 @@ async fn api_stellar_intent_plan(
         exit_code = Some(5);
         logs.push("block: intent_safety".to_string());
     }
+    let requires_approval = req.requires_approval.unwrap_or(false) && !blocked;
+    if requires_approval {
+        plan.warnings
+            .push("approval required before any submit or signing boundary".to_string());
+        logs.push("approval: requires_approval boundary".to_string());
+    }
 
     (
         StatusCode::OK,
@@ -1061,6 +991,7 @@ async fn api_stellar_intent_plan(
             blocked,
             exit_code,
             error: None,
+            requires_approval,
             plan,
             logs,
         }),

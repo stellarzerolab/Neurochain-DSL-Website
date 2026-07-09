@@ -7,6 +7,12 @@ pub mod intent_stellar;
 pub mod interpreter;
 pub mod lexer;
 pub mod parser;
+pub mod soroban_deep;
+pub mod x402_audit;
+pub mod x402_facilitator;
+pub mod x402_stellar;
+pub mod x402_store;
+pub mod zk_attestation;
 
 pub use engine::analyze;
 pub use lexer::tokenize;

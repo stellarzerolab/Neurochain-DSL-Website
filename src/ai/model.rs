@@ -122,8 +122,6 @@ impl AIModel {
                 "StopCommand",
                 "OtherCommand",
             ],
-            // IntentStellar here is classifier label mapping only.
-            // Stellar planning/policy logic lives outside this generic AI loader module.
             ModelKind::IntentStellar => &[
                 "BalanceQuery",
                 "CreateAccount",

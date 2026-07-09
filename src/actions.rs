@@ -59,15 +59,15 @@ pub enum Action {
     StellarTxStatus {
         hash: String,
     },
-    SorobanContractDeploy {
-        alias: String,
-        wasm: String,
-    },
     SorobanContractInvoke {
         contract_id: String,
         function: String,
         #[serde(default)]
         args: serde_json::Value,
+    },
+    SorobanContractDeploy {
+        alias: String,
+        wasm: String,
     },
     Unknown {
         reason: String,
@@ -83,8 +83,8 @@ impl Action {
             Action::StellarChangeTrust { .. } => "stellar.change_trust",
             Action::StellarPayment { .. } => "stellar.payment",
             Action::StellarTxStatus { .. } => "stellar.tx.status",
-            Action::SorobanContractDeploy { .. } => "soroban.contract.deploy",
             Action::SorobanContractInvoke { .. } => "soroban.contract.invoke",
+            Action::SorobanContractDeploy { .. } => "soroban.contract.deploy",
             Action::Unknown { .. } => "unknown",
         }
     }
@@ -107,6 +107,14 @@ impl Allowlist {
         let assets = parse_allowlist(asset_allowlist.to_string());
         let contracts = parse_allowlist(contract_allowlist.to_string());
         Self { assets, contracts }
+    }
+
+    pub fn has_asset_rules(&self) -> bool {
+        !self.assets.is_empty()
+    }
+
+    pub fn has_contract_rules(&self) -> bool {
+        !self.contracts.is_empty()
     }
 
     fn is_asset_allowed(&self, code: &str, issuer: Option<&str>) -> bool {
@@ -175,8 +183,81 @@ pub fn validate_plan(plan: &ActionPlan, allowlist: &Allowlist) -> Vec<AllowlistV
                 asset_code,
                 asset_issuer,
                 ..
+            } if !allowlist.is_asset_allowed(asset_code, Some(asset_issuer)) => {
+                violations.push(AllowlistViolation {
+                    index: idx,
+                    action: action.kind().to_string(),
+                    reason: format!("asset {asset_code}:{asset_issuer} not in allowlist"),
+                });
+            }
+            _ => {}
+        }
+    }
+
+    violations
+}
+
+pub fn validate_enforced_plan(plan: &ActionPlan, allowlist: &Allowlist) -> Vec<AllowlistViolation> {
+    let mut violations = Vec::new();
+
+    for (idx, action) in plan.actions.iter().enumerate() {
+        match action {
+            Action::SorobanContractInvoke {
+                contract_id,
+                function,
+                ..
             } => {
-                if !allowlist.is_asset_allowed(asset_code, Some(asset_issuer)) {
+                if !allowlist.has_contract_rules() {
+                    violations.push(AllowlistViolation {
+                        index: idx,
+                        action: action.kind().to_string(),
+                        reason: "allowlist_unconfigured: contract allowlist is empty while allowlist_enforce is enabled"
+                            .to_string(),
+                    });
+                } else if !allowlist.is_contract_allowed(contract_id, function) {
+                    violations.push(AllowlistViolation {
+                        index: idx,
+                        action: action.kind().to_string(),
+                        reason: format!("contract {contract_id}:{function} not in allowlist"),
+                    });
+                }
+            }
+            Action::StellarPayment {
+                asset_code,
+                asset_issuer,
+                ..
+            } => {
+                if !allowlist.has_asset_rules() {
+                    violations.push(AllowlistViolation {
+                        index: idx,
+                        action: action.kind().to_string(),
+                        reason: "allowlist_unconfigured: asset allowlist is empty while allowlist_enforce is enabled"
+                            .to_string(),
+                    });
+                } else if !allowlist.is_asset_allowed(asset_code, asset_issuer.as_deref()) {
+                    violations.push(AllowlistViolation {
+                        index: idx,
+                        action: action.kind().to_string(),
+                        reason: format!(
+                            "asset {asset_code}:{} not in allowlist",
+                            asset_issuer.as_deref().unwrap_or("")
+                        ),
+                    });
+                }
+            }
+            Action::StellarChangeTrust {
+                asset_code,
+                asset_issuer,
+                ..
+            } => {
+                if !allowlist.has_asset_rules() {
+                    violations.push(AllowlistViolation {
+                        index: idx,
+                        action: action.kind().to_string(),
+                        reason: "allowlist_unconfigured: asset allowlist is empty while allowlist_enforce is enabled"
+                            .to_string(),
+                    });
+                } else if !allowlist.is_asset_allowed(asset_code, Some(asset_issuer)) {
                     violations.push(AllowlistViolation {
                         index: idx,
                         action: action.kind().to_string(),
@@ -359,19 +440,6 @@ pub fn parse_action_plan_from_nc(contents: &str) -> ActionPlan {
                     }
                 }
             }
-            "soroban.contract.deploy" => {
-                let alias = kv.get("alias");
-                let wasm = kv.get("wasm");
-                match (alias, wasm) {
-                    (Some(alias), Some(wasm)) => Action::SorobanContractDeploy {
-                        alias: alias.clone(),
-                        wasm: wasm.clone(),
-                    },
-                    _ => Action::Unknown {
-                        reason: format!("line {}: missing alias/wasm", idx + 1),
-                    },
-                }
-            }
             "soroban.contract.invoke" => {
                 let contract_id = kv.get("contract_id");
                 let function = kv.get("function");
@@ -383,6 +451,19 @@ pub fn parse_action_plan_from_nc(contents: &str) -> ActionPlan {
                     },
                     _ => Action::Unknown {
                         reason: format!("line {}: missing contract_id/function", idx + 1),
+                    },
+                }
+            }
+            "soroban.contract.deploy" => {
+                let alias = kv
+                    .get("alias")
+                    .or_else(|| kv.get("contract_alias"))
+                    .cloned();
+                let wasm = kv.get("wasm").or_else(|| kv.get("wasm_path")).cloned();
+                match (alias, wasm) {
+                    (Some(alias), Some(wasm)) => Action::SorobanContractDeploy { alias, wasm },
+                    _ => Action::Unknown {
+                        reason: format!("line {}: missing alias/wasm", idx + 1),
                     },
                 }
             }

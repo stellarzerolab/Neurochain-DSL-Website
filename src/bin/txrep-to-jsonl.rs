@@ -144,7 +144,7 @@ fn action_to_dataset(action: &Action) -> (String, serde_json::Value, String) {
                 "alias": alias,
                 "wasm": wasm,
             });
-            let text = format!("Deploy contract {alias} wasm {wasm}");
+            let text = format!("Deploy contract alias {alias} wasm {wasm}");
             (intent, slots, text)
         }
         Action::StellarAccountBalance { account, asset } => {

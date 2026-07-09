@@ -103,6 +103,10 @@ cargo run --release --bin neurochain -- examples/macro_test.nc
 cargo run --bin neurochain-server
 cargo run --release --bin neurochain-server
 
+# Stellar demo API server
+cargo run --bin neurochain-stellar-demo-server
+cargo run --release --bin neurochain-stellar-demo-server
+
 Optional logging:
 ────────────────────────────────
 NEUROCHAIN_OUTPUT_LOG=1       → write `neuro:` output to a file (logs/run_latest.log)

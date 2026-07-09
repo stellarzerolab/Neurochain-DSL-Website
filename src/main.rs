@@ -68,23 +68,10 @@ fn main() {
         let mut input_block = String::new();
         loop {
             print!("... ");
-            if let Err(err) = io::stdout().flush() {
-                eprintln!("I/O error (stdout flush): {err}");
-                return;
-            }
+            io::stdout().flush().unwrap();
 
             let mut line = String::new();
-            match io::stdin().read_line(&mut line) {
-                Ok(0) => {
-                    println!("EOF received, exiting...");
-                    return;
-                }
-                Ok(_) => {}
-                Err(err) => {
-                    eprintln!("I/O error (stdin read): {err}");
-                    return;
-                }
-            }
+            io::stdin().read_line(&mut line).unwrap();
 
             if line.trim().is_empty() {
                 break;

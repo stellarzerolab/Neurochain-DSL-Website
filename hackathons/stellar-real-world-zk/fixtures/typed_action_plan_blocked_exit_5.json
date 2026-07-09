@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "intent_label": "ContractInvoke",
+  "action_kind": "soroban_contract_invoke",
+  "contract_id": "CDLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ",
+  "function": "purchase_credits",
+  "args": [
+    {
+      "name": "amount",
+      "type": "u64",
+      "value": "500000000"
+    },
+    {
+      "name": "asset",
+      "type": "symbol",
+      "value": "USDC"
+    }
+  ],
+  "intent_confidence_bps": 9800
+}

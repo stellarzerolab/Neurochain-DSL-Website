@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "policy_version": 2,
+  "commitment_salt": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "allowed_contracts": [
+    "CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ"
+  ],
+  "allowed_contract_functions": [
+    "CBLFA6FCYHI7RN3MMTQJV5TUKEYECQJAUE74HD5ZJM4NXMHCN4OJKCIJ:purchase_credits"
+  ],
+  "allowed_assets": [
+    "USDC"
+  ],
+  "allowed_recipients": [
+    "GCAL4PIFKWOIFO6YT4T7TSSES7SJCWV7HN7XAUTNFFSGQK74RFUSAJBX"
+  ],
+  "max_amount_minor": "1000000000",
+  "approval_threshold_minor": "600000000",
+  "min_intent_confidence_bps": 9000
+}
