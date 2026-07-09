@@ -25,7 +25,7 @@ RewriteRule ^index\.html$ / [R=301,L]
 
 # 301: /xxx.html -> /xxx (only direct browser requests)
 RewriteCond %{THE_REQUEST} \s/+(.+)\.html[\s?] [NC]
-RewriteRule ^ %1 [R=301,L]
+RewriteRule ^(.+)\.html$ /$1 [R=301,L]
 
 # Internal rewrite: /xxx -> /xxx.html if .html exists
 RewriteCond %{REQUEST_FILENAME} !-d
