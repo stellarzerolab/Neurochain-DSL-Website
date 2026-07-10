@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>StellarZeroLab · Roadmap</title>
-  <meta name="description" content="NeuroChain DSL roadmap: shipped deterministic foundations, live private-policy ZK attestation on Stellar testnet, and the path toward integrations, pilots, and production hardening." />
+  <meta name="description" content="NeuroChain DSL roadmap: live private-policy ZK attestation on Stellar testnet, next MCP and Skills packaging, optional x402 ingress, and production hardening." />
   <link rel="canonical" href="https://stellarzerolab.com/roadmap">
 
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -15,13 +15,13 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <meta property="og:title" content="StellarZeroLab · Roadmap">
-  <meta property="og:description" content="Shipped foundations, live RISC Zero Groth16 attestation on Stellar testnet, and the next steps toward integrations, pilots, and production hardening.">
+  <meta property="og:description" content="Shipped foundations, live RISC Zero Groth16 attestation on Stellar testnet, and the next steps toward a simple MCP and Skills guardrail surface.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://stellarzerolab.com/roadmap">
   <meta property="og:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="StellarZeroLab · Roadmap">
-  <meta name="twitter:description" content="NeuroChain DSL roadmap: live private-policy ZK attestation, upcoming integrations, and production-readiness milestones.">
+  <meta name="twitter:description" content="NeuroChain DSL roadmap: live private-policy ZK attestation, MCP and Skills packaging, optional x402 ingress, and production-readiness milestones.">
   <meta name="twitter:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="theme-color" content="#0b0f14">
 
@@ -813,8 +813,8 @@
             <h1><span class="accent">Roadmap</span> for what is <span class="muted-strong">live now</span> and what comes next.</h1>
             <p class="lead">
               NeuroChain DSL now includes a live private-policy zero-knowledge attestation path on Stellar testnet.
-              This roadmap separates the shipped deterministic foundation, the current RISC Zero and Soroban milestone,
-              and the next steps toward external integrations, technical pilots, and production hardening.
+              The next step is to package that guardrail as a simple MCP and Skills surface for agents, scripts,
+              and backend automation without making proof or payment an automatic execution permission.
             </p>
             <div class="hero-metrics">
               <div class="metric-card glass interactive-card">
@@ -827,7 +827,7 @@
               </div>
               <div class="metric-card glass interactive-card">
                 <strong>Next</strong>
-                <span>Integrations and pilot readiness</span>
+                <span>MCP and Skills guardrail surface</span>
               </div>
             </div>
           </div>
@@ -859,8 +859,8 @@
                 <div class="timeline-meta">
                   <span class="timeline-badge"><i class="bi bi-lightning-charge"></i> Next delivery</span>
                 </div>
-                <h3>Integration and pilot readiness</h3>
-                <div class="timeline-note">External caller flows, richer automation, observability, and focused testnet pilots.</div>
+                <h3>MCP and Skills packaging</h3>
+                <div class="timeline-note">Small no-submit tools that let agents plan, evaluate, prove, verify, and stop safely.</div>
               </li>
 
               <li class="timeline-item later interactive-card">
@@ -880,10 +880,11 @@
   <main class="pb-5">
     <section id="timeline" class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
-        <h2>From deterministic plans to verifiable private-policy decisions</h2>
+        <h2>From deterministic plans to agent-ready private-policy guardrails</h2>
         <p class="lead">
           The roadmap reflects the implementation that exists today. The ZK and Soroban path is no longer a future concept:
           it is a working testnet milestone with a hosted demo, genuine proofs, three decision outcomes, and explicit transaction evidence.
+          The post-submission focus is to make the same safety boundary easy to call from agents and automation.
         </p>
       </div>
     </section>
@@ -932,19 +933,19 @@
         <li class="timeline-item next glass soft interactive-card reveal">
           <div class="timeline-meta">
             <span class="timeline-badge"><i class="bi bi-lightning-charge"></i> Next</span>
-            <span class="timeline-note">Integration and pilot readiness</span>
+            <span class="timeline-note">MCP and Skills simplification</span>
           </div>
-          <h3>Make the guardrail easier to integrate and operate</h3>
+          <h3>Package NeuroChain as a small no-submit MCP and Skill</h3>
           <ul class="timeline-list">
-            <li><i class="bi bi-arrow-right-circle"></i><span>Provide a cleaner SDK and API path for external Stellar applications to supply typed ActionPlans and request private-policy verification.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Improve the operator experience for policy commitment authorization, versioning, rotation, and revocation.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Feed decoded Soroban events and return values back into deterministic DSL workflows.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Execute practical multi-step workflows inside a single <code>.nc</code> run instead of only isolated actions.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Add clearer audit, observability, and proof-status views for operators and external reviewers.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Evaluate focused testnet pilot flows for automated treasury, controlled payments, or tokenized-asset operations.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Define durable operational handling for replay state and Stellar network TTL maintenance.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Design a separate approved ActionPlan execution integration without weakening the proof-versus-submit boundary.</span></li>
-            <li><i class="bi bi-arrow-right-circle"></i><span>Move x402-lite toward a real facilitator boundary with production-shaped authentication and idempotency.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Document the post-submission product direction: NeuroChain as a policy/proof runtime, not a generic Stellar helper.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Define MCP v0 as a read-only no-submit surface: plan, evaluate, prove, verify, and get guardrail status.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Keep <code>submit_testnet_attestation</code> separate and explicit, so proof verification never becomes surprise execution.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Create a <strong>NeuroChain Stellar Guardrails</strong> Skill that teaches agents to form typed ActionPlans and respect approval boundaries.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Simplify the public demo language around four actions: Plan, Evaluate, Prove, Verify.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Use Raven as a development-time Stellar context and playbook source, not as a NeuroChain runtime dependency.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Move x402-lite toward a real optional paid-ingress boundary with facilitator verification, authentication, pricing, idempotency, and safe audit.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Improve proof artifacts, <code>zk status</code>, transaction evidence, and operator-facing policy commitment handling.</span></li>
+            <li><i class="bi bi-arrow-right-circle"></i><span>Design any approved ActionPlan execution path separately from proof verification and keep <code>underlying_action_submit_allowed=false</code> as the default demo boundary.</span></li>
           </ul>
         </li>
 
@@ -971,14 +972,14 @@
       <div class="section-card glass soft interactive-card reveal">
         <h2>What the roadmap is optimizing for</h2>
         <p class="lead">
-          The direction remains conservative: explicit typed actions, independently verifiable private-policy decisions,
-          and a clear separation between proof verification and transaction execution.
+          The direction remains conservative and simple: explicit typed actions, independently verifiable private-policy decisions,
+          a small agent-facing tool surface, and a clear separation between proof verification, paid access, and transaction execution.
         </p>
         <div class="focus-grid" data-stagger>
           <div class="focus-card shipped interactive-card reveal">
             <div class="icon"><i class="bi bi-braces-asterisk"></i></div>
-            <h4>Deterministic inputs</h4>
-            <p>Natural-language or application input is converted into a typed ActionPlan before guardrails or chain interaction.</p>
+            <h4>Typed plans first</h4>
+            <p>Natural-language, scripts, or automation input is converted into a typed ActionPlan before guardrails or chain interaction.</p>
           </div>
 
           <div class="focus-card live interactive-card reveal">
@@ -989,8 +990,8 @@
 
           <div class="focus-card next interactive-card reveal">
             <div class="icon"><i class="bi bi-shield-lock"></i></div>
-            <h4>No automatic execution</h4>
-            <p>Proof verification remains an authorization input. Signing and submitting the underlying ActionPlan stay separate.</p>
+            <h4>Small safe surface</h4>
+            <p>MCP and Skills should make NeuroChain easier to call while preserving the no-surprise-submit boundary.</p>
           </div>
         </div>
       </div>
