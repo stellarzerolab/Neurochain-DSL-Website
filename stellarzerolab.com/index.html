@@ -714,7 +714,30 @@
       .flow-step h2 { margin-top: 24px; }
       .outcome { grid-template-columns: 46px 1fr; }
       .status { grid-column: 2; justify-self: start; }
-      .product-stage img { aspect-ratio: 1.08 / 1; }
+      .product-stage-bar {
+        gap: 10px;
+        padding: 10px 12px;
+        font-size: 10px;
+      }
+      .product-stage-bar > span:nth-child(2) {
+        min-width: 0;
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0;
+      }
+      .product-stage-bar > span:nth-child(2)::after {
+        content: "stellar-cli";
+        font: 600 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+      .product-stage-bar .window-dots { gap: 4px; }
+      .product-stage-bar .window-dots i { width: 6px; height: 6px; }
+      .product-stage img {
+        height: clamp(180px, 58vw, 220px);
+        aspect-ratio: auto;
+        object-position: left top;
+      }
       .proof-head { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
       .proof-stellar-logo { order: -1; width: 132px; margin-top: 0; }
       .product-caption { grid-template-columns: 1fr; }
