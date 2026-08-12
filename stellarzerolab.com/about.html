@@ -4,29 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>StellarZeroLab · About</title>
-  <meta name="description" content="About StellarZeroLab: the lab behind NeuroChain DSL, its local-first AI workflow, and the public demos we ship." />
+  <meta name="description" content="About StellarZeroLab, the lab building NeuroChain DSL: typed Stellar actions, deterministic guardrails, private-policy proofs, and explicit execution boundaries." />
   <link rel="canonical" href="https://stellarzerolab.com/about">
 
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
-  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="favicon-180.png">
+  <link rel="manifest" href="site.webmanifest">
 
   <meta property="og:title" content="StellarZeroLab · About">
-  <meta property="og:description" content="The thinking behind NeuroChain DSL, the public demos, and why StellarZeroLab builds AI integration around explicit logic and guardrails.">
+  <meta property="og:description" content="The thinking behind NeuroChain DSL and its deterministic security boundary for AI agents and automated Stellar workflows.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://stellarzerolab.com/about">
   <meta property="og:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="StellarZeroLab · About">
-  <meta name="twitter:description" content="About StellarZeroLab and the design philosophy behind NeuroChain DSL.">
+  <meta name="twitter:description" content="About StellarZeroLab and the deterministic security boundary behind NeuroChain DSL.">
   <meta name="twitter:image" content="https://stellarzerolab.com/og-cover.png">
   <meta name="theme-color" content="#0b0f14">
 
-  <link href="/vendor/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="vendor/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
     :root{
@@ -281,37 +281,18 @@
     }
     .hero-copy .accent{color:#12d0ff}
     .hero-copy .muted-strong{color:#dfe9f6}
-    .hero-metrics{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:1rem;
-      margin-top:2rem;
-    }
-    .metric-card{
-      padding:1rem 1.05rem;
-      background:linear-gradient(180deg,rgba(12,21,36,.82),rgba(8,15,27,.78));
-      border:1px solid rgba(125,211,252,.14);
-      border-radius:16px;
-    }
-    .metric-card strong{
-      display:block;
-      font-size:1.55rem;
-      line-height:1;
-      margin-bottom:.35rem;
-      color:#eaf5ff;
-    }
-    .metric-card span{color:#9fb3c8;font-size:.95rem}
     .hero-panel{
-      padding:1rem;
-      background:linear-gradient(180deg,rgba(14,23,40,.84),rgba(10,17,30,.8));
-      border:1px solid rgba(125,211,252,.18);
+      padding:0 0 0 1.5rem;
+      background:transparent;
+      border:0;
+      border-left:1px solid rgba(125,211,252,.18);
     }
     .hero-panel-head{
       display:flex;
       align-items:center;
       gap:1rem;
-      margin-bottom:1rem;
-      padding:.4rem .5rem .8rem;
+      margin-bottom:0;
+      padding:.4rem 0 1rem;
       border-bottom:1px solid rgba(125,211,252,.14);
     }
     .hero-panel-title{
@@ -330,11 +311,9 @@
       margin:0;
     }
     .panel-list li{
-      margin:.82rem 0;
-      padding:.95rem 1rem;
-      border-radius:16px;
-      border:1px solid rgba(125,211,252,.12);
-      background:linear-gradient(180deg,rgba(12,21,36,.74),rgba(9,16,28,.74));
+      margin:0;
+      padding:1.25rem 0;
+      border-bottom:1px solid rgba(125,211,252,.14);
     }
     .panel-list strong{
       display:block;
@@ -381,9 +360,9 @@
       color:#9fb3c8;
       line-height:1.55;
     }
-    .info-card.dsl .icon{color:#38bdf8}
-    .info-card.web .icon{color:#22c55e}
-    .info-card.stellar .icon{color:#f59e0b}
+    .info-card.runtime .icon{color:#38bdf8}
+    .info-card.zk .icon{color:#a78bfa}
+    .info-card.interfaces .icon{color:#22c55e}
     .split-grid{
       display:grid;
       grid-template-columns:1.15fr .85fr;
@@ -419,37 +398,95 @@
       color:#38bdf8;
       margin-top:.12rem;
     }
-    .cta-card{
-      margin-top:1.4rem;
-      padding:1.4rem;
-      text-align:center;
-      background:linear-gradient(180deg,rgba(14,22,37,.84),rgba(11,18,30,.78));
-      border:1px solid rgba(125,211,252,.16);
+    .about-cta{
+      margin-top:4.5rem;
+      padding:6rem 0;
+      border-top:1px solid rgba(125,211,252,.14);
     }
-    .cta-card p{color:#aebfd0;margin-bottom:1rem}
-    .footer-bleed{
-      width:100vw;
-      margin-left:calc(50% - 50vw);
-      margin-right:calc(50% - 50vw);
-      background:linear-gradient(180deg, transparent, rgba(255,255,255,.03));
-    }
-    .footer a{
-      color:#9dd8ff;
-      text-decoration:none;
-    }
-    .footer a:hover{color:#e6f6ff}
-    .footer-links{
+    .about-cta-inner{
       display:flex;
-      align-items:center;
-      gap:1rem;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:2.75rem;
+    }
+    .about-cta h2{
+      max-width:760px;
+      margin:0;
+      font-size:clamp(3rem,5.2vw,4.9rem);
+      line-height:1;
+      letter-spacing:-.03em;
+    }
+    .about-cta-actions{
+      display:flex;
       flex-wrap:wrap;
       justify-content:flex-end;
+      gap:.65rem;
     }
-    .footer-links a{
+    .about-action{
+      position:relative;
+      isolation:isolate;
+      overflow:hidden;
       display:inline-flex;
       align-items:center;
-      gap:.36rem;
+      justify-content:center;
+      min-height:42px;
+      padding:0 1.05rem;
+      gap:.5rem;
+      border:1px solid rgba(125,211,252,.28);
+      border-radius:8px;
+      color:#e6f6ff;
+      background:rgba(11,19,24,.82);
+      font-weight:700;
+      text-decoration:none;
+      transition:transform .2s var(--ease),border-color .2s ease,background .2s ease,box-shadow .2s ease;
     }
+    .about-action::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      z-index:-1;
+      transform:translateX(-130%);
+      background:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.24) 50%,transparent 66%);
+      transition:transform .55s var(--ease);
+    }
+    .about-action:hover{
+      transform:translateY(-1px);
+      border-color:rgba(125,211,252,.68);
+      color:#fff;
+      box-shadow:0 14px 30px rgba(0,0,0,.26);
+    }
+    .about-action:hover::after{transform:translateX(130%)}
+    .about-action-primary{
+      border-color:#69dbff;
+      color:#041116;
+      background:#69dbff;
+    }
+    .about-action-primary:hover{
+      color:#041116;
+      background:#8bdcff;
+    }
+    .about-footer{
+      padding:1.85rem 0;
+      border-top:1px solid rgba(125,211,252,.14);
+      color:#9fb3c8;
+    }
+    .about-footer-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1.8rem;
+    }
+    .about-footer-links{
+      display:flex;
+      align-items:center;
+      gap:1.35rem;
+      flex-wrap:wrap;
+    }
+    .about-footer a{
+      color:#9fb3c8;
+      text-decoration:none;
+    }
+    .about-footer a:hover{color:#fff}
     .reveal{
       opacity:0;
       transform:translate3d(0,18px,0);
@@ -488,20 +525,14 @@
         right:0;
         width:auto;
       }
-      .footer-links{
-        width:100%;
-        display:grid;
-        grid-template-columns:repeat(3, minmax(0,1fr));
-        gap:.9rem .8rem;
-        justify-items:center;
-      }
-      .footer-links a{
-        justify-content:center;
-        text-align:center;
-      }
-      .footer-x-link{display:none !important}
+      .about-cta-inner{align-items:flex-start;flex-direction:column}
+      .about-cta-actions{justify-content:flex-start}
       .hero-copy h1{max-width:none}
-      .hero-metrics,
+      .hero-panel{
+        padding:1.5rem 0 0;
+        border-left:0;
+        border-top:1px solid rgba(125,211,252,.18);
+      }
       .card-grid,
       .split-grid{grid-template-columns:1fr}
     }
@@ -509,6 +540,11 @@
       .brand-logo{width:36px;height:36px}
       .hero{padding-top:3.25rem}
       .hero-copy h1{font-size:clamp(2.55rem, 14vw, 4.25rem)}
+      .about-cta{padding:4.5rem 0}
+      .about-cta h2{font-size:clamp(2.8rem,13vw,4rem)}
+      .about-cta-actions{width:100%}
+      .about-action{flex:1 1 100%}
+      .about-footer-inner{align-items:flex-start;flex-direction:column}
     }
     @media (prefers-reduced-motion: reduce){
       .spin,
@@ -523,84 +559,71 @@
       .reveal{opacity:1;transform:none}
     }
   </style>
+  <link rel="stylesheet" href="site-theme.css" />
 </head>
-<body>
+<body class="nc-content-page nc-about-page">
   <div class="page-progress" aria-hidden="true"><i id="scrollProgressFill"></i></div>
 
-  <nav class="navbar navbar-expand-lg navbar-dark glass soft sticky-top interactive-nav">
-    <div class="container py-1">
-      <a class="navbar-brand d-flex align-items-center brand" href="/">
-        <svg class="brand-logo" viewBox="0 0 28 28" aria-hidden="true">
+  <header class="site-header" id="siteHeader">
+    <div class="site-nav-shell">
+      <a class="site-brand" href="index.html" aria-label="StellarZeroLab home">
+        <svg class="site-brand-logo" viewBox="0 0 28 28" aria-hidden="true">
           <defs>
-            <radialGradient id="core" cx="50%" cy="50%" r="55%">
+            <radialGradient id="brandCore" cx="50%" cy="50%" r="55%">
               <stop offset="0%" stop-color="#dff7ff"/>
               <stop offset="45%" stop-color="#8fe6ff"/>
               <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
             </radialGradient>
-            <linearGradient id="arm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+            <linearGradient id="brandArm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stop-color="rgba(157,216,255,0)"/>
               <stop offset="30%" stop-color="#7dd3fc"/>
               <stop offset="80%" stop-color="rgba(167,139,250,.9)"/>
               <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
             </linearGradient>
-            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <filter id="brandGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="brandBlur"/>
+              <feMerge><feMergeNode in="brandBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
-            <radialGradient id="fade" cx="50%" cy="50%" r="56%">
+            <radialGradient id="brandFade" cx="50%" cy="50%" r="56%">
               <stop offset="60%" stop-color="white"/>
               <stop offset="100%" stop-color="black"/>
             </radialGradient>
-            <mask id="mFade"><rect width="28" height="28" fill="url(#fade)"/></mask>
+            <mask id="brandFadeMask"><rect width="28" height="28" fill="url(#brandFade)"/></mask>
           </defs>
-          <circle cx="14" cy="14" r="7.4" fill="url(#core)" opacity=".55"/>
-          <g class="spin" filter="url(#glow)" mask="url(#mFade)" stroke-linecap="round" fill="none" stroke="url(#arm)">
-            <g stroke-width="1.4" opacity=".9">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
+          <circle cx="14" cy="14" r="7.4" fill="url(#brandCore)" opacity=".55"/>
+          <g class="site-brand-spin" filter="url(#brandGlow)" mask="url(#brandFadeMask)" stroke-linecap="round" fill="none" stroke="url(#brandArm)">
+            <g stroke-width="1.4" opacity=".9"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(240 14 14)" stroke-width="1" opacity=".6"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g stroke-width=".9" opacity=".45">
+              <path d="M6.5,10.5 C10,9 14,9 18,10.4"/>
+              <path d="M7.8,18.8 C10.2,20 13.2,20.5 16.2,20.1"/>
+              <path d="M20.8,9.8 C22,11 22.9,12.7 23.2,14.6"/>
             </g>
           </g>
         </svg>
         <strong>StellarZeroLab</strong>
       </a>
 
-      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <nav class="site-nav-links" id="siteNavLinks" aria-label="Primary navigation">
+        <a href="index.html">Home</a>
+        <a class="is-current" href="about.html" aria-current="page"><i class="bi bi-stars" aria-hidden="true"></i> About</a>
+        <a href="roadmap.html"><i class="bi bi-signpost-2" aria-hidden="true"></i> Roadmap</a>
+        <a href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a>
+        <a class="site-nav-mobile-demo" href="stellar-cli.html"><i class="bi bi-terminal" aria-hidden="true"></i> Open Demo</a>
+      </nav>
 
-      <div id="nav" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> Home</a></li>
-          <li class="nav-item"><a class="nav-link is-active" href="/about"><i class="bi bi-stars"></i> About</a></li>
-          <li class="nav-item"><a class="nav-link" href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a></li>
-          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
-          <li class="nav-item dropdown">
-            <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-terminal"></i> Open Demo
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
-              <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
-              <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
-            </ul>
-          </li>
-        </ul>
+      <div class="site-nav-action">
+        <a class="site-nav-cta" href="stellar-cli.html"><i class="bi bi-terminal" aria-hidden="true"></i> Open Demo</a>
+        <button class="site-menu-button" id="siteMenuButton" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="siteNavLinks">
+          <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
-  </nav>
+  </header>
 
   <header class="hero">
     <div class="nebula"></div>
@@ -611,41 +634,27 @@
           <div class="hero-copy reveal">
             <h1><span class="accent">About</span> the lab behind <span class="muted-strong">NeuroChain DSL</span>.</h1>
             <p class="lead">
-              StellarZeroLab is the product surface around NeuroChain DSL: a lightweight, developer-first language and demo stack built to keep AI operations explicit, local when possible, and easy to reason about.
+              StellarZeroLab builds NeuroChain DSL, a deterministic security layer for AI agents and automated Stellar workflows. Requests become typed ActionPlans, pass guardrails, and can be proven against private policy before execution.
             </p>
-            <div class="hero-metrics">
-              <div class="metric-card glass interactive-card">
-                <strong>DSL</strong>
-                <span>AI and logic kept in one readable flow</span>
-              </div>
-              <div class="metric-card glass interactive-card">
-                <strong>Local-first</strong>
-                <span>CPU ONNX inference and smaller moving parts</span>
-              </div>
-              <div class="metric-card glass interactive-card">
-                <strong>Real demos</strong>
-                <span>WebUI and Stellar surfaces tied to live code paths</span>
-              </div>
-            </div>
           </div>
         </div>
         <div class="col-xl-5">
-          <div class="hero-panel glass soft interactive-card reveal">
+          <div class="hero-panel reveal">
             <div class="hero-panel-head">
               <div class="hero-panel-title"><i class="bi bi-stars"></i> What matters here</div>
             </div>
             <ul class="panel-list">
-              <li class="interactive-card">
-                <strong>Deterministic over magical</strong>
-                <span>The goal is not vague AI orchestration. The goal is explicit behavior that can be inspected, tested, and reviewed.</span>
+              <li>
+                <strong>Determinism over guesswork</strong>
+                <span>Every action becomes an inspectable and testable typed plan.</span>
               </li>
-              <li class="interactive-card">
-                <strong>Integration over mockups</strong>
-                <span>The public pages are not just screenshots. They reflect the actual server, runtime, and product direction we are building.</span>
+              <li>
+                <strong>Evidence before authority</strong>
+                <span>A valid payment or proof never grants permission to execute.</span>
               </li>
-              <li class="interactive-card">
-                <strong>Guardrails before automation</strong>
-                <span>Especially on the Stellar path, typed plans and safety checks come before any ambition to automate more.</span>
+              <li>
+                <strong>Built on real Stellar paths</strong>
+                <span>Soroban verification and x402 testnet flows use real runtime integrations.</span>
               </li>
             </ul>
           </div>
@@ -658,22 +667,22 @@
     <section class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
         <h2>What StellarZeroLab builds</h2>
-        <p class="lead">The public surface is intentionally compact: one engine, one real server path, and demos that explain the design through use rather than marketing copy alone.</p>
+        <p class="lead">One deterministic runtime, three clear surfaces: policy evaluation, private proof, and safe agent integration.</p>
         <div class="card-grid" data-stagger>
-          <div class="info-card dsl interactive-card reveal">
-            <div class="icon"><i class="bi bi-code-slash"></i></div>
-            <h4>NeuroChain DSL</h4>
-            <p>A language where AI-builtins sit directly in the script instead of being pushed into opaque wrappers and side systems.</p>
+          <div class="info-card runtime interactive-card reveal">
+            <div class="icon"><i class="bi bi-shield-check"></i></div>
+            <h4>NeuroChain Runtime</h4>
+            <p>Turns AI and automation requests into typed Stellar ActionPlans and applies deterministic guardrails before execution.</p>
           </div>
-          <div class="info-card web interactive-card reveal">
-            <div class="icon"><i class="bi bi-terminal"></i></div>
-            <h4>WebUI</h4>
-            <p>A browser surface for trying the DSL quickly, selecting models, viewing output, and testing the same runtime path exposed by the API.</p>
+          <div class="info-card zk interactive-card reveal">
+            <div class="icon"><i class="bi bi-fingerprint"></i></div>
+            <h4>ZK Guardrail Attestation</h4>
+            <p>Proves private-policy decisions with RISC Zero and verifies the receipt on Soroban without revealing owner rules.</p>
           </div>
-          <div class="info-card stellar interactive-card reveal">
-            <div class="icon"><i class="bi bi-rocket-takeoff"></i></div>
-            <h4>Stellar Demo</h4>
-            <p>A guarded testnet-first path for turning user intent into typed plans that can later deepen into contract-aware Soroban workflows.</p>
+          <div class="info-card interfaces interactive-card reveal">
+            <div class="icon"><i class="bi bi-diagram-3"></i></div>
+            <h4>Agent Interfaces</h4>
+            <p>Exposes the same no-submit Plan, Evaluate, Prove, Verify workflow through CLI, API, MCP, and Skills.</p>
           </div>
         </div>
       </div>
@@ -682,18 +691,18 @@
     <section class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
         <h2>How we think about the stack</h2>
-        <p class="lead">The design bias is simple: keep the execution model understandable, keep the public demos honest, and keep the system small enough that behavior stays legible.</p>
-        <div class="split-grid">
-          <div class="copy-card interactive-card reveal">
+        <p class="lead">The architecture stays legible by separating intent, policy, proof, payment, and execution authority.</p>
+        <div class="split-grid principles-grid">
+          <div class="copy-card reveal">
             <p>
-              NeuroChain DSL exists because AI integration too often disappears into glue code, black-box orchestration, and UI layers that look impressive but reveal very little. The approach here is narrower and more deliberate: put AI operations into code, keep the runtime explicit, and make the public surfaces reflect the real architecture.
+              NeuroChain exists because AI and automation should not move directly from intent to blockchain execution. Requests first become typed ActionPlans, then pass deterministic policy checks and optional private proof. Signing and submission remain separate, explicit operations.
             </p>
           </div>
-          <div class="list-card interactive-card reveal">
+          <div class="list-card reveal">
             <ul class="principles">
-              <li><i class="bi bi-check2-circle"></i><span>Local inference on CPU where it makes sense, instead of defaulting to hidden remote layers.</span></li>
-              <li><i class="bi bi-check2-circle"></i><span>Typed plans and guardrails before any action path becomes deeper or more automatic.</span></li>
-              <li><i class="bi bi-check2-circle"></i><span>One production repo and one public story, so technical reviewers can connect the dots quickly.</span></li>
+              <li><i class="bi bi-check2-circle"></i><span>Typed ActionPlans replace free-form transaction instructions.</span></li>
+              <li><i class="bi bi-check2-circle"></i><span>Payment, proof, approval, signing, and execution remain separate capabilities.</span></li>
+              <li><i class="bi bi-check2-circle"></i><span>CLI, API, MCP, and Skills preserve the same no-submit semantics.</span></li>
             </ul>
           </div>
         </div>
@@ -702,57 +711,92 @@
 
     <section class="container section-shell">
       <div class="section-card glass soft interactive-card reveal">
-        <h2>How this started</h2>
-        <p class="lead">This did not begin as a polished product plan. It spent roughly a year taking shape through technical curiosity, iteration, and a growing interest in blockchain infrastructure, especially Stellar.</p>
+        <h2>How NeuroChain began</h2>
+        <p class="lead">NeuroChain began as an independent technical project in spring 2025 and evolved through practical work on deterministic AI execution, Stellar automation, x402 payments, and private-policy verification.</p>
         <div class="card-grid" data-stagger>
           <div class="info-card interactive-card reveal">
-            <div class="icon"><i class="bi bi-hourglass-split"></i></div>
-            <h4>A year of shaping</h4>
-            <p>The project developed gradually rather than all at once: first as a line of thought, then as experiments, and finally as a clearer system with one readable direction.</p>
+            <div class="icon"><i class="bi bi-lightbulb"></i></div>
+            <h4>Independent beginnings</h4>
+            <p>Developed independently and self-funded, with each technical layer built and tested before the next was added.</p>
           </div>
           <div class="info-card interactive-card reveal">
             <div class="icon"><i class="bi bi-rocket-takeoff"></i></div>
-            <h4>Stellar as a catalyst</h4>
-            <p>Interest in blockchain technology, and especially Stellar, pushed the work toward typed plans, explicit guardrails, and flows that can be reasoned about before anything is submitted.</p>
+            <h4>Stellar as the proving ground</h4>
+            <p>Typed ActionPlans, guardrails, Soroban verification, and x402 turned the original idea into a working testnet system.</p>
           </div>
           <div class="info-card interactive-card reveal">
-            <div class="icon"><i class="bi bi-person-badge"></i></div>
-            <h4>One-person core project</h4>
-            <p>At its core, this is a one-person project. The public site, demos, and direction are being shaped and built by one person.</p>
+            <div class="icon"><i class="bi bi-patch-check"></i></div>
+            <h4>Built and validated in public</h4>
+            <p>Two DoraHacks submissions and independent review of the ZK pipeline tested the architecture against real constraints.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="container">
-      <div class="cta-card glass soft interactive-card reveal">
-        <h3 class="fw-bold mb-2">See the lab through the live surfaces</h3>
-        <p>The clearest way to understand StellarZeroLab is still to open the public demos and follow the roadmap from there.</p>
-        <div class="d-flex justify-content-center flex-wrap gap-2">
-          <a href="/webui" class="btn btn-primary"><i class="bi bi-terminal"></i> Open WebUI</a>
-          <a href="/roadmap" class="btn btn-outline-light"><i class="bi bi-signpost-2"></i> View Roadmap</a>
-          <a href="/stellar-cli" class="btn btn-outline-light"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a>
+    <section class="about-cta">
+      <div class="container about-cta-inner reveal">
+        <h2>Run the guardrail flow yourself.</h2>
+        <div class="about-cta-actions">
+          <a class="about-action about-action-primary" href="stellar-cli.html"><i class="bi bi-terminal" aria-hidden="true"></i><span>Launch the CLI</span></a>
+          <a class="about-action" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i><span>Explore the code</span></a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer footer-bleed py-4 mt-4 border-top border-secondary-subtle interactive-nav">
-    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-      <div class="small text">© <span id="year"></span> StellarZeroLab · NeuroChain DSL</div>
-      <div class="footer-links small">
-        <a href="/webui"><i class="bi bi-terminal"></i> WebUI</a>
-        <a href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</a>
-        <a href="/about"><i class="bi bi-stars"></i> About</a>
-        <a href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a>
-        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
-        <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
+  <footer class="about-footer">
+    <div class="container about-footer-inner">
+      <span>&copy; <span id="year"></span> StellarZeroLab</span>
+      <div class="about-footer-links">
+        <a href="about.html">About</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="help.html">Docs</a>
+        <a href="mailto:stellarzerolabs@proton.me">Contact</a>
       </div>
     </div>
   </footer>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    (function () {
+      const header = document.getElementById('siteHeader');
+      const menuButton = document.getElementById('siteMenuButton');
+      const navLinks = document.getElementById('siteNavLinks');
+      if (!header || !menuButton || !navLinks) return;
+
+      const closeMenu = ({ restoreFocus = false } = {}) => {
+        if (!navLinks.classList.contains('is-open')) return;
+        navLinks.classList.remove('is-open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', 'Open navigation');
+        menuButton.querySelector('i').className = 'bi bi-list';
+        if (restoreFocus) menuButton.focus();
+      };
+
+      const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 18);
+      updateHeader();
+      window.addEventListener('scroll', updateHeader, { passive: true });
+
+      menuButton.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('is-open');
+        menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+        menuButton.querySelector('i').className = open ? 'bi bi-x-lg' : 'bi bi-list';
+      });
+      navLinks.addEventListener('click', (event) => {
+        if (event.target.closest('a')) closeMenu();
+      });
+      document.addEventListener('click', (event) => {
+        if (!header.contains(event.target)) closeMenu();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenu({ restoreFocus: true });
+      });
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 1120) closeMenu();
+      });
+    })();
 
     (function () {
       const progressFill = document.getElementById('scrollProgressFill');
@@ -842,6 +886,6 @@
       revealEls.forEach((el) => io.observe(el));
     })();
   </script>
-  <script src="/vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -114,31 +114,6 @@
       background: linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
       text-decoration: none;
     }
-    .nav-demo-dropdown .dropdown-menu {
-      margin-top: .45rem;
-    }
-    .nav-demo-menu {
-      min-width: 14.5rem;
-      padding: .42rem;
-      border-radius: 16px;
-      border: 1px solid rgba(125,211,252,.18);
-      background: linear-gradient(180deg,rgba(14,23,40,.96),rgba(10,17,30,.94));
-      box-shadow: 0 18px 34px rgba(0,0,0,.4);
-      backdrop-filter: blur(12px);
-    }
-    .nav-demo-menu .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: .55rem;
-      border-radius: 10px;
-      color: #dff0ff;
-      padding: .58rem .7rem;
-    }
-    .nav-demo-menu .dropdown-item:hover,
-    .nav-demo-menu .dropdown-item:focus {
-      color: #ffffff;
-      background: linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
-    }
     .hero-card,
     .toc-card,
     .doc-card {
@@ -432,16 +407,6 @@
       .icon-only-label {
         display: inline;
       }
-      .nav-demo-dropdown {
-        width: 100%;
-      }
-      .nav-demo-dropdown .nav-quick-cta {
-        width: 100%;
-        justify-content: flex-start;
-      }
-      .nav-demo-menu {
-        min-width: 100%;
-      }
       .nav-quick-link {
         background: rgba(255,255,255,.02);
         border: 1px solid rgba(255,255,255,.06);
@@ -470,16 +435,10 @@
             <a class="nav-quick-link" href="/" aria-label="Home"><i class="bi bi-house"></i><span>Home</span></a>
             <a class="nav-quick-link" href="/about" aria-label="About"><i class="bi bi-stars"></i><span>About</span></a>
             <a class="nav-quick-link" href="/roadmap" aria-label="Roadmap"><i class="bi bi-signpost-split"></i><span>Roadmap</span></a>
-            <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="bi bi-github"></i><span>GitHub</span></a>
-            <div class="dropdown nav-demo-dropdown">
-              <a class="nav-quick-cta dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open Demo menu">
-                <i class="bi bi-rocket-takeoff"></i><span>Open Demo</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
-                <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
-                <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
-              </ul>
-            </div>
+            <a class="nav-quick-link" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="bi bi-github"></i><span>GitHub</span></a>
+            <a class="nav-quick-cta" href="/stellar-cli" aria-label="Open Stellar Demo">
+              <i class="bi bi-rocket-takeoff"></i><span>Open Demo</span>
+            </a>
           </div>
         </div>
       </div>

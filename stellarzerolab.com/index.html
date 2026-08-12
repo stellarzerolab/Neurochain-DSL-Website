@@ -1,1462 +1,1116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>StellarZeroLab · NeuroChain DSL</title>
-  <meta name="description" content="StellarZeroLab — NeuroChain: a lightweight, fast, developer-friendly AI DSL and WebUI." />
-
-  <!-- Canonical (a clear base URL for search engines) -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NeuroChain DSL | Deterministic Guardrails for Stellar</title>
+  <meta name="description" content="NeuroChain turns AI and automation requests into typed Stellar ActionPlans, evaluates private policies, proves decisions with zero knowledge, and verifies them on Stellar without automatic execution.">
   <link rel="canonical" href="https://stellarzerolab.com/">
+  <meta name="theme-color" content="#080b0e">
 
-  <!-- Favicons & PWA -->
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" as="image" href="hero-guardrail-system.png">
 
-  <!-- PNG favicons -->
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="/favicon-180.png">
+  <meta property="og:title" content="NeuroChain DSL | Deterministic Guardrails for Stellar">
+  <meta property="og:description" content="Plan, evaluate, prove, and verify AI and automation actions before execution.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://stellarzerolab.com/">
+  <meta property="og:image" content="https://stellarzerolab.com/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Android / PWA icons -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512.png">
-
-  <!-- iOS PWA -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="StellarZeroLab">
-	  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	
-	  <!-- Safari pinned tab -->
-	  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0b0f14">
-
-  <!-- Windows / Edge -->
-  <meta name="msapplication-TileColor" content="#0b0f14">
-
-  <!-- Manifest -->
-  <link rel="manifest" href="/site.webmanifest">
-
-  <!-- Theme colors -->
-  <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-
-  <!-- Social preview (OG + Twitter) -->
-  <meta property="og:title" content="StellarZeroLab · NeuroChain DSL">
-	  <meta property="og:description" content="StellarZeroLab — NeuroChain: a lightweight, fast, developer-friendly AI DSL and WebUI.">
-	  <meta property="og:type" content="website">
-	  <meta property="og:url" content="https://stellarzerolab.com/">
-	  <!-- Social preview image (recommended ~1200×630) -->
-	  <meta property="og:image" content="https://stellarzerolab.com/og-cover.png">
-	  <meta name="twitter:card" content="summary_large_image">
-	  <meta name="twitter:title" content="StellarZeroLab · NeuroChain DSL">
-	  <meta name="twitter:description" content="A lightweight and fast AI DSL — StellarZeroLab NeuroChain WebUI.">
-	  <meta name="twitter:image" content="https://stellarzerolab.com/og-cover.png">
-	
-	  <!-- Optional iOS splash screens -->
-	  <link rel="apple-touch-startup-image" href="/apple-splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (orientation: portrait)">
-	  <link rel="apple-touch-startup-image" href="/apple-splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (orientation: portrait)">
-
-  <!-- CSS / UI libraries -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.css">
 
   <style>
-    :root{
-      --bg:#070b12;
-      --surface:#0c121c;
-      --surface-2:#0f1726;
-      --ink:#eaf2ff;
-      --muted:#9fb3c8;
-      --primary:#7dd3fc;
-      --accent:#a78bfa;
-      --success:#22c55e;
-      --radius:20px;
-      --ease:cubic-bezier(.22,.61,.36,1);
-    }
-    html,body{
-      background:
-        radial-gradient(120% 80% at 0% 0%, rgba(15,23,42,.75), transparent 55%),
-        radial-gradient(120% 80% at 100% 0%, rgba(30,58,138,.18), transparent 55%),
-        var(--bg);
-      color:var(--ink);
-      overflow-x:hidden;
-    }
-    .glass{background:rgba(255,255,255,.05);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius)}
-    .soft{box-shadow:0 20px 50px rgba(0,0,0,.45)}
-    .btn{
-      position:relative;
-      overflow:hidden;
-      isolation:isolate;
-      border-radius:12px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.08),
-        0 10px 24px rgba(7,14,25,.36);
-      transition:
-        transform .18s var(--ease),
-        box-shadow .22s ease,
-        filter .22s ease,
-        background .22s ease,
-        border-color .22s ease,
-        color .22s ease;
-    }
-    .btn::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);
-      opacity:.55;
-      z-index:0;
-    }
-    .btn::after{
-      content:"";
-      position:absolute;
-      inset:-30% -10%;
-      pointer-events:none;
-      background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.24) 50%,transparent 80%);
-      transform:translateX(-130%);
-      transition:transform .65s var(--ease);
-      z-index:0;
-    }
-    .btn > *{position:relative;z-index:1}
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:
-        0 0 0 1px rgba(185,231,255,.28),
-        0 14px 30px rgba(8,18,31,.44),
-        0 0 26px rgba(125,211,252,.24);
-    }
-    .btn:hover::after{transform:translateX(130%)}
-    .btn:active{transform:translateY(0)}
-
-    .btn-primary{
-      background:linear-gradient(135deg,var(--primary),#8bdcff);
-      border:0;
-      color:#04121e;
-      box-shadow:
-        0 0 0 1px rgba(198,238,255,.34),
-        0 14px 34px rgba(125,211,252,.28),
-        0 0 28px rgba(125,211,252,.24);
-    }
-    .btn-primary:hover{
-      filter:brightness(1.06);
-      box-shadow:
-        0 0 0 1px rgba(213,242,255,.45),
-        0 16px 38px rgba(125,211,252,.34),
-        0 0 34px rgba(125,211,252,.34);
-    }
-    .btn-outline-light{
-      border-color:#3a5e84;
-      color:#dff0ff;
-      background:linear-gradient(180deg,rgba(15,28,47,.82),rgba(11,22,37,.78));
-    }
-    .btn-outline-light:hover{
-      border-color:#79b3df;
-      color:#f1f8ff;
-      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
-    }
-    .nav-demo-menu{
-      min-width:14.5rem;
-      padding:.42rem;
-      border-radius:16px;
-      border:1px solid rgba(125,211,252,.18);
-      background:linear-gradient(180deg,rgba(14,23,40,.96),rgba(10,17,30,.94));
-      box-shadow:0 18px 34px rgba(0,0,0,.4);
-      backdrop-filter:blur(12px);
-    }
-    .nav-demo-menu .dropdown-item{
-      display:flex;
-      align-items:center;
-      gap:.55rem;
-      border-radius:10px;
-      color:#dff0ff;
-      padding:.58rem .7rem;
-    }
-    .nav-demo-menu .dropdown-item:hover,
-    .nav-demo-menu .dropdown-item:focus{
-      color:#ffffff;
-      background:linear-gradient(180deg,rgba(22,40,66,.9),rgba(15,30,49,.88));
-    }
-    .lead{color:var(--muted)}
-    .brand{letter-spacing:.3px}
-    .badge-dot{display:inline-flex;align-items:center;gap:.5ch}
-    .badge-dot::before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:currentColor}
-    .brand-logo{width:56px;height:56px;margin-right:.5rem;display:inline-block;filter:drop-shadow(0 2px 6px rgba(125,211,252,.45));}
-    .navbar{background:linear-gradient(180deg,rgba(11,18,30,.9),rgba(11,18,30,.68))}
-    .page-progress{
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:3px;
-      z-index:1200;
-      pointer-events:none;
-    }
-    .page-progress i{
-      display:block;
-      height:100%;
-      width:0;
-      background:linear-gradient(90deg,#22d3ee,#7dd3fc,#a78bfa);
-      box-shadow:0 0 18px rgba(125,211,252,.55);
-      transition:width .08s linear;
-    }
-    .nav-link{color:#c4d7ea}
-    .nav-link:hover{color:#ffffff}
-    .nav-link{position:relative}
-    .interactive-nav{
-      position:relative;
-      overflow:visible;
-      isolation:isolate;
-    }
-    .interactive-nav::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:0;
-      transition:opacity .24s ease;
-      border-radius:inherit;
-      background:radial-gradient(
-        340px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(125,211,252,.14),
-        rgba(167,139,250,.1) 32%,
-        transparent 70%
-      );
-      z-index:0;
-    }
-    .interactive-nav > .container{
-      position:relative;
-      z-index:1;
-    }
-    @media (hover:hover) and (pointer:fine){
-      .interactive-nav:hover::after{opacity:1}
-    }
-    .nav-link.is-active{
-      color:#ffffff;
-      text-shadow:0 0 14px rgba(125,211,252,.45);
-    }
-    .nav-link.is-active::after{
-      content:"";
-      position:absolute;
-      left:.5rem;
-      right:.5rem;
-      bottom:.2rem;
-      height:2px;
-      border-radius:999px;
-      background:linear-gradient(90deg,rgba(34,211,238,.9),rgba(125,211,252,.95));
-      box-shadow:0 0 10px rgba(125,211,252,.5);
-    }
-    @media (max-width:576px){.brand-logo{width:40px;height:40px}}
-    .hero{position:relative;overflow:hidden}
-    .hero::before{
-      content:"";
-      position:absolute;inset:0;
-      background:
-        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
-      background-size:36px 36px;
-      mask-image:radial-gradient(circle at 50% 40%, black 25%, transparent 80%);
-      opacity:.22;
-      animation:grid-drift 22s linear infinite;
-      pointer-events:none
-    }
-    .nebula{position:absolute;inset:-20%;background:
-      radial-gradient(40% 30% at 20% 30%, rgba(124,58,237,.25), transparent 70%),
-      radial-gradient(35% 25% at 80% 20%, rgba(14,165,233,.25), transparent 70%),
-      radial-gradient(45% 35% at 60% 80%, rgba(59,130,246,.18), transparent 75%);
-      filter:blur(50px);opacity:.9}
-    .stars{position:absolute;inset:0}
-    .stars::before,.stars::after{content:"";position:absolute;inset:0;background:
-      radial-gradient(1px 1px at 10% 20%, #bfe4ff 70%, transparent),
-      radial-gradient(1px 1px at 30% 40%, #e6e1ff 70%, transparent),
-      radial-gradient(1px 1px at 70% 30%, #c7f3ff 70%, transparent),
-      radial-gradient(1px 1px at 85% 65%, #ffffff 70%, transparent),
-      radial-gradient(1px 1px at 55% 75%, #cde6ff 70%, transparent);
-      opacity:.8;animation:twinkle 5s infinite ease-in-out alternate}
-    .stars::after{filter:blur(.5px);opacity:.6;animation-duration:7s}
-    @keyframes twinkle{from{opacity:.4} to{opacity:.95}}
-    @keyframes grid-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-36px,-36px,0)}}
-    .feature{transition:.2s transform ease,.2s box-shadow ease}
-    .feature:hover{transform:translateY(-6px);box-shadow:0 14px 40px rgba(0,0,0,.35);border-color:rgba(125,211,252,.28)}
-    pre.code{background:#0a1220;border:1px solid #16233a;border-radius:16px;color:#cfe3ff;max-width:100%;overflow:auto}
-    #tech pre.code{
-      white-space:pre-wrap;
-      overflow-wrap:anywhere;
-      word-break:break-word;
-      overflow-x:hidden;
-      scrollbar-width:thin;
-      scrollbar-color:rgba(125,211,252,.45) rgba(9,18,34,.72);
-    }
-    #tech pre.code::-webkit-scrollbar{
-      width:8px;
-      height:8px;
-    }
-    #tech pre.code::-webkit-scrollbar-track{
-      background:rgba(9,18,34,.72);
-      border-radius:999px;
-    }
-    #tech pre.code::-webkit-scrollbar-thumb{
-      background:linear-gradient(180deg,rgba(125,211,252,.78),rgba(92,169,220,.74));
-      border-radius:999px;
-      border:1px solid rgba(157,216,255,.35);
-    }
-    .code-card{
-      position:relative;
-      background:linear-gradient(180deg,rgba(14,23,40,.84),rgba(10,17,30,.8));
-      border:1px solid rgba(125,211,252,.19);
-      overflow:hidden;
-    }
-    .code-card::before{
-      content:"";
-      position:absolute;inset:-1px;
-      background:linear-gradient(135deg,rgba(125,211,252,.22),rgba(167,139,250,.18),transparent 40%);
-      pointer-events:none;
-      mix-blend-mode:screen;
-    }
-    .code-card-head{
-      display:flex;align-items:center;justify-content:space-between;
-      margin:-.3rem -.3rem .8rem;
-      padding:.55rem .74rem;
-      border-bottom:1px solid rgba(125,211,252,.15);
-      background:rgba(8,14,26,.65);
-    }
-    .code-dots{display:flex;gap:.33rem}
-    .code-dots i{width:.5rem;height:.5rem;border-radius:50%;display:block}
-    .code-dots i:nth-child(1){background:#fb7185}
-    .code-dots i:nth-child(2){background:#facc15}
-    .code-dots i:nth-child(3){background:#4ade80}
-    .code-label{
-      font-size:.75rem;
-      color:#b7cadf;
-      letter-spacing:.05em;
-      text-transform:uppercase;
-    }
-    .hero pre.code{
-      position:relative;overflow:hidden;
-      box-shadow:inset 0 0 0 1px rgba(125,211,252,.14),0 24px 44px rgba(0,0,0,.42);
-      margin-bottom:.85rem !important;
-    }
-    .hero pre.code::after{
-      content:"";position:absolute;inset:-120% -60% auto;
-      height:280%;
-      transform:rotate(12deg);
-      background:linear-gradient(to right,transparent,rgba(255,255,255,.11),transparent);
-      animation:shimmer 4.8s linear infinite
-    }
-    @keyframes shimmer{from{left:-140%}to{left:140%}}
-    main a:not(.btn), main a:visited:not(.btn),
-    .footer a:not(.btn), .footer a:visited:not(.btn){
-      color:#9dd8ff;
-      text-decoration-color:rgba(157,216,255,.55);
-      transition:color .18s var(--ease), text-decoration-color .18s var(--ease), text-shadow .18s var(--ease);
-    }
-    main a:not(.btn):hover, main a:not(.btn):focus-visible,
-    .footer a:not(.btn):hover, .footer a:not(.btn):focus-visible{
-      color:#e6f6ff;
-      text-decoration-color:rgba(230,246,255,.95);
-      text-shadow:0 0 10px rgba(125,211,252,.35);
-    }
-    .promo-link{display:block;position:relative;overflow:hidden;border-radius:16px;border:1px solid #16233a;background:linear-gradient(180deg,#0a1220,#0b1324);aspect-ratio:16/9;}
-    .promo-link img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease, opacity .25s ease;}
-    .promo-link:hover img{transform:scale(1.04)}
-    .promo-link::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:0;
-      transition:opacity .24s ease;
-      background:radial-gradient(
-        300px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(125,211,252,.16),
-        rgba(167,139,250,.1) 34%,
-        transparent 70%
-      );
-      z-index:2;
-    }
-    @media (hover:hover) and (pointer:fine){
-      .promo-link:hover::after{opacity:1}
-    }
-    .promo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb3c8;text-align:center;padding:1rem;}
-    .feature-grid{margin-top:.35rem}
-    .feature-card{
-      background:linear-gradient(180deg,rgba(14,22,37,.84),rgba(11,18,30,.78));
-      border:1px solid rgba(125,211,252,.15);
-      position:relative;
-      overflow:hidden;
-    }
-    .feature-card::before{
-      content:"";
-      position:absolute;left:-1px;right:-1px;top:-1px;height:2px;
-      background:linear-gradient(90deg,rgba(125,211,252,.08),rgba(125,211,252,.55),rgba(167,139,250,.42),rgba(125,211,252,.08));
-      opacity:.74;
-    }
-    .demo-card{
-      background:linear-gradient(180deg,rgba(14,23,39,.86),rgba(11,18,30,.8));
-      border:1px solid rgba(125,211,252,.17);
-      position:relative;
-      overflow:hidden;
-    }
-    .demo-card::before{
-      content:"";
-      position:absolute;inset:0;
-      background:radial-gradient(65% 55% at -10% 0%, rgba(56,189,248,.14), transparent 66%);
-      pointer-events:none;
-    }
-    .demo-badge{
-      display:inline-flex;align-items:center;
-      padding:.2rem .55rem;
-      border-radius:999px;
-      border:1px solid rgba(125,211,252,.24);
-      color:#d4e8fc;
-      font-size:.68rem;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      background:rgba(11,24,40,.6);
-    }
-    .demo-list{margin:.95rem 0 0;padding:0;list-style:none}
-    .demo-preview-wrap{
-      display:flex;flex-direction:column;gap:.7rem;
-    }
-    .setup-link-icon{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:1.72rem;
-      height:1.72rem;
-      margin-left:.36rem;
-      border-radius:999px;
-      border:1px solid rgba(125,211,252,.34);
-      background:linear-gradient(180deg,rgba(18,34,56,.9),rgba(12,22,37,.86));
-      color:#e8f6ff !important;
-      text-decoration:none !important;
-      box-shadow:0 0 0 1px rgba(255,255,255,.05),0 8px 18px rgba(6,13,24,.35);
-      transition:transform .16s var(--ease),border-color .2s ease,box-shadow .2s ease,filter .2s ease;
-      vertical-align:middle;
-    }
-    .setup-link-icon:hover,
-    .setup-link-icon:focus-visible{
-      transform:translateY(-1px);
-      border-color:rgba(167,225,255,.65);
-      box-shadow:0 0 0 1px rgba(185,231,255,.3),0 0 14px rgba(125,211,252,.3),0 10px 22px rgba(6,13,24,.42);
-      filter:brightness(1.08);
-      color:#ffffff !important;
-    }
-    .setup-link-icon i{font-size:.95rem;line-height:1}
-    .arch-intro{
-      color:#a9bed3;
-      line-height:1.62;
-      margin:.35rem 0 1rem;
-      max-width:58ch;
-    }
-    .arch-shell{
-      position:relative;
-      overflow:hidden;
-      display:grid;
-      gap:.88rem;
-      margin-top:1rem;
-      padding:1rem;
-      border-radius:22px;
-      border:1px solid rgba(125,211,252,.12);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 46%),
-        linear-gradient(180deg,rgba(7,18,34,.78),rgba(5,12,24,.82));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
-    }
-    .arch-shell::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
-      background-size:28px 28px;
-      mask-image:linear-gradient(180deg,rgba(0,0,0,.6),transparent 92%);
-      opacity:.38;
-    }
-    .arch-layer{
-      position:relative;
-      padding:1rem 1rem 1.05rem;
-      border-radius:18px;
-      border:1px solid rgba(125,211,252,.18);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.09), transparent 44%),
-        linear-gradient(180deg,rgba(8,24,42,.84),rgba(6,16,31,.86));
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.04),
-        0 12px 26px rgba(0,0,0,.16);
-      transition:
-        transform .18s var(--ease),
-        border-color .22s ease,
-        box-shadow .22s ease,
-        filter .22s ease;
-    }
-    .arch-layer:hover{
-      transform:translateY(-1px);
-      border-color:rgba(167,225,255,.34);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.05),
-        0 16px 30px rgba(0,0,0,.22),
-        0 0 24px rgba(125,211,252,.14);
-      filter:brightness(1.02);
-    }
-    .arch-layer::before{
-      content:"";
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      height:1px;
-      pointer-events:none;
-      background:linear-gradient(90deg,transparent,rgba(167,225,255,.3),transparent);
-    }
-    .arch-layer::after{
-      content:"";
-      position:absolute;
-      left:1.1rem;
-      right:1.1rem;
-      bottom:-.48rem;
-      height:1px;
-      pointer-events:none;
-      background:linear-gradient(90deg,rgba(125,211,252,.1),rgba(167,139,250,.24),rgba(125,211,252,.1));
-    }
-    .arch-layer-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:.8rem;
-      margin-bottom:.55rem;
-    }
-    .arch-kicker{
-      font-size:.74rem;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#8ccfff;
-      font-weight:700;
-    }
-    .arch-mini{
-      padding:.25rem .55rem;
-      border-radius:999px;
-      border:1px solid rgba(125,211,252,.18);
-      background:rgba(11,24,40,.7);
-      color:#d9efff;
-      font-size:.74rem;
-      line-height:1;
-      white-space:nowrap;
-    }
-    .arch-layer h5{
-      margin:0 0 .42rem;
-      font-size:1.12rem;
-      color:#f2f8ff;
-    }
-    .arch-flow,
-    .arch-copy{
-      margin:0;
-      color:#b7ccde;
-      line-height:1.65;
-    }
-    .arch-flow strong,
-    .arch-copy strong{
-      color:#f4fbff;
-      font-weight:700;
-    }
-    .arch-pills{
-      display:flex;
-      flex-wrap:wrap;
-      gap:.5rem;
-      margin-top:.75rem;
-    }
-    .arch-pill{
-      display:inline-flex;
-      align-items:center;
-      padding:.38rem .66rem;
-      border-radius:999px;
-      border:1px solid rgba(125,211,252,.18);
-      background:linear-gradient(180deg,rgba(12,32,53,.82),rgba(8,21,37,.8));
-      color:#d5e6f5;
-      font-size:.86rem;
-      line-height:1;
-    }
-    .arch-routes{
-      display:grid;
-      gap:.62rem;
-      margin-top:.7rem;
-    }
-    .arch-route{
-      padding:.72rem .8rem;
-      border-radius:14px;
-      border:1px solid rgba(125,211,252,.18);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 42%),
-        linear-gradient(180deg,rgba(8,22,39,.82),rgba(6,16,30,.84));
-    }
-    .arch-route code{
-      display:block;
-      color:#8fe6ff;
-      font-size:.94rem;
-      margin-bottom:.22rem;
-    }
-    .arch-route span{
-      display:block;
-      color:#abc0d4;
-      line-height:1.5;
-      font-size:.92rem;
-    }
-    .arch-note{
-      margin-top:.78rem;
-      padding:.68rem .8rem;
-      border-radius:14px;
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 44%),
-        linear-gradient(180deg,rgba(14,36,58,.88),rgba(9,24,41,.88));
-      border:1px solid rgba(125,211,252,.18);
-      color:#dcecff;
-      font-size:.92rem;
-      line-height:1.5;
-    }
-    .arch-engine .arch-mini{color:#d9f8ff}
-    .arch-runtime .arch-mini{color:#def7eb}
-    .arch-api .arch-mini{color:#e4ecff}
-    .arch-stellar .arch-mini{color:#ffe6bc}
-    #tech ol{
-      line-height:1.62;
-      padding-left:1.55rem;
-    }
-    #tech ol li{
-      margin:.52rem 0;
-    }
-    .guarantee-card{
-      border:1px solid rgba(125,211,252,.14);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.07), transparent 44%),
-        linear-gradient(180deg,rgba(10,19,34,.84),rgba(7,14,26,.84));
-    }
-    .setup-card{
-      border:1px solid rgba(125,211,252,.16);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 44%),
-        linear-gradient(180deg,rgba(10,21,37,.84),rgba(7,15,29,.84));
-    }
-    .arch-card{
-      border:1px solid rgba(125,211,252,.16);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.1), transparent 44%),
-        linear-gradient(180deg,rgba(10,22,39,.84),rgba(7,15,30,.84));
-    }
-    .build-card{
-      border:1px solid rgba(125,211,252,.16);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.09), transparent 44%),
-        linear-gradient(180deg,rgba(10,21,37,.84),rgba(7,15,29,.84));
-    }
-    .guarantee-intro{
-      color:#a9bed3;
-      line-height:1.62;
-      margin:.35rem 0 1rem;
-      max-width:54ch;
-    }
-    .guarantee-list{
-      display:grid;
-      gap:.78rem;
-      margin:0;
-      padding:0;
-      list-style:none;
-    }
-    .guarantee-item{
-      display:flex;
-      align-items:flex-start;
-      gap:.78rem;
-      padding:.88rem .92rem;
-      border-radius:16px;
-      border:1px solid rgba(125,211,252,.18);
-      background:
-        radial-gradient(120% 120% at 100% 0%, rgba(34,211,238,.08), transparent 42%),
-        linear-gradient(180deg,rgba(8,24,42,.82),rgba(6,16,30,.84));
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-    }
-    .guarantee-icon{
-      flex:0 0 auto;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:2rem;
-      height:2rem;
-      border-radius:999px;
-      border:1px solid rgba(125,211,252,.22);
-      background:linear-gradient(180deg,rgba(12,33,54,.86),rgba(8,21,37,.84));
-      color:#8fe6ff;
-      box-shadow:0 0 0 1px rgba(255,255,255,.03);
-    }
-    .guarantee-copy strong{
-      display:block;
-      color:#f1f8ff;
-      margin-bottom:.12rem;
-      font-size:.98rem;
-    }
-    .guarantee-copy span{
-      display:block;
-      color:#aec2d6;
-      line-height:1.56;
-      font-size:.93rem;
-    }
-    @media (min-width:992px){
-      .tech-side-stack{height:100%}
-      .guarantee-card{
-        display:flex;
-        flex-direction:column;
-        flex:1 1 auto;
-      }
-      .guarantee-list{
-        flex:1 1 auto;
-        grid-template-rows:repeat(4, minmax(0,1fr));
-      }
-    }
-    .icon-inline { vertical-align: -0.05em; font-size: 0.95em; }
-    .code-actions{display:grid;grid-template-columns:1fr 1fr;gap:.58rem}
-    .code-actions .btn{border-radius:10px}
-    .interactive-card{
-      position:relative;
-      overflow:hidden;
-      isolation:isolate;
-    }
-    .interactive-card::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      width:auto;
-      height:auto;
-      pointer-events:none;
-      opacity:0;
-      transition:opacity .28s ease;
-      background:radial-gradient(
-        280px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(125,211,252,.14),
-        rgba(167,139,250,.1) 32%,
-        transparent 68%
-      );
-      z-index:0;
-    }
-    .arch-layer.interactive-card::after{
-      background:radial-gradient(
-        320px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(125,211,252,.18),
-        rgba(34,211,238,.12) 34%,
-        transparent 72%
-      );
-    }
-    .arch-route.interactive-card::after,
-    .arch-note.interactive-card::after{
-      background:radial-gradient(
-        240px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(125,211,252,.22),
-        rgba(34,211,238,.14) 36%,
-        transparent 74%
-      );
-    }
-    .interactive-card > *{position:relative;z-index:1}
-    @media (hover:hover) and (pointer:fine){
-      .interactive-card:hover::after{opacity:1}
+    @font-face {
+      font-family: "Space Grotesk";
+      src: url("vendor/space-grotesk/SpaceGrotesk-Variable.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 300 700;
+      font-display: swap;
     }
 
-    /* Full-bleed footer helper */
-    .footer-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
-      background:linear-gradient(180deg, transparent, rgba(255,255,255,.03));}
-    .footer-links{
-      display:flex;
-      align-items:center;
-      gap:1rem;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .footer-links a{
-      display:inline-flex;
-      align-items:center;
-      gap:.36rem;
+    :root {
+      color-scheme: dark;
+      --bg: #080b0e;
+      --bg-soft: #0d1216;
+      --surface: #11171c;
+      --surface-strong: #151d23;
+      --line: #263139;
+      --line-bright: #3b4c57;
+      --text: #f4f7f8;
+      --muted: #9daab2;
+      --cyan: #69dbff;
+      --mint: #55dfa2;
+      --coral: #ff876f;
+      --amber: #f6c85f;
+      --max: 1240px;
+      --nav-h: 72px;
+      --radius: 8px;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .35);
+      --ease: cubic-bezier(.2, .7, .2, 1);
     }
 
-    /* Reveal system */
-    .reveal{opacity:0;transform:translate3d(0,18px,0);transition:opacity .7s var(--ease),transform .7s var(--ease)}
-    .reveal.in{opacity:1;transform:translate3d(0,0,0)}
-    [data-stagger] .reveal:nth-child(1){transition-delay:.04s}
-    [data-stagger] .reveal:nth-child(2){transition-delay:.11s}
-    [data-stagger] .reveal:nth-child(3){transition-delay:.18s}
-    [data-stagger] .reveal:nth-child(4){transition-delay:.25s}
-    [data-stagger] .reveal:nth-child(5){transition-delay:.32s}
-
-    @media (prefers-reduced-motion: reduce){
-      .stars::before,.stars::after,.hero::before,.hero pre.code::after{animation:none}
-      .feature,.promo-link img,.btn,.btn::after{transition:none}
-      .reveal{opacity:1;transform:none;transition:none}
-      .page-progress i,.interactive-card::after,.interactive-nav::after,.promo-link::after{transition:none}
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 18px); }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      letter-spacing: 0;
+      overflow-x: hidden;
     }
-    @media (max-width:991.98px){
-      .navbar-collapse.collapsing{
-        transition:height .12s ease !important;
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(to bottom, black, transparent 75%);
+      z-index: -1;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    ::selection { background: rgba(105, 219, 255, .24); color: white; }
+
+    .skip-link {
+      position: fixed;
+      left: 16px;
+      top: -80px;
+      z-index: 1000;
+      padding: 10px 14px;
+      color: #051015;
+      background: var(--cyan);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .skip-link:focus { top: 12px; }
+
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 16px;
+      color: var(--cyan);
+      font: 700 12px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+    .section-title {
+      max-width: 800px;
+      margin: 0;
+      font-size: 64px;
+      line-height: 1.02;
+      font-weight: 680;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    .section-copy { max-width: 680px; margin: 22px 0 0; color: var(--muted); font-size: 18px; text-wrap: pretty; }
+    .section-head { margin-bottom: 44px; }
+    .section { padding: 112px 0; border-top: 1px solid var(--line); }
+
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 100;
+      height: var(--nav-h);
+      border-top: 1px solid rgba(246, 200, 95, .18);
+      border-bottom: 1px solid #202c39;
+      background: var(--bg);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+      transition: background .25s ease, box-shadow .25s ease;
+    }
+    .nav {
+      position: relative;
+      height: 100%;
+      margin-top: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .site-header.is-scrolled {
+      background: var(--bg);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, .28);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 720; }
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      overflow: visible;
+      filter: drop-shadow(0 2px 6px rgba(125, 211, 252, .45));
+    }
+    .brand-spin {
+      transform-origin: 14px 14px;
+      animation: brand-spin 18s linear infinite;
+    }
+    .brand strong {
+      font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 19px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    .brand:focus-visible { outline: 2px solid rgba(105, 219, 255, .34); outline-offset: 3px; border-radius: 3px; }
+    @keyframes brand-spin { to { transform: rotate(360deg); } }
+    .nav-links { display: flex; align-items: center; align-self: stretch; gap: 22px; margin-left: auto; }
+    .nav-links a {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      color: #c7d0d5;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: color .18s ease;
+    }
+    .nav-links a i { color: #d6e4ec; font-size: 15px; }
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 7px;
+      width: 0;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--cyan);
+      transform: translateX(-50%);
+      transition: width .2s var(--ease);
+    }
+    .nav-links a:hover, .nav-links a:focus-visible { color: white; }
+    .nav-links a:hover::after, .nav-links a:focus-visible::after { width: 18px; }
+    .nav-links a.is-current { color: white; }
+    .nav-links a.is-current::after { width: 18px; }
+    .nav-links a:focus-visible { outline: 2px solid rgba(105, 219, 255, .34); outline-offset: 4px; border-radius: 2px; }
+    .nav-mobile-demo { display: none !important; }
+    .nav-action { display: flex; align-items: center; gap: 10px; }
+    .nav-action .button {
+      min-height: 36px;
+      padding: 0 13px;
+      gap: 7px;
+      border-color: #3d5870;
+      border-radius: 999px;
+      color: #eaf6fb;
+      background: #0d1927;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset;
+    }
+    .nav-action .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(105, 219, 255, .68);
+      color: white;
+      background: #112537;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset;
+    }
+    .nav-cta-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-action .nav-cta-icon i { font-size: 14px; }
+    .menu-button {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line-bright);
+      border-radius: 6px;
+      color: var(--text);
+      background: rgba(12, 17, 21, .8);
+      cursor: pointer;
+      transition: color .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .menu-button:hover, .menu-button:focus-visible { color: var(--cyan); border-color: rgba(105, 219, 255, .55); background: #11191e; }
+    .menu-button:focus-visible { outline: 2px solid rgba(105, 219, 255, .32); outline-offset: 2px; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      transition: transform .18s var(--ease), background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .button:hover { transform: translateY(-2px); }
+    .button:focus-visible { outline: 2px solid rgba(105, 219, 255, .55); outline-offset: 3px; }
+    .button-primary { background: var(--cyan); color: #041116; }
+    .button-primary:hover { background: #95e7ff; }
+    .button-secondary { border-color: var(--line-bright); color: var(--text); background: rgba(8,11,14,.5); }
+    .button-secondary:hover { border-color: #6d818c; background: rgba(18,25,30,.86); }
+    .button i { font-size: 17px; }
+
+    .hero {
+      position: relative;
+      min-height: min(880px, 88svh);
+      display: flex;
+      align-items: center;
+      isolation: isolate;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-media { position: absolute; inset: 0; z-index: -2; }
+    .hero-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 67% 54%;
+      transform: translate3d(0, var(--hero-shift, 0), 0) scale(1.025);
+      transform-origin: 65% 50%;
+      will-change: transform;
+    }
+    .hero-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(8,11,14,.98) 0%, rgba(8,11,14,.92) 33%, rgba(8,11,14,.3) 72%, rgba(8,11,14,.52) 100%), linear-gradient(0deg, rgba(8,11,14,.88), transparent 38%);
+    }
+    .hero-content { padding: calc(var(--nav-h) + 54px) 0 44px; }
+    .hero-copy { max-width: 1180px; }
+    h1 {
+      position: relative;
+      margin: 0;
+      max-width: 100%;
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 18px;
+      font-size: 118px;
+      line-height: .84;
+      font-weight: 720;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+    .hero-title-main {
+      position: relative;
+      display: block;
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+      animation: hero-title-decode 1.08s .16s var(--ease) forwards;
+    }
+    .hero-title-main::after {
+      content: "";
+      position: absolute;
+      top: 4%;
+      bottom: 4%;
+      left: 0;
+      width: 2px;
+      background: var(--cyan);
+      box-shadow: 0 0 14px rgba(105,219,255,.8);
+      animation: hero-title-scan 1.08s .16s var(--ease) both;
+    }
+    .hero-title-dsl {
+      position: static;
+      margin-top: 8px;
+      color: var(--cyan);
+      font: 700 28px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      letter-spacing: .22em;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: hero-dsl-lock .5s 1.02s var(--ease) forwards;
+    }
+    .hero-system-row {
+      position: relative;
+      width: min(100%, 1160px);
+      margin-top: 42px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(194,204,209,.5);
+    }
+    .hero-subtitle {
+      max-width: 660px;
+      margin: 0;
+      color: #c2ccd1;
+      font-size: 27px;
+      line-height: 1.34;
+      font-weight: 470;
+      opacity: 0;
+      transform: translateY(14px);
+      animation: hero-content-enter .6s 1.3s var(--ease) forwards;
+    }
+    .hero-subtitle strong {
+      display: block;
+      margin-bottom: 7px;
+      color: white;
+      font-weight: 650;
+    }
+    @keyframes hero-title-decode {
+      0% { opacity: 0; clip-path: inset(0 100% 0 0); filter: blur(8px); }
+      30% { opacity: 1; }
+      100% { opacity: 1; clip-path: inset(0 0 0 0); filter: none; }
+    }
+    @keyframes hero-title-scan {
+      0% { left: 0; opacity: 0; }
+      12% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+    @keyframes hero-dsl-lock {
+      0% { opacity: 0; transform: translateY(10px); letter-spacing: .42em; }
+      100% { opacity: 1; transform: none; letter-spacing: .22em; }
+    }
+    @keyframes hero-content-enter {
+      to { opacity: 1; transform: none; }
+    }
+    .flow-band {
+      background: #0a0e11;
+      border-bottom: 1px solid var(--line);
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+      filter: blur(8px);
+      animation: flow-band-enter 1.08s .16s var(--ease) forwards;
+    }
+    @keyframes flow-band-enter {
+      0% { opacity: 0; clip-path: inset(0 100% 0 0); filter: blur(8px); }
+      30% { opacity: 1; }
+      100% { opacity: 1; clip-path: inset(0 0 0 0); filter: none; }
+    }
+    .flow-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .flow-step {
+      position: relative;
+      min-height: 180px;
+      padding: 30px 28px;
+      border-left: 1px solid var(--line);
+      transition: background .25s ease, border-color .25s ease;
+      cursor: default;
+    }
+    .flow-step:last-child { border-right: 1px solid var(--line); }
+    .flow-step::after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 0;
+      height: 2px;
+      background: var(--cyan);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .35s var(--ease);
+    }
+    .flow-step.is-active { background: #11181d; border-left-color: rgba(105, 219, 255, .34); }
+    .flow-step.is-active::after { transform: scaleX(1); }
+    .flow-index { color: var(--muted); font: 600 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .flow-step h2 { margin: 32px 0 8px; font-size: 23px; line-height: 1.1; }
+    .flow-step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .outcome-layout { display: grid; grid-template-columns: .82fr 1.18fr; gap: 74px; align-items: start; }
+    .outcome-list { border-top: 1px solid var(--line-bright); }
+    .outcome {
+      display: grid;
+      grid-template-columns: 54px 1fr auto;
+      gap: 20px;
+      align-items: center;
+      padding: 27px 0;
+      border-bottom: 1px solid var(--line);
+      transition: padding .22s var(--ease), border-color .22s ease, background .22s ease;
+    }
+    .outcome-icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-bright);
+      border-radius: 6px;
+      font-size: 20px;
+      background: rgba(255, 255, 255, .015);
+      transition: transform .22s var(--ease), background .22s ease;
+    }
+    .outcome h3 { margin: 0 0 4px; font-size: 19px; }
+    .outcome p { margin: 0; color: var(--muted); font-size: 14px; }
+    .status {
+      padding: 6px 9px;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      font: 700 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+      text-transform: uppercase;
+    }
+    .approved { color: var(--mint); }
+    .approval { color: var(--amber); }
+    .blocked { color: var(--coral); }
+
+    .product-band { padding: 112px 0; background: #0b0f12; border-top: 1px solid var(--line); }
+    .proof-head {
+      display: grid;
+      grid-template-columns: minmax(0, 760px) 1fr;
+      align-items: center;
+      gap: 60px;
+    }
+    .proof-head .eyebrow i {
+      font-size: 15px;
+      line-height: 1;
+    }
+    .proof-copy { grid-column: 1; grid-row: 1; }
+    .proof-stellar-logo {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: start;
+      align-self: start;
+      width: 220px;
+      height: auto;
+      margin: 24px 0 0 clamp(28px, 3vw, 54px);
+    }
+    .product-stage {
+      position: relative;
+      border: 1px solid var(--line-bright);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #080c10;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 32px 90px rgba(0, 0, 0, .4);
+      transition: border-color .3s ease, box-shadow .3s ease, transform .3s var(--ease);
+    }
+    .product-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, .03);
+      border-radius: inherit;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset;
+    }
+    .product-stage img {
+      width: 100%;
+      aspect-ratio: 2.2 / 1;
+      object-fit: cover;
+      object-position: top center;
+      transition: transform .65s var(--ease), filter .35s ease;
+    }
+    .product-stage-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      background: #11171c;
+      font: 600 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .window-dots { display: flex; gap: 6px; }
+    .window-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-bright); }
+    .window-dots i:nth-child(1) { background: var(--coral); }
+    .window-dots i:nth-child(2) { background: var(--amber); }
+    .window-dots i:nth-child(3) { background: var(--mint); }
+    .product-caption {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      margin-top: 26px;
+    }
+    .product-caption p { margin: 0; max-width: 720px; color: var(--muted); }
+    .product-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .button-compact {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      min-height: 38px;
+      padding: 0 14px;
+      gap: 8px;
+      border-radius: 10px;
+      font-size: 13px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 8px 20px rgba(7,14,25,.3);
+      transition: transform .18s var(--ease), box-shadow .22s ease, filter .22s ease, background .22s ease, border-color .22s ease, color .22s ease;
+    }
+    .button-compact i { font-size: 15px; }
+    .button-compact::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,0) 45%);
+      opacity: .55;
+    }
+    .button-compact::after {
+      content: "";
+      position: absolute;
+      inset: -30% -10%;
+      z-index: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,.24) 50%, transparent 80%);
+      transform: translateX(-130%);
+      transition: transform .65s var(--ease);
+    }
+    .button-compact > * { position: relative; z-index: 1; }
+    .button-compact:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(185,231,255,.28), 0 14px 30px rgba(8,18,31,.44), 0 0 26px rgba(105,219,255,.24);
+    }
+    .button-compact:hover::after { transform: translateX(130%); }
+    .button-compact:active { transform: translateY(0); }
+    .product-actions .button-primary {
+      background: linear-gradient(135deg, var(--cyan), #8bdcff);
+      box-shadow: 0 0 0 1px rgba(198,238,255,.3), 0 12px 28px rgba(105,219,255,.22), 0 0 24px rgba(105,219,255,.18);
+    }
+    .product-actions .button-primary:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 0 0 1px rgba(213,242,255,.45), 0 14px 32px rgba(105,219,255,.3), 0 0 30px rgba(105,219,255,.3);
+    }
+    .product-actions .button-secondary {
+      border-color: #36566b;
+      color: #e1f3fb;
+      background: linear-gradient(180deg, rgba(17,30,38,.84), rgba(10,20,26,.8));
+    }
+    .product-actions .button-secondary:hover {
+      border-color: #73b5d2;
+      color: white;
+      background: linear-gradient(180deg, rgba(24,43,53,.92), rgba(14,29,37,.9));
+    }
+
+    .architecture { display: grid; grid-template-columns: 1fr 1.4fr; gap: 70px; align-items: start; }
+    .arch-rail { border-top: 1px solid var(--line-bright); }
+    .arch-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 44px 150px 1fr;
+      gap: 18px;
+      align-items: start;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line);
+      transition: padding .22s var(--ease), background .22s ease, border-color .22s ease;
+    }
+    .arch-row i { color: var(--cyan); font-size: 20px; }
+    .arch-row strong { font-size: 15px; }
+    .arch-row span { color: var(--muted); font-size: 14px; }
+    .arch-note {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border-left: 2px solid var(--mint);
+      color: #c8d2d7;
+      background: #10161a;
+      font: 600 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .surface-grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line-bright); }
+    .surface-item {
+      position: relative;
+      padding: 30px 28px 34px 0;
+      border-bottom: 1px solid var(--line);
+      transition: background .22s ease, padding .22s var(--ease), border-color .22s ease;
+    }
+    .surface-item:nth-child(odd) { padding-right: 40px; border-right: 1px solid var(--line); }
+    .surface-item:nth-child(even) { padding-left: 40px; }
+    .surface-item h3 { margin: 0 0 8px; font-size: 24px; }
+    .surface-item p { margin: 0; color: var(--muted); }
+    .surface-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; color: #d8e8ef; font-weight: 700; font-size: 14px; }
+    .surface-link i { transition: transform .18s var(--ease); }
+    .surface-link:hover, .surface-link:focus-visible { color: var(--cyan); }
+    .surface-link:hover i, .surface-link:focus-visible i { transform: translateX(3px); }
+    .surface-link:focus-visible { outline: 2px solid rgba(105, 219, 255, .35); outline-offset: 4px; border-radius: 2px; }
+
+    .boundary { padding: 90px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: linear-gradient(90deg, #0e1519, #10191e 58%, #0e1519); }
+    .boundary-inner { display: grid; grid-template-columns: 1.35fr .65fr; gap: 80px; align-items: center; }
+    .boundary h2 { margin: 0; max-width: 850px; font-size: 84px; line-height: .98; font-weight: 680; text-wrap: balance; }
+    .boundary h2 span { color: var(--coral); }
+    .boundary-aside { padding-left: 24px; border-left: 1px solid var(--line-bright); }
+    .boundary-aside p { margin: 0; color: var(--muted); }
+    .boundary-aside strong { display: block; margin-bottom: 10px; color: var(--mint); font: 700 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; }
+
+    .cta { padding: 118px 0; }
+    .cta-inner { display: flex; align-items: end; justify-content: space-between; gap: 44px; }
+    .cta h2 { max-width: 780px; margin: 0; font-size: 78px; line-height: 1; }
+    .cta-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+
+    .footer { padding: 30px 0; border-top: 1px solid var(--line); color: var(--muted); }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 30px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 22px; }
+    .footer a:hover, .footer a:focus-visible { color: white; }
+    .footer a:focus-visible { outline: 2px solid rgba(105, 219, 255, .32); outline-offset: 4px; border-radius: 2px; }
+
+    .reveal { opacity: 0; transform: translateY(22px); filter: blur(4px); transition: opacity .65s var(--ease), transform .65s var(--ease), filter .65s ease; }
+    .reveal.is-visible { opacity: 1; transform: none; filter: none; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .outcome:hover { padding-left: 10px; border-color: var(--line-bright); background: rgba(255, 255, 255, .012); }
+      .outcome:hover .outcome-icon { transform: translateY(-2px); background: rgba(255, 255, 255, .035); }
+      .product-stage:hover { border-color: #536873; box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 38px 110px rgba(0, 0, 0, .48); transform: translateY(-3px); }
+      .product-stage:hover img { transform: scale(1.012); filter: saturate(1.04); }
+      .arch-row:hover { padding-left: 10px; border-color: var(--line-bright); background: rgba(255, 255, 255, .012); }
+      .surface-item:hover { border-color: var(--line-bright); background: rgba(255, 255, 255, .012); }
+      .surface-item:nth-child(odd):hover { padding-left: 12px; padding-right: 28px; }
+      .surface-item:nth-child(even):hover { padding-left: 52px; }
+    }
+
+    @media (max-width: 1120px) {
+      .nav-links {
+        position: absolute;
+        top: calc(100% + 1px);
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        margin-left: 0;
+        padding: 8px;
+        border: 1px solid var(--line-bright);
+        border-radius: 6px;
+        background: var(--bg);
+        box-shadow: var(--shadow);
       }
-      .interactive-nav{
-        -webkit-backdrop-filter:none;
-        backdrop-filter:none;
+      .nav-links.is-open { display: flex; }
+      .nav-links a { height: auto; padding: 13px 12px; }
+      .nav-links a::after { display: none; }
+      .nav-mobile-demo { display: inline-flex !important; color: var(--cyan) !important; }
+      .nav-action .button { display: none; }
+      .menu-button { display: grid; place-items: center; }
+    }
+
+    @media (max-width: 980px) {
+      :root { --nav-h: 64px; }
+      .nav { height: 100%; margin-top: 0; padding: 0; }
+      .section-title { font-size: 52px; }
+      .hero { min-height: 780px; }
+      h1 { font-size: 100px; }
+      .hero-title-dsl { font-size: 24px; }
+      .hero-subtitle { font-size: 27px; }
+      .hero-media img { object-position: 60% 50%; }
+      .hero-media::after { background: linear-gradient(90deg, rgba(8,11,14,.98), rgba(8,11,14,.82) 55%, rgba(8,11,14,.56)), linear-gradient(0deg, rgba(8,11,14,.92), transparent 48%); }
+      .flow-grid { grid-template-columns: repeat(2, 1fr); }
+      .flow-step:nth-child(2) { border-right: 1px solid var(--line); }
+      .outcome-layout, .architecture, .boundary-inner { grid-template-columns: 1fr; gap: 42px; }
+      .boundary-aside { max-width: 620px; }
+      .boundary h2 { font-size: 64px; }
+      .product-stage img { aspect-ratio: 1.72 / 1; }
+      .proof-head { grid-template-columns: minmax(0, 1fr) auto; gap: 32px; }
+      .proof-stellar-logo { width: 160px; margin-left: 0; }
+      .cta-inner { align-items: start; flex-direction: column; }
+      .cta h2 { font-size: 60px; }
+      .cta-actions { justify-content: flex-start; }
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: min(calc(100% - 28px), var(--max)); }
+      .section, .product-band { padding: 78px 0; }
+      .hero {
+        min-height: min(620px, calc(100svh - 68px));
+        align-items: flex-start;
       }
-      .navbar-nav .nav-link{
-        display:inline-flex;
-        align-items:center;
-        gap:.45rem;
-        width:max-content;
-        padding-left:0;
-        padding-right:0;
-      }
-      .nav-link.is-active::after{
-        left:0;
-        right:0;
-        width:auto;
-      }
-      .arch-shell{padding:.82rem}
-      .arch-layer{padding:.9rem .86rem}
-      .arch-layer-top{align-items:flex-start;flex-direction:column}
-      .arch-route{padding:.68rem .72rem}
-      .code-actions{grid-template-columns:1fr}
-      .footer-links{
-        width:100%;
-        display:grid;
-        grid-template-columns:repeat(3, minmax(0,1fr));
-        gap:.9rem .8rem;
-        justify-items:center;
-      }
-      .footer-links a{
-        justify-content:center;
-        text-align:center;
-      }
-      .footer-x-link{display:none !important}
+      .hero-media img { object-position: 68% 44%; }
+      .hero-media::after { background: linear-gradient(0deg, rgba(8,11,14,.99) 12%, rgba(8,11,14,.76) 76%, rgba(8,11,14,.42)); }
+      .hero-content { padding: clamp(140px, 20svh, 180px) 0 36px; }
+      .section-title { font-size: 42px; }
+      h1 { display: grid; gap: 10px; font-size: 64px; }
+      .hero-title-dsl { justify-self: start; margin-top: 0; font-size: 18px; }
+      .hero-system-row { display: block; margin-top: 26px; padding-top: 18px; }
+      .hero-subtitle { margin-top: 18px; font-size: 21px; }
+      .flow-grid { grid-template-columns: 1fr; }
+      .flow-step { min-height: 146px; border-right: 1px solid var(--line); }
+      .flow-step h2 { margin-top: 24px; }
+      .outcome { grid-template-columns: 46px 1fr; }
+      .status { grid-column: 2; justify-self: start; }
+      .product-stage img { aspect-ratio: 1.08 / 1; }
+      .proof-head { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+      .proof-stellar-logo { order: -1; width: 132px; margin-top: 0; }
+      .product-caption { grid-template-columns: 1fr; }
+      .product-actions { justify-content: flex-start; }
+      .arch-row { grid-template-columns: 34px 1fr; }
+      .arch-row span { grid-column: 2; }
+      .surface-grid { grid-template-columns: 1fr; }
+      .surface-item, .surface-item:nth-child(odd), .surface-item:nth-child(even) { padding: 26px 0; border-right: 0; }
+      .boundary { padding: 72px 0; }
+      .boundary h2 { font-size: 48px; }
+      .boundary-aside { padding-left: 18px; }
+      .cta { padding: 82px 0; }
+      .cta h2 { font-size: 46px; }
+      .cta-actions { width: 100%; }
+      .cta-actions .button { flex: 1 1 100%; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 380px) {
+      h1 { font-size: 50px; }
+      .section-title { font-size: 38px; }
+      .boundary h2 { font-size: 43px; }
+      .cta h2 { font-size: 42px; }
+    }
+
+    @media (min-width: 981px) and (max-width: 1180px) {
+      h1 { font-size: 106px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .hero-media img { transform: none; }
+      .reveal { opacity: 1; transform: none; filter: none; }
+      .hero-title-main { opacity: 1; clip-path: none; filter: none; animation: none; }
+      .hero-title-main::after { display: none; }
+      .hero-title-dsl, .hero-subtitle { opacity: 1; transform: none; animation: none; }
+      .flow-band { opacity: 1; clip-path: none; filter: none; animation: none; }
     }
   </style>
 </head>
 
 <body>
-  <div class="page-progress" aria-hidden="true"><i id="scrollProgressFill"></i></div>
-  <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg navbar-dark glass soft sticky-top interactive-nav">
-    <div class="container py-2">
-      <!-- Brand -->
-      <a class="navbar-brand d-flex align-items-center brand" href="/">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="shell nav">
+      <a class="brand" href="index.html" aria-label="StellarZeroLab home">
         <svg class="brand-logo" viewBox="0 0 28 28" aria-hidden="true">
           <defs>
-            <radialGradient id="core" cx="50%" cy="50%" r="55%">
+            <radialGradient id="brandCore" cx="50%" cy="50%" r="55%">
               <stop offset="0%" stop-color="#dff7ff"/>
               <stop offset="45%" stop-color="#8fe6ff"/>
               <stop offset="100%" stop-color="rgba(143,230,255,0)"/>
             </radialGradient>
-            <linearGradient id="arm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
-              <stop offset="0%"   stop-color="rgba(157,216,255,0)"/>
-              <stop offset="30%"  stop-color="#7dd3fc"/>
-              <stop offset="80%"  stop-color="rgba(167,139,250,.9)"/>
+            <linearGradient id="brandArm" x1="0" y1="0" x2="28" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="rgba(157,216,255,0)"/>
+              <stop offset="30%" stop-color="#7dd3fc"/>
+              <stop offset="80%" stop-color="rgba(167,139,250,.9)"/>
               <stop offset="100%" stop-color="rgba(167,139,250,0)"/>
             </linearGradient>
-            <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <filter id="brandGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.7" result="brandBlur"/>
+              <feMerge><feMergeNode in="brandBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
-            <radialGradient id="fade" cx="50%" cy="50%" r="56%">
+            <radialGradient id="brandFade" cx="50%" cy="50%" r="56%">
               <stop offset="60%" stop-color="white"/>
               <stop offset="100%" stop-color="black"/>
             </radialGradient>
-            <mask id="mFade"><rect width="28" height="28" fill="url(#fade)"/></mask>
+            <mask id="brandFadeMask"><rect width="28" height="28" fill="url(#brandFade)"/></mask>
           </defs>
-          <circle cx="14" cy="14" r="7.4" fill="url(#core)" opacity=".55"/>
-          <g class="spin" filter="url(#glow)" mask="url(#mFade)" stroke-linecap="round" fill="none" stroke="url(#arm)">
-            <g stroke-width="1.4" opacity=".9">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(240 14 14)" stroke-width="1.0" opacity=".6">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
-            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7">
-              <path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23" />
-            </g>
+          <circle cx="14" cy="14" r="7.4" fill="url(#brandCore)" opacity=".55"/>
+          <g class="brand-spin" filter="url(#brandGlow)" mask="url(#brandFadeMask)" stroke-linecap="round" fill="none" stroke="url(#brandArm)">
+            <g stroke-width="1.4" opacity=".9"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(60 14 14)" stroke-width="1.3" opacity=".85"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(120 14 14)" stroke-width="1.2" opacity=".75"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(180 14 14)" stroke-width="1.1" opacity=".7"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(240 14 14)" stroke-width="1" opacity=".6"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
+            <g transform="rotate(300 14 14)" stroke-width="1.2" opacity=".7"><path d="M14,14 C16,12 18.6,11.7 20.5,12.8 C22.8,14.1 23.6,16.7 22.8,18.9 C21.8,21.8 18.7,23.5 15.6,23"/></g>
             <g stroke-width=".9" opacity=".45">
-              <path d="M6.5,10.5 C10,9 14,9 18,10.4" />
-              <path d="M7.8,18.8 C10.2,20 13.2,20.5 16.2,20.1" />
-              <path d="M20.8,9.8 C22,11 22.9,12.7 23.2,14.6" />
+              <path d="M6.5,10.5 C10,9 14,9 18,10.4"/>
+              <path d="M7.8,18.8 C10.2,20 13.2,20.5 16.2,20.1"/>
+              <path d="M20.8,9.8 C22,11 22.9,12.7 23.2,14.6"/>
             </g>
           </g>
-          <style>
-            .spin{transform-origin:14px 14px;animation:spin 18s linear infinite}
-            @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-            @media (prefers-reduced-motion: reduce){.spin{animation:none}}
-          </style>
         </svg>
         <strong>StellarZeroLab</strong>
       </a>
 
-      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <nav class="nav-links" id="navLinks" aria-label="Primary navigation">
+        <a href="#system">Features</a>
+        <a href="#interfaces">Surfaces</a>
+        <a href="#proof">Tech</a>
+        <a href="about.html"><i class="bi bi-stars" aria-hidden="true"></i> About</a>
+        <a href="roadmap.html"><i class="bi bi-signpost-2" aria-hidden="true"></i> Roadmap</a>
+        <a href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a>
+        <a class="nav-mobile-demo" href="stellar-cli.html"><i class="bi bi-terminal" aria-hidden="true"></i> Open Demo</a>
+      </nav>
 
-      <div id="nav" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-          <li class="nav-item"><a class="nav-link section-link" href="#features">Features</a></li>
-          <li class="nav-item"><a class="nav-link section-link" href="#demo">Surfaces</a></li>
-          <li class="nav-item"><a class="nav-link section-link" href="#tech">Tech</a></li>
-          <li class="nav-item"><a class="nav-link" href="/about"><i class="bi bi-stars"></i> About</a></li>
-          <li class="nav-item"><a class="nav-link" href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a></li>
-          <li class="nav-item"><a class="nav-link" href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></li>
-          <li class="nav-item dropdown">
-            <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-terminal"></i> Open Demo
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end nav-demo-menu">
-              <li><a class="dropdown-item" href="/webui"><i class="bi bi-terminal"></i> Open WebUI</a></li>
-              <li><a class="dropdown-item" href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Open Stellar Demo</a></li>
-            </ul>
-          </li>
-        </ul>
+      <div class="nav-action">
+        <a class="button button-primary nav-cta" href="stellar-cli.html">
+          <span class="nav-cta-icon"><i class="bi bi-terminal" aria-hidden="true"></i></span>
+          <span>Open Demo</span>
+        </a>
+        <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks">
+          <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- HERO -->
-<header class="hero position-relative">
-  <div class="nebula"></div>
-  <div class="stars"></div>
-  <div class="container position-relative" style="z-index:2">
-    <div class="row align-items-center" style="min-height:65vh">
-      <div class="col-lg-7 py-5">
-        <h1 class="display-5 fw-bold mb-3 reveal">
-          <span class="text-info">NeuroChain DSL</span>
-          <i class="bi bi-terminal text-warning mx-2 icon-inline" aria-hidden="true"></i>
-          programming language with AI directly into code
-        </h1>
-        <p class="lead reveal">
-          Simplicity is beautiful — NeuroChain DSL makes it real. AI operations are part of the code, not hidden layers.
-          Scripts and the CLI are the primary way to work, while the demos are light public test surfaces.
-          Run ONNX models on the CPU and keep full control.
-        </p>
-        <div class="d-flex flex-wrap gap-2 mt-3 hero-cta reveal">
-          <a href="/webui" class="btn btn-primary btn-lg"><i class="bi bi-play-circle"></i> Try the WebUI</a>
-          <a href="#demo" class="btn btn-outline-light btn-lg"><i class="bi bi-lightning"></i> See the surfaces</a>
-        </div>
+  <main id="main">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-media" aria-hidden="true">
+        <img src="hero-guardrail-system.png" alt="" width="1792" height="1024">
       </div>
-
-      <div class="col-lg-5 py-5">
-        <div class="glass soft p-3 p-md-4 reveal code-card interactive-card">
-          <div class="code-card-head">
-            <span class="code-dots"><i></i><i></i><i></i></span>
-            <span class="code-label" aria-hidden="true"></span>
-          </div>
-          <pre class="code p-3 mb-3"><code># Sentiment
-AI: "models/distilbert-sst2/model.onnx"
-set mood from AI: "This product is great!"
-if mood == "Positive":
-    neuro "👍"
-</code></pre>
-          <div class="code-actions">
-            <a href="/webui" class="btn btn-outline-light"><i class="bi bi-arrow-right"></i> Run example</a>
-            <button class="btn btn-outline-light" id="copySnippet"><i class="bi bi-clipboard"></i> Copy</button>
+      <div class="shell hero-content">
+        <div class="hero-copy">
+          <h1 id="heroTitle" aria-label="NeuroChain DSL">
+            <span class="hero-title-main" aria-hidden="true">NeuroChain</span>
+            <span class="hero-title-dsl" aria-hidden="true">DSL</span>
+          </h1>
+          <div class="hero-system-row">
+            <p class="hero-subtitle"><strong>Guardrails before execution.</strong> Turn AI and automation requests into typed Stellar actions, prove private-policy decisions, and verify them on-chain.</p>
           </div>
         </div>
       </div>
+    </section>
 
-    </div>
-  </div>
-</header>
+    <section class="flow-band" id="system" aria-label="NeuroChain workflow">
+      <div class="shell flow-grid" id="flowGrid">
+        <article class="flow-step is-active" data-step="0">
+          <span class="flow-index">01 / Request</span>
+          <h2>Plan</h2>
+          <p>Convert intent into a canonical, typed Stellar ActionPlan.</p>
+        </article>
+        <article class="flow-step" data-step="1">
+          <span class="flow-index">02 / Policy</span>
+          <h2>Evaluate</h2>
+          <p>Apply deterministic allowlist, contract, amount, and approval rules.</p>
+        </article>
+        <article class="flow-step" data-step="2">
+          <span class="flow-index">03 / Privacy</span>
+          <h2>Prove</h2>
+          <p>Create a zero-knowledge receipt without revealing the owner policy.</p>
+        </article>
+        <article class="flow-step" data-step="3">
+          <span class="flow-index">04 / Stellar</span>
+          <h2>Verify</h2>
+          <p>Verify the known evaluator, decision, and audit binding on Soroban.</p>
+        </article>
+      </div>
+    </section>
 
+    <section class="section">
+      <div class="shell outcome-layout">
+        <div class="section-head reveal">
+          <h2 class="section-title">Automation can move fast. Authority should stay exact.</h2>
+          <p class="section-copy">NeuroChain gives AI agents, bots, scripts, and backend jobs one deterministic boundary before a Stellar action can move forward.</p>
+        </div>
 
-  <!-- FEATURES -->
-<section id="features" class="py-5">
-  <div class="container">
-    <div class="text-center mb-4 reveal">
-      <h2 class="fw-bold">Why <span class="text-info">NeuroChain DSL?</span></h2>
-      <p class="lead">
-        NeuroChain DSL unifies AI and logic into one language so you can build solutions smartly and simply.
-      </p>
-    </div>
-    <div class="row g-4 feature-grid" data-stagger>
-      
-      <!-- ONNX / CPU -->
-      <div class="col-md-6 col-lg-3 reveal">
-        <div class="glass p-4 feature feature-card interactive-card h-100">
-          <div class="fs-3 mb-2"><i class="bi bi-cpu text-info"></i></div>
-          <h5>ONNX / CPU</h5>
-          <p class="lead">SST2, Toxic, FactCheck, Intent, MacroIntent and Intent Stellar models run on the CPU without heavy infrastructure.</p>
+        <div class="outcome-list reveal" aria-label="Guardrail outcomes">
+          <article class="outcome">
+            <span class="outcome-icon approved"><i class="bi bi-check2"></i></span>
+            <div><h3>Approved</h3><p>The typed plan satisfies the committed policy.</p></div>
+            <span class="status approved">exit 0</span>
+          </article>
+          <article class="outcome">
+            <span class="outcome-icon approval"><i class="bi bi-person-check"></i></span>
+            <div><h3>Requires approval</h3><p>The policy allows review, but execution remains stopped.</p></div>
+            <span class="status approval">no submit</span>
+          </article>
+          <article class="outcome">
+            <span class="outcome-icon blocked"><i class="bi bi-slash-circle"></i></span>
+            <div><h3>Blocked</h3><p>Allowlist, contract-policy, or intent-safety rules reject the plan.</p></div>
+            <span class="status blocked">exit 3 / 4 / 5</span>
+          </article>
         </div>
       </div>
+    </section>
 
-      <!-- Local & controlled -->
-      <div class="col-md-6 col-lg-3 reveal">
-        <div class="glass p-4 feature feature-card interactive-card h-100">
-          <div class="fs-3 mb-2"><i class="bi bi-shield-lock text-success"></i></div>
-          <h5>Local & Offline</h5>
-          <p class="lead">No external cloud layers and smaller attack surface, more control.</p>
-        </div>
-      </div>
-
-      <!-- AI in code -->
-<div class="col-md-6 col-lg-3 reveal">
-  <div class="glass p-4 feature feature-card interactive-card h-100">
-    <div class="fs-3 mb-2"><i class="bi bi-terminal text-warning"></i></div>
-    <h5>AI in the Code</h5>
-    <p class="lead mb-2">
-      AI built-ins are part of the syntax, no hidden layers.
-    </p>
-    <p class="small mb-0">
-      <code># Intent</code><br>
-      <code>set cmd from AI: "Please stop."</code><br>
-      <code>if cmd == "StopCommand": neuro "Stopping process"</code>
-    </p>
-  </div>
-</div>
-
-
-      <!-- Lightweight -->
-      <div class="col-md-6 col-lg-3 reveal">
-        <div class="glass p-4 feature feature-card interactive-card h-100">
-          <div class="fs-3 mb-2"><i class="bi bi-box-seam text-primary"></i></div>
-          <h5>Lightweight</h5>
-          <p class="lead">No heavy environments or unnecessary dependencies, just code and run.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-  <!-- DEMO (WebUI: text left, image right) -->
-<section id="demo" class="py-5">
-  <div class="container">
-    <div class="row align-items-center g-4" data-stagger>
-
-      <!-- WebUI text -->
-      <div class="col-lg-6 reveal">
-        <div class="glass p-4 soft h-100 demo-card interactive-card">
-          <h4 class="mb-2"><i class="bi bi-cpu"></i> WebUI Demo</h4>
-          <p class="lead mb-3">
-            Enter NeuroChain DSL commands and run them from your browser. Pick one or many models and see output and logs instantly.
-          </p>
-          <ul class="list-unstyled small mb-0">
-            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Model picker: SST2 / Toxic / FactCheck / Intent / MacroIntent</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Multi-model runs (one request per selected model)</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Drag & Drop for <code>.nc</code> files</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Local API Base URL support (connect to your own server)</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Download output & keyboard shortcuts</li>
-          </ul>
-          <div class="mt-3">
-            <a href="/webui" class="btn btn-primary">
-              <i class="bi bi-cursor"></i> Open WebUI
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- WebUI image -->
-      <div class="col-lg-6 reveal">
-        <div class="demo-preview-wrap">
-          <a href="/webui" class="promo-link glass soft" aria-label="WebUI — NeuroChain’s browser-based interface">
-            <img src="webui-promo.png" alt="NeuroChain WebUI preview"
-                 onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
-                 `<div class=&quot;promo-fallback&quot;>
-                    <div>
-                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-cpu&quot;></i></div>
-                      <p class=&quot;mt-2 mb-0&quot;>WebUI — click to open</p>
-                      <div class=&quot;text-muted small&quot;>Add an image file named <code>webui-promo.png</code></div>
-                    </div>
-                  </div>`)">
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-  <!-- STELLAR DEMO -->
-  <section id="stellar" class="py-4">
-    <div class="container">
-      <div class="row align-items-center g-4" data-stagger>
-        <!-- Stellar text -->
-        <div class="col-lg-6 reveal">
-          <div class="glass p-4 soft h-100 demo-card interactive-card">
-            <h4 class="mb-2"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</h4>
-            <p class="lead mb-3">NeuroChain parses Stellar/Soroban intents into typed plans with explicit guardrails before submit.</p>
-            <ul class="list-unstyled small mb-0">
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Model picker: Intent Stellar</li>
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Dedicated endpoint: <code>POST /api/stellar/intent-plan</code></li>
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Guardrails: allowlist / policy / intent safety (exit 3 / 4 / 5)</li>
-              <li class="mb-2"><i class="bi bi-check2-circle text-success"></i> Testnet-first workflow for reviewer-friendly verification</li>
-            </ul>
-            <div class="mt-3 d-flex flex-wrap gap-2">
-              <a href="/stellar-cli" class="btn btn-primary"><i class="bi bi-cursor"></i> Open Stellar Demo</a>
-              <a href="/help" class="btn btn-outline-light"><i class="bi bi-book"></i> Help &amp; Docs</a>
-            </div>
+    <section class="product-band" id="proof">
+      <div class="shell">
+        <div class="section-head proof-head reveal">
+          <img class="proof-stellar-logo" src="stellar-logo-white.png" alt="Stellar">
+          <div class="proof-copy">
+            <p class="eyebrow"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>Running on testnet</span></p>
+            <h2 class="section-title">Inspect the full proof path in the browser.</h2>
+            <p class="section-copy">The hosted CLI exposes planning, all three decision states, read-only Soroban verification, and a separate explicit testnet attestation action.</p>
           </div>
         </div>
 
-        <!-- Stellar image -->
-        <div class="col-lg-6 reveal">
-          <a href="/stellar-cli" class="promo-link glass soft" aria-label="Stellar demo — NeuroChain intent-plan guardrails on testnet">
-            <img src="stellar-promo.png" alt="NeuroChain Stellar demo"
-                 onerror="this.style.display='none'; this.closest('a').insertAdjacentHTML('beforeend',
-                 `<div class=&quot;promo-fallback&quot;>
-                    <div>
-                      <div class=&quot;display-6&quot;><i class=&quot;bi bi-rocket-takeoff&quot;></i></div>
-                      <p class=&quot;mt-2 mb-0&quot;>Stellar demo — click to open</p>
-                      <div class=&quot;text-muted small&quot;>Add an image file named <code>stellar-promo.png</code></div>
-                    </div>
-                  </div>`)">
-          </a>
+        <div class="product-stage reveal">
+          <div class="product-stage-bar">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span>stellarzerolab.com / stellar-cli</span>
+            <span>testnet</span>
+          </div>
+          <img src="stellar-promo.png" alt="NeuroChain Stellar CLI showing its REPL and workspace" width="1245" height="567" loading="lazy">
         </div>
-      </div>
-    </div>
-  </section>
-
-<!-- TECH -->
-<section id="tech" class="py-5">
-  <div class="container">
-    <div class="row g-4" data-stagger>
-      
-      <!-- Architecture -->
-      <div class="col-lg-6 reveal">
-        <div class="glass p-4 h-100 interactive-card arch-card">
-          <h4 class="mb-2"><i class="bi bi-diagram-3"></i> Architecture</h4>
-          <p class="arch-intro mb-0">
-            One local-first engine, multiple runtime surfaces, and a guarded Stellar intent layer presented as one coherent stack.
-          </p>
-          <div class="arch-shell">
-            <div class="arch-layer arch-engine interactive-card">
-              <div class="arch-layer-top">
-                <span class="arch-kicker">Engine</span>
-                <span class="arch-mini">Local-first</span>
-              </div>
-              <h5>NeuroChain Core</h5>
-              <p class="arch-flow"><strong>Lexer -> Parser -> Interpreter -> Intent/Template -> Inference</strong></p>
-              <div class="arch-pills">
-                <span class="arch-pill">tract-onnx</span>
-                <span class="arch-pill">CPU runtime</span>
-                <span class="arch-pill">No external cloud layers</span>
-              </div>
-            </div>
-
-            <div class="arch-layer arch-runtime interactive-card">
-              <div class="arch-layer-top">
-                <span class="arch-kicker">Runtime Surfaces</span>
-                <span class="arch-mini">Shared path</span>
-              </div>
-              <h5>One runtime, many entry points</h5>
-              <div class="arch-pills">
-                <span class="arch-pill">REPL</span>
-                <span class="arch-pill">.nc scripts</span>
-                <span class="arch-pill">CLI</span>
-                <span class="arch-pill">API</span>
-              </div>
-            </div>
-
-            <div class="arch-layer arch-api interactive-card">
-              <div class="arch-layer-top">
-                <span class="arch-kicker">API</span>
-                <span class="arch-mini">Rust / Axum</span>
-              </div>
-              <h5>Live endpoints</h5>
-              <div class="arch-routes">
-                <div class="arch-route interactive-card">
-                  <code>POST /api/analyze</code>
-                  <span>DSL analysis and local inference.</span>
-                </div>
-                <div class="arch-route interactive-card">
-                  <code>POST /api/stellar/intent-plan</code>
-                  <span>Typed Stellar planning surface.</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="arch-layer arch-stellar interactive-card">
-              <div class="arch-layer-top">
-                <span class="arch-kicker">Stellar Layer</span>
-                <span class="arch-mini">Guarded by default</span>
-              </div>
-              <h5>IntentStellar planning</h5>
-              <p class="arch-copy">
-                Typed plans flow through <strong>allowlist</strong>, <strong>contract policy</strong>, and <strong>intent safety</strong> before anything deeper happens.
-              </p>
-            </div>
+        <div class="product-caption reveal">
+          <p>Generate a wallet, run the ZK guardrail demo, verify the receipt on Stellar, and inspect the resulting testnet evidence without submitting the underlying ActionPlan.</p>
+          <div class="product-actions">
+            <a class="button button-primary button-compact" href="stellar-cli.html"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span>Open live CLI</span></a>
+            <a class="button button-secondary button-compact" href="help.html"><i class="bi bi-book" aria-hidden="true"></i><span>Help &amp; Docs</span></a>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Setup -->
-      <div class="col-lg-6 mt-lg-5 reveal">
-        <div class="d-flex flex-column gap-4 h-100 tech-side-stack">
-          <div class="glass p-4 h-90 interactive-card setup-card">
-            <h4 class="mb-2"><i class="bi bi-tools"></i> Setup</h4>
-            <ol class="mb-0">
-              <li>
-                <strong>Try it online:</strong> no install.
-                <a href="/webui" class="setup-link-icon" aria-label="Open WebUI" title="Open WebUI">
-                  <i class="bi bi-terminal"></i>
-                </a>
-                <a href="/stellar-cli" class="setup-link-icon" aria-label="Open Stellar Demo" title="Open Stellar Demo">
-                  <i class="bi bi-rocket-takeoff"></i>
-                </a>
-              </li>
-              <li>
-                <strong>Locally:</strong> clone from GitHub.
-                <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener" class="setup-link-icon" aria-label="Open GitHub repository" title="Open GitHub repository">
-                  <i class="bi bi-github"></i>
-                </a>
-              </li>
-              <li><strong>Server:</strong> run an Axum-compatible backend if needed; WebUI and Stellar Demo can point to it.</li>
-            </ol>
-          </div>
+    <section class="section">
+      <div class="shell architecture">
+        <div class="section-head reveal">
+          <h2 class="section-title">Private where it matters. Public where it must verify.</h2>
+          <p class="section-copy">The policy stays private. The proof publishes only the bindings needed to verify the evaluator and its decision.</p>
+          <div class="arch-note">payment != proof != approval != execution</div>
+        </div>
 
-          <div class="glass p-4 interactive-card guarantee-card">
-            <h4 class="mb-2"><i class="bi bi-shield-check"></i> Execution Guarantees</h4>
-            <p class="guarantee-intro mb-0">
-              Built to stay legible under load: explicit execution flow, safer defaults, and guardrails before anything deeper happens.
-            </p>
-            <ul class="guarantee-list">
-              <li class="guarantee-item interactive-card">
-                <span class="guarantee-icon"><i class="bi bi-cpu"></i></span>
-                <div class="guarantee-copy">
-                  <strong>Inspectable execution</strong>
-                  <span>Parser, interpreter, inference, and policy steps stay visible instead of disappearing into hidden orchestration.</span>
-                </div>
-              </li>
-              <li class="guarantee-item interactive-card">
-                <span class="guarantee-icon"><i class="bi bi-shuffle"></i></span>
-                <div class="guarantee-copy">
-                  <strong>Explicit runtime path</strong>
-                  <span>Scripts, CLI, and API all trace back to the same readable engine behavior.</span>
-                </div>
-              </li>
-              <li class="guarantee-item interactive-card">
-                <span class="guarantee-icon"><i class="bi bi-shield-lock"></i></span>
-                <div class="guarantee-copy">
-                  <strong>Policy-gated execution</strong>
-                  <span>Allowlist, contract policy, and intent safety are checked before any deeper action path.</span>
-                </div>
-              </li>
-              <li class="guarantee-item interactive-card">
-                <span class="guarantee-icon"><i class="bi bi-lock"></i></span>
-                <div class="guarantee-copy">
-                  <strong>Testnet-proven rollout</strong>
-                  <span>Developer flows harden on testnet first, creating a clearer path toward mainnet once behavior and guardrails are stable.</span>
-                </div>
-              </li>
-            </ul>
-          </div>
+        <div class="arch-rail reveal">
+          <div class="arch-row"><i class="bi bi-file-earmark-code"></i><strong>Typed request</strong><span>Canonical ActionPlan hash binds the exact requested Stellar action.</span></div>
+          <div class="arch-row"><i class="bi bi-incognito"></i><strong>Private witness</strong><span>Owner policy, commitment salt, and audit nonce remain off-chain.</span></div>
+          <div class="arch-row"><i class="bi bi-cpu"></i><strong>Known evaluator</strong><span>RISC Zero proves the deterministic NeuroChain guardrail program ran.</span></div>
+          <div class="arch-row"><i class="bi bi-link-45deg"></i><strong>Public journal</strong><span>Image ID, hashes, policy version, decision, exit code, reason, and nullifier are bound together.</span></div>
+          <div class="arch-row"><i class="bi bi-gem"></i><strong>Soroban verifier</strong><span>Stellar verifies the receipt and can reject invalid evidence or replay.</span></div>
         </div>
       </div>
+    </section>
 
-    </div>
-  </div>
-</section>
+    <section class="section" id="interfaces">
+      <div class="shell">
+        <div class="section-head reveal">
+          <h2 class="section-title">Use NeuroChain where automation already lives.</h2>
+          <p class="section-copy">The same deterministic guardrails and private-policy ZK verification across every supported surface.</p>
+        </div>
 
-  <!-- CTA (compact) -->
-<section class="py-4">
-  <div class="container">
-    <div class="glass p-3 p-md-4 text-center soft w-100 w-md-75 w-lg-50 mx-auto reveal interactive-card build-card">
-      <h3 class="fw-bold mb-2 fs-4">Ready to build?</h3>
-      <p class="mb-3">Try the WebUI or add your own script and get moving right away.</p>
-      <div class="d-flex justify-content-center gap-2">
-        <a href="/webui" class="btn btn-primary"><i class="bi bi-rocket-takeoff"></i> Launch WebUI</a>
-        <a href="#features" class="btn btn-outline-light"><i class="bi bi-info-circle"></i> Learn more</a>
+        <div class="surface-grid reveal">
+          <article class="surface-item">
+            <h3>CLI and REPL</h3>
+            <p>Inspect plans, guardrails, ZK status, and Stellar verification from one live developer surface.</p>
+            <a class="surface-link" href="stellar-cli.html">Open Stellar CLI <i class="bi bi-arrow-up-right"></i></a>
+          </article>
+          <article class="surface-item">
+            <h3>MCP and Skills</h3>
+            <p>A no-submit tool contract gives agents a safe Plan, Evaluate, Prove, and Verify workflow with private-policy ZK proofs and read-only Stellar verification.</p>
+            <a class="surface-link" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener">View the repository <i class="bi bi-github"></i></a>
+          </article>
+          <article class="surface-item">
+            <h3>API and scripts</h3>
+            <p>Use the same typed decisions from backend jobs, scheduled automation, and reproducible <code>.nc</code> flows.</p>
+            <a class="surface-link" href="help.html">Read integration docs <i class="bi bi-arrow-right"></i></a>
+          </article>
+          <article class="surface-item">
+            <h3>x402 access</h3>
+            <p>Paid access can sit in front of the service, but payment never bypasses policy or grants submit authority.</p>
+            <a class="surface-link" href="roadmap.html">See the roadmap <i class="bi bi-signpost-2"></i></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="boundary">
+      <div class="shell boundary-inner reveal">
+        <h2>A valid proof is <span>not permission</span> to execute.</h2>
+        <div class="boundary-aside">
+          <strong>No-surprise-submit boundary</strong>
+          <p>Verification confirms evidence. Approval and execution remain separate, explicit operations.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="shell cta-inner reveal">
+        <div>
+          <h2>Run the guardrail flow yourself.</h2>
+        </div>
+        <div class="cta-actions">
+          <a class="button button-primary" href="stellar-cli.html"><i class="bi bi-terminal"></i> Launch the CLI</a>
+          <a class="button button-secondary" href="https://github.com/stellarzerolab/Neurochain-DSL-Stellar" target="_blank" rel="noopener"><i class="bi bi-github"></i> Explore the code</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner">
+      <span>&copy; <span id="year"></span> StellarZeroLab</span>
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="help.html">Docs</a>
+        <a href="mailto:stellarzerolabs@proton.me">Contact</a>
       </div>
     </div>
-  </div>
-</section>
-
-  <!-- FOOTER (full-bleed) -->
-  <footer class="footer footer-bleed py-4 mt-4 border-top border-secondary-subtle interactive-nav">
-    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-      <div class="small text">© <span id="year"></span> StellarZeroLab · NeuroChain DSL</div>
-	      <div class="footer-links small">
-	        <a href="/webui"><i class="bi bi-terminal"></i> WebUI</a>
-	        <a href="/stellar-cli"><i class="bi bi-rocket-takeoff"></i> Stellar Demo</a>
-	        <a href="/about"><i class="bi bi-stars"></i> About</a>
-	        <a href="/roadmap"><i class="bi bi-signpost-2"></i> Roadmap</a>
-	        <a href="https://github.com/stellarzerolab/Neurochain-DSL" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
-		        <a href="mailto:stellarzerolabs@proton.me" aria-label="Email: stellarzerolabs@proton.me"><i class="bi bi-envelope"></i> Contact</a>
-	      </div>
-	    </div>
-	  </footer>
+  </footer>
 
   <script>
+    const header = document.getElementById('siteHeader');
+    const menuButton = document.getElementById('menuButton');
+    const navLinks = document.getElementById('navLinks');
+    const heroImage = document.querySelector('.hero-media img');
+    const flowSteps = Array.from(document.querySelectorAll('.flow-step'));
+    const navSectionLinks = Array.from(navLinks.querySelectorAll('a[href^="#"]'))
+      .map((link) => ({ link, section: document.querySelector(link.getAttribute('href')) }))
+      .filter(({ section }) => section);
+    const orderedNavSections = [...navSectionLinks]
+      .sort((a, b) => a.section.offsetTop - b.section.offsetTop);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     document.getElementById('year').textContent = new Date().getFullYear();
-    const copySnippetBtn = document.getElementById('copySnippet');
-    if (copySnippetBtn) {
-      copySnippetBtn.addEventListener('click', () => {
-        const txt = `# Sentiment\nAI: "models/distilbert-sst2/model.onnx"\nset mood from AI: "This product is great!"\nif mood == "Positive":\n    neuro "👍"`;
-        navigator.clipboard.writeText(txt).then(() => {
-          copySnippetBtn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
-          setTimeout(() => copySnippetBtn.innerHTML = '<i class="bi bi-clipboard"></i> Copy', 1500);
-        });
+
+    let viewportFramePending = false;
+    const updateViewportState = () => {
+      header.classList.toggle('is-scrolled', window.scrollY > 18);
+
+      if (!reducedMotion && heroImage) {
+        heroImage.style.setProperty('--hero-shift', `${Math.min(window.scrollY * .035, 28)}px`);
+      }
+
+      let currentSection = orderedNavSections[0]?.section.id || '';
+      orderedNavSections.forEach(({ section }) => {
+        if (section.getBoundingClientRect().top <= window.innerHeight * .45) currentSection = section.id;
       });
+      navSectionLinks.forEach(({ link, section }) => {
+        const current = section.id === currentSection;
+        link.classList.toggle('is-current', current);
+        if (current) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+      viewportFramePending = false;
+    };
+    const requestViewportUpdate = () => {
+      if (viewportFramePending) return;
+      viewportFramePending = true;
+      window.requestAnimationFrame(updateViewportState);
+    };
+    updateViewportState();
+    window.addEventListener('scroll', requestViewportUpdate, { passive: true });
+    window.addEventListener('resize', requestViewportUpdate);
+
+    const closeMenu = ({ restoreFocus = false } = {}) => {
+      if (!navLinks.classList.contains('is-open')) return;
+      navLinks.classList.remove('is-open');
+      menuButton.setAttribute('aria-expanded', 'false');
+      menuButton.setAttribute('aria-label', 'Open navigation');
+      menuButton.querySelector('i').className = 'bi bi-list';
+      if (restoreFocus) menuButton.focus();
+    };
+
+    menuButton.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('is-open');
+      menuButton.setAttribute('aria-expanded', String(open));
+      menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      menuButton.querySelector('i').className = open ? 'bi bi-x-lg' : 'bi bi-list';
+    });
+    navLinks.addEventListener('click', (event) => {
+      if (!event.target.closest('a')) return;
+      closeMenu();
+    });
+    document.addEventListener('click', (event) => {
+      if (!header.contains(event.target)) closeMenu();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeMenu({ restoreFocus: true });
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 980) closeMenu();
+    });
+
+    flowSteps.forEach((step, index) => {
+      step.addEventListener('pointerenter', () => {
+        flowSteps.forEach((item, itemIndex) => item.classList.toggle('is-active', itemIndex === index));
+      });
+    });
+    if (!reducedMotion) {
+      let activeStep = 0;
+      window.setInterval(() => {
+        activeStep = (activeStep + 1) % flowSteps.length;
+        flowSteps.forEach((step, index) => step.classList.toggle('is-active', index === activeStep));
+      }, 4200);
     }
 
-    (function () {
-      const hashLinks = Array.from(document.querySelectorAll('a[href^="#"]'))
-        .filter((link) => {
-          const href = link.getAttribute('href') || '';
-          return href.length > 1;
-        });
-
-      const cleanUrl = () => {
-        if (!window.location.hash) return;
-        const cleanPath = `${window.location.pathname}${window.location.search}`;
-        history.replaceState(null, document.title, cleanPath);
-      };
-
-      const scrollToHash = (hash, behavior) => {
-        let targetId = hash.slice(1);
-        try {
-          targetId = decodeURIComponent(targetId);
-        } catch (_) {
-          // Keep raw hash when decoding fails.
-        }
-        const target = document.getElementById(targetId);
-        if (!target) return false;
-        target.scrollIntoView({ behavior, block: 'start' });
-        return true;
-      };
-
-      hashLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          const hash = link.getAttribute('href');
-          if (!hash || hash.length <= 1) return;
-          if (!scrollToHash(hash, 'smooth')) return;
-          event.preventDefault();
-          cleanUrl();
-        });
-      });
-
-      if (window.location.hash.length > 1) {
-        const initialHash = window.location.hash;
-        if (scrollToHash(initialHash, 'auto')) {
-          requestAnimationFrame(() => requestAnimationFrame(cleanUrl));
-        }
-      }
-    })();
-
-    (function () {
-      const progressFill = document.getElementById('scrollProgressFill');
-      const sectionLinks = Array.from(document.querySelectorAll('.section-link'));
-      const sectionMap = sectionLinks
-        .map((link) => {
-          const href = link.getAttribute('href') || '';
-          if (!href.startsWith('#')) return null;
-          const section = document.querySelector(href);
-          if (!section) return null;
-          return { link, section, href };
-        })
-        .filter(Boolean);
-
-      let rafPending = false;
-      const updateUi = () => {
-        rafPending = false;
-        const doc = document.documentElement;
-        const maxScroll = doc.scrollHeight - window.innerHeight;
-        const progress = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
-        if (progressFill) {
-          const clamped = Math.min(100, Math.max(0, progress));
-          progressFill.style.width = `${clamped}%`;
-        }
-
-        if (!sectionMap.length) return;
-        const probeY = window.scrollY + window.innerHeight * 0.32;
-        let activeHref = sectionMap[0].href;
-        sectionMap.forEach(({ href, section }) => {
-          if (section.offsetTop <= probeY) activeHref = href;
-        });
-        sectionMap.forEach(({ link, href }) => {
-          link.classList.toggle('is-active', href === activeHref);
-        });
-      };
-
-      const queueUiUpdate = () => {
-        if (rafPending) return;
-        rafPending = true;
-        requestAnimationFrame(updateUi);
-      };
-
-      queueUiUpdate();
-      window.addEventListener('scroll', queueUiUpdate, { passive: true });
-      window.addEventListener('resize', queueUiUpdate);
-    })();
-
-    (function () {
-      if (!(window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches)) return;
-      const interactiveEls = document.querySelectorAll('.interactive-card, .interactive-nav, .promo-link');
-      interactiveEls.forEach((el) => {
-        let rafId = null;
-        let lastX = '50%';
-        let lastY = '50%';
-
-        const flush = () => {
-          rafId = null;
-          el.style.setProperty('--mx', lastX);
-          el.style.setProperty('--my', lastY);
-        };
-
-        const queue = () => {
-          if (rafId !== null) return;
-          rafId = requestAnimationFrame(flush);
-        };
-
-        el.addEventListener('pointerenter', (event) => {
-          const rect = el.getBoundingClientRect();
-          lastX = `${event.clientX - rect.left}px`;
-          lastY = `${event.clientY - rect.top}px`;
-          queue();
-        });
-
-        el.addEventListener('pointermove', (event) => {
-          const rect = el.getBoundingClientRect();
-          lastX = `${event.clientX - rect.left}px`;
-          lastY = `${event.clientY - rect.top}px`;
-          queue();
-        });
-
-        el.addEventListener('pointerleave', () => {
-          lastX = '50%';
-          lastY = '50%';
-          queue();
-        });
-      });
-    })();
-
-    (function () {
-      const revealEls = Array.from(document.querySelectorAll('.reveal'));
-      if (!revealEls.length) return;
-
-      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduced || !('IntersectionObserver' in window)) {
-        revealEls.forEach((el) => el.classList.add('in'));
-        return;
-      }
-
-      const io = new IntersectionObserver((entries, obs) => {
+    const revealItems = document.querySelectorAll('.reveal');
+    if (reducedMotion || !('IntersectionObserver' in window)) {
+      revealItems.forEach((item) => item.classList.add('is-visible'));
+    } else {
+      const observer = new IntersectionObserver((entries, currentObserver) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add('in');
-          obs.unobserve(entry.target);
+          entry.target.classList.add('is-visible');
+          currentObserver.unobserve(entry.target);
         });
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-
-      revealEls.forEach((el) => io.observe(el));
-    })();
+      }, { threshold: .14, rootMargin: '0px 0px -8% 0px' });
+      revealItems.forEach((item) => {
+        if (!item.classList.contains('is-visible')) observer.observe(item);
+      });
+    }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>
 </html>
