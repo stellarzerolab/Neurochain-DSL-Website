@@ -4,6 +4,9 @@ RewriteEngine On
 # Hide legacy Snake demo endpoint (file remains in repo)
 RewriteRule ^snake(?:\.html)?/?$ - [G,L,NC]
 
+# Retire the generic WebUI; keep the hosted Stellar CLI as the public demo.
+RewriteRule ^webui(?:\.html)?/?$ /stellar-cli [R=301,L,NC]
+
 # 301: legacy Stellar demo path -> new Stellar CLI path
 RewriteRule ^stellar(?:\.html)?/?$ /stellar-cli [R=301,L,NC]
 
