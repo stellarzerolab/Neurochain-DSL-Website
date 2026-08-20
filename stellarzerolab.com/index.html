@@ -601,7 +601,7 @@
       position: relative;
       padding: 30px 28px 34px 0;
       border-bottom: 1px solid var(--line);
-      transition: background .22s ease, padding .22s var(--ease), border-color .22s ease;
+      transition: background .22s ease, border-color .22s ease;
     }
     .surface-item:nth-child(odd) { padding-right: 40px; border-right: 1px solid var(--line); }
     .surface-item:nth-child(even) { padding-left: 40px; }
@@ -642,8 +642,6 @@
       .product-stage:hover img { transform: scale(1.012); filter: saturate(1.04); }
       .arch-row:hover { padding-left: 10px; border-color: var(--line-bright); background: rgba(255, 255, 255, .012); }
       .surface-item:hover { border-color: var(--line-bright); background: rgba(255, 255, 255, .012); }
-      .surface-item:nth-child(odd):hover { padding-left: 12px; padding-right: 28px; }
-      .surface-item:nth-child(even):hover { padding-left: 52px; }
     }
 
     @media (max-width: 1120px) {
